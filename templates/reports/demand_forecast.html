@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">{{ title }}</h1>
+      <p class="muted">Прогнозирование спроса на основе истории отгрузок за последние {{ period_days }} дней.</p>
+    </div>
+    <div class="row row--wrap">
+      <form method="get" class="row row--wrap" style="gap:10px;">
+        <div class="field" style="min-width:120px;">
+          <input type="number" name="period" value="{{ period_days }}" class="form__input" placeholder="Период анализа (дни)" min="7" max="365">
+        </div>
+        <div class="field" style="min-width:120px;">
+          <input type="number" name="forecast_days" value="{{ forecast_days }}" class="form__input" placeholder="Прогноз (дни)" min="1" max="90">
+        </div>
+        <button type="submit" class="btn btn--primary">Применить</button>
+      </form>
+      <a class="btn btn--ghost" href="{% url 'reports_home' %}">← К отчётам</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="stack">
+      {% for item in forecasts %}
+        <div class="kv">
+          <div class="row row--between row--wrap">
+            <div>
+              <div class="kv__v">{{ item.product_sku }} — {{ item.product_name }}</div>
+              <div class="hint">
+                История: {{ item.historical_qty|floatformat:0 }} шт за {{ period_days }} дней
+                ({{ item.historical_orders }} заказов)
+              </div>
+            </div>
+            <div>
+              <div class="kv__v">
+                <strong>Прогноз на {{ forecast_days }} дней: {{ item.forecast_qty|floatformat:0 }} шт</strong>
+              </div>
+              <div class="hint">Среднее в день: {{ item.daily_avg|floatformat:2 }} шт</div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Недостаточно данных для прогноза. Нужны отгруженные заказы за последние {{ period_days }} дней.</p>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

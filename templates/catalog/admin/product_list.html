@@ -1,0 +1,34 @@
+{% extends "catalog/admin/_list_base.html" %}
+
+{% block list_guide %}
+  <div class="admin-list-guide">
+    <p class="muted">Карточка товара включает SKU, OEM/аналог, бренд и категорию. Для обновления характеристик используйте кнопку "Редактировать".</p>
+  </div>
+{% endblock %}
+
+{% block table %}
+  <div class="admin-list">
+    {% for item in items %}
+      <article class="admin-row">
+        <div>
+          <h3 class="admin-row__title">{{ item.internal_sku }} · {{ item.name }}</h3>
+          <p class="admin-row__meta">
+            OEM: {{ item.oem_number }}{% if item.analog_number %} | Аналог: {{ item.analog_number }}{% endif %}
+          </p>
+          <p class="admin-row__meta">
+            Бренд: {{ item.brand.name }} | Категория: {{ item.category.name }} | Упаковка: {{ item.get_packaging_type_display }}
+          </p>
+        </div>
+        <div class="admin-row__actions">
+          <a class="btn btn--primary" href="{% url 'catalog_product_update' item.pk %}">Редактировать</a>
+          <a class="btn btn--ghost" href="{% url 'catalog_product_xref' item.pk %}">OEM/аналоги</a>
+        </div>
+      </article>
+    {% empty %}
+      <div class="admin-empty">
+        <div class="kv__v">Товары не найдены</div>
+        <p class="muted">Измените запрос поиска или добавьте новую карточку товара.</p>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">{{ title }}</h1>
+      <p class="muted">Период: {{ period_start|date:"d.m.Y" }} — {{ period_end|date:"d.m.Y" }}</p>
+    </div>
+    <div class="row row--wrap">
+      <form method="get" class="row row--wrap" style="gap:10px;">
+        <select name="period" class="form__input" style="width:auto;">
+          <option value="7" {% if period_days == 7 %}selected{% endif %}>7 дней</option>
+          <option value="30" {% if period_days == 30 %}selected{% endif %}>30 дней</option>
+          <option value="90" {% if period_days == 90 %}selected{% endif %}>90 дней</option>
+          <option value="180" {% if period_days == 180 %}selected{% endif %}>180 дней</option>
+        </select>
+        <button type="submit" class="btn btn--primary">Применить</button>
+      </form>
+      <a class="btn btn--ghost" href="{% url 'reports_home' %}">← К отчётам</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Результаты анализа</h3>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--stroke);">
+            <th style="padding:10px;text-align:left;">Товар</th>
+            <th style="padding:10px;text-align:right;">Количество</th>
+            <th style="padding:10px;text-align:right;">Сумма, ₽</th>
+            <th style="padding:10px;text-align:center;">ABC</th>
+            <th style="padding:10px;text-align:center;">XYZ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in products %}
+            <tr style="border-bottom:1px solid rgba(255,255,255,.1);">
+              <td style="padding:10px;">
+                <div>{{ item.product_sku }}</div>
+                <div class="hint">{{ item.product_name }}</div>
+              </td>
+              <td style="padding:10px;text-align:right;">{{ item.qty|floatformat:0 }}</td>
+              <td style="padding:10px;text-align:right;">{{ item.amount|floatformat:2 }}</td>
+              <td style="padding:10px;text-align:center;">
+                <span style="padding:4px 8px;border-radius:6px;background:rgba(124,92,255,.2);">{{ item.abc_class }}</span>
+              </td>
+              <td style="padding:10px;text-align:center;">
+                <span style="padding:4px 8px;border-radius:6px;background:rgba(45,212,191,.2);">{{ item.xyz_class }}</span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" style="padding:20px;text-align:center;" class="muted">Нет данных за выбранный период</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

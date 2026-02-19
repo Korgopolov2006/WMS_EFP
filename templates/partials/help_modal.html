@@ -1,0 +1,40 @@
+{% comment %}
+  Универсальный компонент модального окна помощи
+  
+  Использование:
+  {% include "partials/help_modal.html" with title="Заголовок" content="Текст инструкции" %}
+  
+  Или с блоками:
+  {% include "partials/help_modal.html" with title="Заголовок" %}
+    {% block help_content %}
+      <p>Текст инструкции</p>
+    {% endblock %}
+  {% endinclude %}
+{% endcomment %}
+
+{% load static %}
+
+<button id="help-btn" class="help-btn" title="Как работать на этой странице" aria-label="Помощь">
+  ?
+</button>
+
+<div id="help-modal" class="help-modal">
+  <div class="help-modal__content">
+    <div class="help-modal__header">
+      <h2 class="help-modal__title">{{ title|default:"Как работать" }}</h2>
+      <button class="help-modal__close" aria-label="Закрыть">&times;</button>
+    </div>
+    <div class="help-modal__body">
+      {% if content %}
+        {{ content|safe }}
+      {% else %}
+        {% block help_content %}
+          <p>Инструкция для этой страницы будет добавлена позже.</p>
+        {% endblock %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/help-modal.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/help-modal.css' %}">

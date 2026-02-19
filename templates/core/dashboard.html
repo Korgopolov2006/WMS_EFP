@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Дашборд — WMS{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap dashboard-toolbar">
+    <div class="stack stack--sm">
+      <h1 class="h2">Сегодня в работе</h1>
+      <p class="muted">Приоритетные действия на текущую смену.</p>
+    </div>
+    <div class="row row--wrap dashboard-toolbar__actions">
+      {% if is_admin_mode %}
+        <form method="get" class="dashboard-role-switch">
+          <label class="field__label" for="as_role">Режим просмотра</label>
+          <select id="as_role" name="as_role" class="dashboard-role-switch__select" onchange="this.form.submit()">
+            {% for code, label in role_switch_options %}
+              <option value="{{ code }}" {% if effective_role == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      {% endif %}
+      <div>
+        {% include "partials/help_modal.html" with title="Как работать на дашборде" %}
+        {% block help_content %}
+          <h3>Логика экрана</h3>
+          <p>Сначала смотрите блок "Сегодня в работе", затем переходите в "Рабочие действия".</p>
+          <h3>Карточки действий</h3>
+          <p>Каждая карточка содержит ключевой показатель и 1-2 кнопки перехода в нужный раздел.</p>
+          <h3>Служебный доступ</h3>
+          <p>Ниже находятся вспомогательные разделы: справочники, 3D склад, профиль и отчёты.</p>
+        {% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <section class="dashboard-shell">
+    <div class="dashboard-main">
+      <article class="card card--glass dashboard-today">
+        <div class="card__header">
+          <div class="dashboard-card__header">
+            <span class="dashboard-icon dashboard-icon--tasks"></span>
+            <h2 class="h3 dashboard-card__title">Мои задачи</h2>
+          </div>
+          <p class="muted">Роль: {{ request.user.get_role_display|default:request.user.role }} | Витрина: {{ effective_role_label }}</p>
+        </div>
+        <div class="dashboard-today__body">
+          <div class="grid grid--2">
+            <div class="kv">
+              <div class="kv__k">Ожидают выполнения</div>
+              <div class="counter counter--pending">{{ today_summary.pending_tasks|default:0 }}</div>
+            </div>
+            <div class="kv">
+              <div class="kv__k">В работе</div>
+              <div class="counter counter--in-progress">{{ today_summary.in_progress_tasks|default:0 }}</div>
+            </div>
+          </div>
+          {% if today_summary.progress_percent > 0 %}
+            <div class="progress-bar">
+              <div class="progress-bar__fill" style="width:{{ today_summary.progress_percent }}%;"></div>
+            </div>
+            <div class="progress-bar__text">{{ today_summary.progress_percent }}% задач уже в работе</div>
+          {% endif %}
+        </div>
+        <div class="dashboard-card__footer">
+          <a class="btn btn--primary btn--block" href="{% url 'task_list' %}?my_tasks=1">К моим задачам</a>
+        </div>
+      </article>
+
+      <article class="card card--glass dashboard-next">
+        <div class="card__header">
+          <h2 class="h3">Следующее действие</h2>
+          <p class="muted">{{ today_summary.next_action.title }}</p>
+        </div>
+        <div class="dashboard-next__body">
+          <p class="muted">{{ today_summary.next_action.description }}</p>
+        </div>
+        <div class="dashboard-card__footer">
+          <a class="btn btn--primary btn--block" href="{{ today_summary.next_action.url }}">{{ today_summary.next_action.button }}</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="dashboard-section">
+    <div class="dashboard-section__head">
+      <h2 class="h3">Рабочие действия</h2>
+      <p class="muted">Основные операции для выбранной роли.</p>
+    </div>
+    <div class="dashboard-actions-grid">
+      {% for card in dashboard_cards %}
+        <article class="card card--glass dashboard-card">
+          <div class="card__header">
+            <div class="dashboard-card__header">
+              <span class="dashboard-icon dashboard-icon--{{ card.icon }}"></span>
+              <h3 class="h3 dashboard-card__title">{{ card.title }}</h3>
+            </div>
+            <p class="muted">{{ card.subtitle }}</p>
+          </div>
+          <div class="dashboard-card__body stack stack--sm">
+            {% for metric in card.metrics %}
+              <div class="kv">
+                <div class="kv__k">{{ metric.label }}</div>
+                <div class="counter {% if metric.kind == 'completed' %}counter--completed{% elif metric.kind == 'in_progress' %}counter--in-progress{% else %}counter--pending{% endif %}">
+                  {{ metric.value|default:0 }}
+                </div>
+              </div>
+            {% endfor %}
+            {% if card.progress_percent %}
+              <div class="progress-bar">
+                <div class="progress-bar__fill" style="width:{{ card.progress_percent }}%;"></div>
+              </div>
+              <div class="progress-bar__text">{{ card.progress_percent }}% выполнено</div>
+            {% endif %}
+          </div>
+          <div class="dashboard-card__footer">
+            {% for action in card.actions %}
+              <a class="btn {% if action.variant == 'primary' %}btn--primary{% else %}btn--ghost{% endif %} btn--block" href="{{ action.url }}">{{ action.label }}</a>
+            {% endfor %}
+          </div>
+        </article>
+      {% empty %}
+        <article class="card card--glass dashboard-card">
+          <div class="card__header">
+            <h3 class="h3">Нет рабочих карточек</h3>
+            <p class="muted">Для выбранной роли операции пока не настроены.</p>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="dashboard-section">
+    <div class="dashboard-section__head">
+      <h2 class="h3">Служебный доступ</h2>
+      <p class="muted">Вспомогательные разделы системы.</p>
+    </div>
+    <div class="dashboard-secondary-grid">
+      {% for link in quick_links %}
+        <a href="{{ link.url }}" class="card card--glass dashboard-link-card">
+          <div class="card__header">
+            <h3 class="h3">{{ link.title }}</h3>
+            <p class="muted">{{ link.description }}</p>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

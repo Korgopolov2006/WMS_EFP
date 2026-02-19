@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Справочники — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap" style="margin-bottom:20px;">
+    <div></div>
+    <div>
+      {% include "partials/help_modal.html" with title="Как работать со справочниками" %}
+    </div>
+  </div>
+  
+  {% block help_content %}
+      <h3>Управление справочниками</h3>
+      <p>В разделе справочников вы можете управлять всеми базовыми данными системы:</p>
+      <ul>
+        <li><strong>Номенклатура</strong> — товары, их характеристики, OEM номера, аналоги</li>
+        <li><strong>Бренды</strong> — производители автозапчастей</li>
+        <li><strong>Категории</strong> — категории товаров (электроника, ходовая, тормоза и т.д.)</li>
+        <li><strong>Зоны хранения</strong> — типы зон (ячейки, полки, напольное) и места хранения</li>
+        <li><strong>Применимость</strong> — связь товаров с марками и моделями автомобилей</li>
+      </ul>
+      
+      <h3>Создание и редактирование</h3>
+      <p>Используйте кнопки <strong>+ Создать</strong> для добавления новых элементов. Нажмите на элемент для просмотра и редактирования.</p>
+      
+      <h3>Поиск и фильтрация</h3>
+      <p>Используйте поиск для быстрого нахождения нужных элементов. Фильтры помогают сузить результаты поиска.</p>
+  {% endblock %}
+
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">Администрирование справочников</h1>
+      <p class="muted">Модуль 1: номенклатура, применимость, зоны хранения.</p>
+    </div>
+  </div>
+
+  <section class="grid grid--3" style="margin-top: 14px;">
+    <div class="card card--glass">
+      <div class="card__header">
+        <h3 class="h3">Номенклатура</h3>
+        <p class="muted">Карточки товаров: OEM/аналоги, бренд, категория, размеры, упаковка, фото.</p>
+      </div>
+      <div class="card__footer">
+        <a class="btn btn--primary btn--block" href="{% url 'catalog_product_list' %}">Открыть</a>
+      </div>
+    </div>
+
+    <div class="card card--glass">
+      <div class="card__header">
+        <h3 class="h3">Справочники</h3>
+        <p class="muted">Бренды, категории, марки/модели ТС (适用), типы складских зон.</p>
+      </div>
+      <div class="card__footer stack stack--sm">
+        <a class="btn btn--ghost btn--block" href="{% url 'catalog_brand_list' %}">Бренды</a>
+        <a class="btn btn--ghost btn--block" href="{% url 'catalog_category_list' %}">Категории</a>
+        <a class="btn btn--ghost btn--block" href="{% url 'catalog_vehicle_make_list' %}">Марки ТС</a>
+        <a class="btn btn--ghost btn--block" href="{% url 'catalog_vehicle_model_list' %}">Модели ТС</a>
+        <a class="btn btn--ghost btn--block" href="{% url 'catalog_zone_type_list' %}">Типы зон</a>
+      </div>
+    </div>
+
+    <div class="card card--glass">
+      <div class="card__header">
+        <h3 class="h3">Доступ</h3>
+        <p class="muted">Раздел доступен только роли “Администратор”.</p>
+      </div>
+      <div class="card__footer">
+        <span class="hint">RBAC: role_required(ADMIN)</span>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+

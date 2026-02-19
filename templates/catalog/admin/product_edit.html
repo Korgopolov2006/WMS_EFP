@@ -1,0 +1,42 @@
+{% extends "catalog/admin/form.html" %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">{{ title }}</h1>
+      <p class="muted">Карточка товара (OEM/аналоги/适用/размеры/упаковка)</p>
+    </div>
+    <div class="row row--wrap">
+      <a class="btn btn--ghost" href="{% url 'catalog_product_list' %}">К списку</a>
+      <a class="btn btn--ghost" href="{% url 'catalog_product_xref' product.pk %}">OEM ↔ аналоги</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top: 14px;">
+    <form class="form stack" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="toast toast--danger">
+          <div class="toast__title">{{ form.non_field_errors }}</div>
+        </div>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="field">
+          <div class="field__label">{{ field.label }}</div>
+          {{ field }}
+          {% if field.errors %}
+            <div class="hint" style="color: rgba(255,80,120,.9)">{{ field.errors }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="row row--between row--wrap">
+        <button class="btn btn--primary" type="submit">Сохранить</button>
+        <a class="btn btn--ghost" href="{% url 'catalog_product_list' %}">Отмена</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}
+

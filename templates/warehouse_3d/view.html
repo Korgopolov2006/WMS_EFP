@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}3D-склад: {{ warehouse.name }} — WMS{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    body.page-warehouse3d .container {
+      width: min(1500px, calc(100% - 24px));
+    }
+
+    body.page-warehouse3d .nav {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      justify-content: flex-start;
+      scrollbar-width: thin;
+    }
+
+    body.page-warehouse3d .nav__link {
+      white-space: nowrap;
+      padding: 7px 9px;
+    }
+
+    body.page-warehouse3d .topbar__actions {
+      flex-shrink: 0;
+    }
+
+    body.page-warehouse3d .warehouse-3d-header {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    body.page-warehouse3d .warehouse-3d-header__actions {
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) auto auto auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    body.page-warehouse3d .warehouse-3d-main {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 14px;
+      align-items: start;
+      flex-direction: row !important;
+    }
+
+    body.page-warehouse3d .warehouse-3d-sidebar {
+      width: 340px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      grid-template-columns: none !important;
+      max-height: none !important;
+      gap: 12px;
+    }
+
+    body.page-warehouse3d .warehouse-3d-canvas {
+      min-height: 68vh;
+    }
+
+    body.page-warehouse3d .warehouse-switcher {
+      min-width: 320px;
+      background: rgba(255, 255, 255, 0.92) !important;
+      color: #0f172a !important;
+      border-color: rgba(148, 163, 184, 0.55) !important;
+      color-scheme: light !important;
+    }
+
+    body.page-warehouse3d .warehouse-switcher option {
+      color: #0f172a !important;
+      background: #ffffff !important;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<script>document.body.classList.add('page-warehouse3d');</script>
+<div class="warehouse-3d-container">
+  <div class="warehouse-3d-header">
+    <div class="warehouse-3d-header__info">
+      <h1 class="warehouse-3d-header__title">{{ warehouse.name }}</h1>
+      <p class="warehouse-3d-header__subtitle">
+        <span class="warehouse-3d-header__branch">{{ warehouse.branch.name }}</span>
+        <span class="warehouse-3d-header__dot">•</span>
+        <span class="warehouse-3d-header__code">{{ warehouse.code }}</span>
+      </p>
+      <div class="warehouse-3d-header__access-badge">
+        {% if can_edit %}
+          <span class="access-badge access-badge--edit">Режим редактирования</span>
+        {% else %}
+          <span class="access-badge access-badge--view">Только просмотр</span>
+        {% endif %}
+        {% if layout.is_layout_defined %}
+          <span class="access-badge access-badge--done">Разметка зафиксирована</span>
+        {% else %}
+          <span class="access-badge access-badge--warn">Требуется первичная разметка</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="warehouse-3d-header__actions">
+      <select id="warehouse-selector" class="select-glass warehouse-switcher">
+        <option value="">Выберите склад...</option>
+        {% for wh in request.user.get_accessible_warehouses %}
+          <option value="{% url 'warehouse_3d:view' wh.id %}" {% if wh.id == warehouse.id %}selected{% endif %}>
+            {{ wh.branch.code }}:{{ wh.code }} — {{ wh.name }}
+          </option>
+        {% endfor %}
+      </select>
+      <div id="control-mode-indicator" class="control-mode-indicator">Режим камеры</div>
+      <button id="btn-fullscreen" class="btn btn--ghost">
+        <span class="btn__icon">⤢</span>
+        <span>Полноэкранный режим</span>
+      </button>
+      {% if can_edit %}
+        <button id="mode-toggle" class="btn btn--primary" data-mode="edit">
+          <span class="btn__icon">✏️</span>
+          <span>Режим редактирования</span>
+        </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="warehouse-3d-main">
+    <div id="canvas-container" class="warehouse-3d-canvas"></div>
+
+    <aside class="warehouse-3d-sidebar {% if not can_edit %}warehouse-3d-sidebar--view-only{% endif %}">
+      <div class="panel-glass">
+        <div class="panel-glass__header">
+          <h2 class="panel-glass__title">Инструменты</h2>
+        </div>
+        <div class="panel-glass__body">
+          {% if not can_edit %}
+            <div class="tool-section">
+              <div class="access-notice">
+                <p class="access-notice__text">У вас нет прав на редактирование этого склада. Доступен только просмотр.</p>
+              </div>
+            </div>
+          {% elif not layout.is_layout_defined %}
+            <div class="tool-section">
+              <h3 class="tool-section__title">Первичная разметка склада</h3>
+              <p class="tool-section__desc">Этот этап выполняется один раз: задайте контур склада, после чего начнётся работа с объектами и горячими клавишами.</p>
+              <div class="layout-start-actions">
+                <button id="btn-start-layout" class="btn btn--primary btn--block">Начать разметку вручную</button>
+                <button id="btn-create-by-size" class="btn btn--ghost btn--block">Создать по размерам</button>
+              </div>
+            </div>
+            <div class="tool-section layout-mode-panel" id="layout-mode-panel" style="display:none;">
+              <h3 class="tool-section__title">Режим разметки активен</h3>
+              <p class="tool-section__desc">Кликайте по полу, чтобы добавить точки контура. Минимум 3 точки.</p>
+              <button id="btn-finish-layout" class="btn btn--primary btn--block" disabled>Завершить разметку</button>
+            </div>
+          {% else %}
+            <div class="tool-section">
+              <h3 class="tool-section__title">Добавить объект</h3>
+              <div class="tool-buttons">
+                <button class="tool-btn" data-type="RACK" data-key="R" title="R — Стеллаж">
+                  <span class="tool-btn__icon">📦</span>
+                  <span class="tool-btn__label">Стеллаж</span>
+                  <span class="tool-btn__key">R</span>
+                </button>
+                <button class="tool-btn" data-type="SHELF" data-key="S" title="S — Полка">
+                  <span class="tool-btn__icon">📚</span>
+                  <span class="tool-btn__label">Полка</span>
+                  <span class="tool-btn__key">S</span>
+                </button>
+                <button class="tool-btn" data-type="CELL" data-key="C" title="C — Ячейка">
+                  <span class="tool-btn__icon">📋</span>
+                  <span class="tool-btn__label">Ячейка</span>
+                  <span class="tool-btn__key">C</span>
+                </button>
+                <button class="tool-btn" data-type="FLOOR" data-key="F" title="F — Напольное место">
+                  <span class="tool-btn__icon">⬜</span>
+                  <span class="tool-btn__label">Напольное</span>
+                  <span class="tool-btn__key">F</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="tool-section" id="object-properties" style="display:none;">
+              <h3 class="tool-section__title">Свойства объекта</h3>
+              <div class="form-group">
+                <label class="form-label">Код</label>
+                <input type="text" id="obj-code" class="input-glass" placeholder="A-01">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Название</label>
+                <input type="text" id="obj-name" class="input-glass" placeholder="Стеллаж A-01">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Размеры (м)</label>
+                <div class="form-row">
+                  <input type="number" id="obj-width" class="input-glass" step="0.1" min="0.1" placeholder="Ширина">
+                  <input type="number" id="obj-depth" class="input-glass" step="0.1" min="0.1" placeholder="Глубина">
+                  <input type="number" id="obj-height" class="input-glass" step="0.1" min="0.1" placeholder="Высота">
+                </div>
+              </div>
+              <div class="form-actions">
+                <button id="btn-save-object" class="btn btn--primary">Сохранить изменения</button>
+                <button id="btn-delete-object" class="btn btn--danger">Удалить объект</button>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="panel-glass">
+        <div class="panel-glass__header">
+          <h2 class="panel-glass__title">Камера</h2>
+        </div>
+        <div class="panel-glass__body">
+          <div class="camera-buttons">
+            <button class="btn btn--ghost" data-view="top" title="Вид сверху">
+              <span>Вид сверху</span>
+              <span class="btn__key">1</span>
+            </button>
+            <button class="btn btn--ghost" data-view="iso" title="Изометрия">
+              <span>Изометрия</span>
+              <span class="btn__key">2</span>
+            </button>
+            <button class="btn btn--ghost" data-view="reset" title="Сброс">
+              <span>Сброс</span>
+              <span class="btn__key">3</span>
+            </button>
+          </div>
+          <div class="tool-section tool-section--compact">
+            <p class="tool-section__desc tool-section__desc--compact">
+              <strong>Управление:</strong><br>
+              ЛКМ + движение — вращение<br>
+              Колесико — приближение<br>
+              Shift + ЛКМ — перемещение
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {% if layout.is_layout_defined and can_edit %}
+      <div class="panel-glass">
+        <div class="panel-glass__header">
+          <h2 class="panel-glass__title">Стены</h2>
+        </div>
+        <div class="panel-glass__body">
+          <div class="tool-buttons tool-buttons--single">
+            <button id="btn-toggle-walls" class="btn btn--ghost btn--block">
+              <span>Показать стены</span>
+            </button>
+            <button id="btn-toggle-walls-transparent" class="btn btn--ghost btn--block">
+              <span>Сделать прозрачными</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if can_edit %}
+      <div class="panel-glass" id="hotkeys-panel">
+        <div class="panel-glass__header">
+          <h2 class="panel-glass__title">Горячие клавиши</h2>
+        </div>
+        <div class="panel-glass__body">
+          <div class="hotkeys-list">
+            <div class="hotkey-item"><span class="hotkey-item__key">R</span><span class="hotkey-item__desc">Стеллаж</span></div>
+            <div class="hotkey-item"><span class="hotkey-item__key">S</span><span class="hotkey-item__desc">Полка</span></div>
+            <div class="hotkey-item"><span class="hotkey-item__key">C</span><span class="hotkey-item__desc">Ячейка</span></div>
+            <div class="hotkey-item"><span class="hotkey-item__key">F</span><span class="hotkey-item__desc">Напольное место</span></div>
+            <div class="hotkey-item"><span class="hotkey-item__key">Del</span><span class="hotkey-item__desc">Удалить</span></div>
+            <div class="hotkey-item"><span class="hotkey-item__key">Ctrl+Z</span><span class="hotkey-item__desc">Отмена</span></div>
+            <div class="hotkey-item"><span class="hotkey-item__key">Esc</span><span class="hotkey-item__desc">Снять выделение</span></div>
+            <div class="hotkey-item"><span class="hotkey-item__key">Space</span><span class="hotkey-item__desc">Переключить режим</span></div>
+            <div class="hotkey-item"><span class="hotkey-item__key">1/2/3</span><span class="hotkey-item__desc">Виды камеры</span></div>
+          </div>
+        </div>
+      </div>
+
+      {% if layout.is_layout_defined %}
+      <div class="panel-glass">
+        <div class="panel-glass__header">
+          <h2 class="panel-glass__title">Управление</h2>
+        </div>
+        <div class="panel-glass__body">
+          <button id="btn-clear-layout" class="btn btn--danger btn--block">Очистить разметку склада</button>
+          <div id="clear-layout-confirm" class="clear-layout-confirm" style="display:none;">
+            <p class="tool-section__desc tool-section__desc--compact">
+              Для подтверждения введите: <strong>ОЧИСТИТЬ СКЛАД ПОЛНОСТЬЮ</strong>
+            </p>
+            <input type="text" id="clear-confirm-input" class="input-glass" placeholder="Введите текст подтверждения">
+            <button id="btn-confirm-clear" class="btn btn--danger btn--block clear-layout-confirm__button" disabled>Подтвердить очистку</button>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endif %}
+    </aside>
+  </div>
+
+  <div id="modal-empty" class="modal">
+    <div class="modal__overlay"></div>
+    <div class="modal__content">
+      <div class="modal__header">
+        <h2 class="modal__title">Выберите действие</h2>
+        <button class="modal__close" data-modal="empty">✕</button>
+      </div>
+      <div class="modal__body">
+        <div class="modal__buttons">
+          <button class="modal-btn modal-btn--primary" data-action="add-object"><span class="modal-btn__icon">➕</span><span class="modal-btn__text">Добавить объект</span></button>
+          <button class="modal-btn modal-btn--secondary" data-action="start-layout"><span class="modal-btn__icon">✏️</span><span class="modal-btn__text">Начать разметку</span></button>
+          <button class="modal-btn modal-btn--ghost" data-action="cancel"><span class="modal-btn__text">Отмена</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-add-object" class="modal">
+    <div class="modal__overlay"></div>
+    <div class="modal__content">
+      <div class="modal__header">
+        <h2 class="modal__title">Добавить объект</h2>
+        <button class="modal__close" data-modal="add-object">✕</button>
+      </div>
+      <div class="modal__body">
+        <div class="modal__buttons">
+          <button class="modal-btn modal-btn--primary" data-action="add" data-type="RACK"><span class="modal-btn__icon">📦</span><span class="modal-btn__text">Стеллаж</span></button>
+          <button class="modal-btn modal-btn--primary" data-action="add" data-type="SHELF"><span class="modal-btn__icon">📚</span><span class="modal-btn__text">Полка</span></button>
+          <button class="modal-btn modal-btn--primary" data-action="add" data-type="CELL"><span class="modal-btn__icon">📋</span><span class="modal-btn__text">Ячейка</span></button>
+          <button class="modal-btn modal-btn--primary" data-action="add" data-type="FLOOR"><span class="modal-btn__icon">⬜</span><span class="modal-btn__text">Напольная зона</span></button>
+          <button class="modal-btn modal-btn--ghost" data-action="cancel"><span class="modal-btn__text">Отмена</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-object" class="modal">
+    <div class="modal__overlay"></div>
+    <div class="modal__content">
+      <div class="modal__header">
+        <h2 class="modal__title">Действия с объектом</h2>
+        <button class="modal__close" data-modal="object">✕</button>
+      </div>
+      <div class="modal__body">
+        <div class="modal__buttons">
+          <button class="modal-btn modal-btn--primary" data-action="edit"><span class="modal-btn__icon">✏️</span><span class="modal-btn__text">Редактировать</span></button>
+          <button class="modal-btn modal-btn--secondary" data-action="properties"><span class="modal-btn__icon">ℹ️</span><span class="modal-btn__text">Свойства</span></button>
+          <button class="modal-btn modal-btn--danger" data-action="delete"><span class="modal-btn__icon">🗑️</span><span class="modal-btn__text">Удалить</span></button>
+          <button class="modal-btn modal-btn--ghost" data-action="cancel"><span class="modal-btn__text">Отмена</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-create-warehouse" class="modal">
+    <div class="modal__overlay"></div>
+    <div class="modal__content">
+      <div class="modal__header">
+        <h2 class="modal__title">Создание склада</h2>
+        <button class="modal__close" data-modal="create-warehouse">✕</button>
+      </div>
+      <div class="modal__body">
+        <div class="form-group">
+          <label class="form-label">Ширина (м)</label>
+          <input type="number" id="warehouse-width" class="input-glass" step="0.1" min="1" max="100" value="10" placeholder="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Длина (м)</label>
+          <input type="number" id="warehouse-length" class="input-glass" step="0.1" min="1" max="100" value="10" placeholder="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Высота (м)</label>
+          <input type="number" id="warehouse-height" class="input-glass" step="0.1" min="2" max="20" value="3" placeholder="3">
+        </div>
+        <div class="modal__buttons modal__buttons--spaced">
+          <button class="modal-btn modal-btn--primary" data-action="create-warehouse"><span class="modal-btn__text">Создать</span></button>
+          <button class="modal-btn modal-btn--ghost" data-action="cancel"><span class="modal-btn__text">Отмена</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+  console.log('[Warehouse3D] Three.js loaded:', typeof THREE !== 'undefined');
+  console.log('[Warehouse3D] OrbitControls loaded:', typeof OrbitControls !== 'undefined');
+
+  if (typeof THREE !== 'undefined' && typeof OrbitControls !== 'undefined') {
+    THREE.OrbitControls = OrbitControls;
+    console.log('[Warehouse3D] OrbitControls attached to THREE');
+  }
+</script>
+<script>
+  (function() {
+    function initEditor() {
+      if (typeof THREE === 'undefined') {
+        setTimeout(initEditor, 50);
+        return;
+      }
+
+      window.WAREHOUSE_3D_CONFIG = {
+        warehouseId: {{ warehouse.id }},
+        canEdit: {{ can_edit|yesno:"true,false" }},
+        layoutDefined: {{ layout.is_layout_defined|yesno:"true,false" }},
+        floorPoints: {{ layout.floor_points|safe }},
+        stocksByLocation: {{ stocks_json|safe }},
+        storageObjects: {{ storage_objects_json|safe }},
+        urls: {
+          saveLayout: "{% url 'warehouse_3d:save_layout' warehouse.id %}",
+          saveObject: "{% url 'warehouse_3d:save_object' warehouse.id %}",
+          deleteObject: "{% url 'warehouse_3d:delete_object' warehouse.id 999999 %}",
+          view: "{% url 'warehouse_3d:view' warehouse.id %}"
+        }
+      };
+
+      const script = document.createElement('script');
+      script.src = "{% static 'js/warehouse_3d/editor.js' %}";
+      document.body.appendChild(script);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initEditor);
+    } else {
+      initEditor();
+    }
+  })();
+</script>
+{% endblock %}

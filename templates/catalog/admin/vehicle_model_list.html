@@ -1,0 +1,29 @@
+{% extends "catalog/admin/_list_base.html" %}
+
+{% block list_guide %}
+  <div class="admin-list-guide">
+    <p class="muted">Модели привязываются к маркам и используются в применимости товара. Название модели указывайте коротко и без лишних служебных символов.</p>
+  </div>
+{% endblock %}
+
+{% block table %}
+  <div class="admin-list">
+    {% for item in items %}
+      <article class="admin-row">
+        <div>
+          <h3 class="admin-row__title">{{ item.make.name }} {{ item.name }}</h3>
+          <p class="admin-row__meta">Марка: {{ item.make.name }} | Создано: {{ item.created_at|date:"d.m.Y" }}</p>
+        </div>
+        <div class="admin-row__actions">
+          <a class="btn btn--primary" href="{% url 'catalog_vehicle_model_update' item.pk %}">Редактировать</a>
+          <a class="btn btn--ghost" href="{% url 'catalog_product_list' %}?q={{ item.name|urlencode }}">Найти товары</a>
+        </div>
+      </article>
+    {% empty %}
+      <div class="admin-empty">
+        <div class="kv__v">Модели не найдены</div>
+        <p class="muted">Попробуйте изменить запрос или добавить новую модель.</p>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

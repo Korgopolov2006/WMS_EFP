@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль — WMS{% endblock %}
+
+{% block content %}
+  <section class="card card--glass">
+    <div class="card__header">
+      <h1 class="h2">Профиль</h1>
+      <p class="muted">Информация для контроля прав и доступа.</p>
+    </div>
+
+    <div class="grid grid--2">
+      <div class="kv">
+        <div class="kv__k">Пользователь</div>
+        <div class="kv__v">{{ request.user.username }}</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Роль</div>
+        <div class="kv__v">{{ request.user.get_role_display|default:request.user.role }}</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Email</div>
+        <div class="kv__v">{{ request.user.email|default:"—" }}</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Активен</div>
+        <div class="kv__v">{% if request.user.is_active %}Да{% else %}Нет{% endif %}</div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+

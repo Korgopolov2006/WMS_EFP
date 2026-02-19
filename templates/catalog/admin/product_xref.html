@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}OEM ↔ аналоги — {{ product.internal_sku }}{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">OEM ↔ аналоги</h1>
+      <p class="muted">{{ product.internal_sku }} — {{ product.name }}</p>
+    </div>
+    <div class="row row--wrap">
+      <a class="btn btn--ghost" href="{% url 'catalog_product_update' product.pk %}">Карточка товара</a>
+      <a class="btn btn--ghost" href="{% url 'catalog_product_list' %}">К списку</a>
+    </div>
+  </div>
+
+  <div class="grid grid--2" style="margin-top: 14px;">
+    <div class="card card--glass card--lg">
+      <h2 class="h3">Добавить связь</h2>
+      <form class="form stack" method="post">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="field">
+            <div class="field__label">{{ field.label }}</div>
+            {{ field }}
+            {% if field.errors %}
+              <div class="hint" style="color: rgba(255,80,120,.9)">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+        <button class="btn btn--primary" type="submit">Добавить</button>
+      </form>
+    </div>
+
+    <div class="card card--glass card--lg">
+      <h2 class="h3">Текущие связи</h2>
+      <div class="stack stack--sm" style="margin-top: 10px;">
+        {% for item in items %}
+          <div class="kv">
+            <div class="row row--between row--wrap">
+              <div>
+                <div class="kv__k">{{ item.get_relation_type_display }}</div>
+                <div class="kv__v">{{ item.to_product.internal_sku }} — {{ item.to_product.name }}</div>
+                {% if item.note %}
+                  <div class="hint">{{ item.note }}</div>
+                {% endif %}
+              </div>
+              <form method="post" action="{% url 'catalog_product_xref_delete' product.pk item.pk %}">
+                {% csrf_token %}
+                <button class="btn" type="submit">Удалить</button>
+              </form>
+            </div>
+          </div>
+        {% empty %}
+          <p class="muted">Пока нет связей.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

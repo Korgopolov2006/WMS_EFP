@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Остатки — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">Остатки на складе</h1>
+      <p class="muted">Текущие остатки товаров по местам хранения.</p>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <form method="get" class="row row--wrap" style="gap:10px;">
+      <div class="field" style="min-width:200px;">
+        <div class="field__label">Поиск</div>
+        <input type="text" name="q" value="{{ q }}" placeholder="SKU, название, OEM, место">
+      </div>
+      <div class="field" style="min-width:120px;">
+        <div class="field__label">Товар ID</div>
+        <input type="number" name="product_id" value="{{ product_id }}" placeholder="ID товара">
+      </div>
+      <div class="field" style="min-width:120px;">
+        <div class="field__label">Место ID</div>
+        <input type="number" name="location_id" value="{{ location_id }}" placeholder="ID места">
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button type="submit" class="btn btn--primary">Найти</button>
+      </div>
+    </form>
+
+    <div class="stack" style="margin-top:18px;">
+      {% for item in items %}
+        <div class="kv">
+          <div class="row row--between row--wrap">
+            <div>
+              <div class="kv__v">{{ item.product.internal_sku }} — {{ item.product.name }}</div>
+              <div class="hint">Место: {{ item.storage_location.code }} ({{ item.storage_location.zone.name }})</div>
+              <div class="hint">OEM: {{ item.product.oem_number }}</div>
+            </div>
+            <div>
+              <div class="kv__v">Доступно: {{ item.qty_available }} шт</div>
+              {% if item.qty_reserved > 0 %}
+                <div class="hint">Зарезервировано: {{ item.qty_reserved }} шт</div>
+              {% endif %}
+              {% if item.batch_no %}
+                <div class="hint">Партия: {{ item.batch_no }}</div>
+              {% endif %}
+            </div>
+            <div>
+              <a class="btn btn--ghost" href="{% url 'stock_detail' item.product.pk %}">Детали</a>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Остатков не найдено.</p>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

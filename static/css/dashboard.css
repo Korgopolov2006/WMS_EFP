@@ -1,0 +1,360 @@
+/* Иконки для дашборда через CSS */
+.dashboard-icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  vertical-align: middle;
+  position: relative;
+  color: rgba(100, 200, 255, 1);
+}
+
+.dashboard-icon--tasks::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  top: 2px;
+  left: 2px;
+}
+
+.dashboard-icon--tasks::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 2px;
+  background: currentColor;
+  top: 8px;
+  left: 6px;
+  box-shadow: 0 4px 0 currentColor, 0 8px 0 currentColor;
+}
+
+.dashboard-icon--receiving::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  top: 4px;
+  left: 3px;
+}
+
+.dashboard-icon--receiving::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 2px;
+  background: currentColor;
+  top: 8px;
+  left: 7px;
+  box-shadow: 0 3px 0 currentColor;
+}
+
+.dashboard-icon--inventory::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  top: 2px;
+  left: 4px;
+}
+
+.dashboard-icon--inventory::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 8px;
+  background: currentColor;
+  top: 6px;
+  left: 11px;
+  box-shadow: -4px 0 0 currentColor, 4px 0 0 currentColor;
+}
+
+.dashboard-icon--picking::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  top: 3px;
+  left: 5px;
+}
+
+.dashboard-icon--picking::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+  top: 7px;
+  left: 9px;
+}
+
+.dashboard-icon--shipping::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-radius: 2px 2px 0 0;
+  top: 6px;
+  left: 2px;
+}
+
+.dashboard-icon--shipping::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  top: 2px;
+  left: 10px;
+}
+
+.dashboard-icon--orders::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 20px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  top: 1px;
+  left: 4px;
+}
+
+.dashboard-icon--orders::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 2px;
+  background: currentColor;
+  top: 6px;
+  left: 5px;
+  box-shadow: 0 4px 0 currentColor, 0 8px 0 currentColor;
+}
+
+.dashboard-icon--stats::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  top: 2px;
+  left: 3px;
+}
+
+.dashboard-icon--stats::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 6px;
+  background: currentColor;
+  top: 10px;
+  left: 6px;
+  box-shadow: 3px -2px 0 currentColor, 6px 0 0 currentColor, 9px 2px 0 currentColor;
+}
+
+/* Прогресс-бары */
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(100, 200, 255, 0.8), rgba(50, 150, 255, 0.8));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.progress-bar__text {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  text-align: right;
+}
+
+/* Счётчики */
+.counter {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin: 4px 0;
+}
+
+.counter--pending {
+  color: rgba(255, 200, 100, 1);
+}
+
+.counter--in-progress {
+  color: rgba(100, 200, 255, 1);
+}
+
+.counter--completed {
+  color: rgba(100, 255, 150, 1);
+}
+
+/* Карточки дашборда */
+.dashboard-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dashboard-card__header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.dashboard-card__title {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.dashboard-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-card__footer {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashboard-card__footer .btn {
+  min-height: 42px;
+}
+
+.dashboard-toolbar {
+  margin-bottom: 20px;
+}
+
+.dashboard-toolbar__actions {
+  align-items: flex-end;
+}
+
+.dashboard-role-switch {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 210px;
+}
+
+.dashboard-role-switch__select {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: var(--glass);
+  color: var(--text);
+  padding: 8px 12px;
+}
+
+.dashboard-role-switch__select option {
+  color: #111827;
+  background: #ffffff;
+}
+
+:root[data-theme="dark"] .dashboard-role-switch__select option {
+  color: #e5e7eb;
+  background: #0b1220;
+}
+
+.dashboard-shell {
+  margin-top: 14px;
+}
+
+.dashboard-main {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 2fr 1fr;
+}
+
+.dashboard-today,
+.dashboard-next {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-today__body,
+.dashboard-next__body {
+  padding: 0 18px 10px;
+  flex: 1;
+}
+
+.dashboard-next__body {
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-section {
+  margin-top: 24px;
+}
+
+.dashboard-section__head {
+  margin-bottom: 12px;
+}
+
+.dashboard-actions-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-secondary-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-link-card {
+  text-decoration: none;
+  display: block;
+  min-height: 100%;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-secondary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .dashboard-main {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-actions-grid,
+  .dashboard-secondary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-toolbar__actions {
+    align-items: stretch;
+  }
+}

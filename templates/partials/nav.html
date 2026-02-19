@@ -1,0 +1,38 @@
+{% load static %}
+<header class="topbar">
+  <div class="container topbar__inner">
+    <a class="brand" href="{% url 'dashboard' %}">
+      <span class="brand__logo">WMS</span>
+      <span class="brand__text">Склад автозапчастей</span>
+    </a>
+
+    <nav class="nav">
+      <a class="nav__link" href="{% url 'dashboard' %}">Дашборд</a>
+      <a class="nav__link" href="{% url 'user_manual' %}">Инструкция</a>
+      <a class="nav__link" href="{% url 'catalog_admin_home' %}">Номенклатура</a>
+      {% with first_warehouse=request.user.get_accessible_warehouses.first %}
+        {% if first_warehouse %}
+          <a class="nav__link" href="{% url 'warehouse_3d:view' first_warehouse.id %}">3D Склад</a>
+        {% endif %}
+      {% endwith %}
+      <a class="nav__link" href="{% url 'receiving_list' %}">Приёмка</a>
+      <a class="nav__link" href="{% url 'stock_list' %}">Остатки</a>
+      <a class="nav__link" href="{% url 'order_list' %}">Комплектация</a>
+      <a class="nav__link" href="{% url 'tasks_monitoring' %}">Задачи</a>
+      <a class="nav__link" href="{% url 'reports_home' %}">Отчёты</a>
+    </nav>
+
+    <div class="topbar__actions">
+      <button class="btn btn--ghost topbar__theme" type="button" id="theme-toggle" data-theme="dark">Тёмная</button>
+      {% if request.user.is_authenticated %}
+        <a class="btn btn--ghost" href="{% url 'me' %}">{{ request.user.get_short_name|default:request.user.username }}</a>
+        <form method="post" action="{% url 'logout' %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn--primary">Выйти</button>
+        </form>
+      {% else %}
+        <a class="btn btn--primary" href="{% url 'login' %}">Войти</a>
+      {% endif %}
+    </div>
+  </div>
+</header>

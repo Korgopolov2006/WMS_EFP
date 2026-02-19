@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">{{ title }}</h1>
+      <p class="muted">Мониторинг задач подбора в реальном времени.</p>
+    </div>
+  </div>
+
+  <div class="grid grid--4" style="margin-top:14px;gap:14px;">
+    <div class="card card--glass">
+      <div class="card__header">
+        <div class="hint">Активные заказы</div>
+        <div class="h2" id="stat-active-orders">—</div>
+      </div>
+    </div>
+    <div class="card card--glass">
+      <div class="card__header">
+        <div class="hint">Ожидают</div>
+        <div class="h2" id="stat-pending-tasks">—</div>
+      </div>
+    </div>
+    <div class="card card--glass">
+      <div class="card__header">
+        <div class="hint">В работе</div>
+        <div class="h2" id="stat-in-progress-tasks">—</div>
+      </div>
+    </div>
+    <div class="card card--glass">
+      <div class="card__header">
+        <div class="hint">Завершено сегодня</div>
+        <div class="h2" id="stat-completed-today">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Активные задачи</h3>
+    </div>
+    <div id="tasks-list" class="stack">
+      <p class="muted">Загрузка...</p>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      function updateMonitoring() {
+        fetch('{% url "tasks_monitoring_api" %}')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            document.getElementById('stat-active-orders').textContent = data.active_orders || 0;
+            document.getElementById('stat-pending-tasks').textContent = data.pending_tasks || 0;
+            document.getElementById('stat-in-progress-tasks').textContent = data.in_progress_tasks || 0;
+            document.getElementById('stat-completed-today').textContent = data.completed_tasks_today || 0;
+
+            var tasksList = document.getElementById('tasks-list');
+            if (data.recent_tasks && data.recent_tasks.length > 0) {
+              tasksList.innerHTML = data.recent_tasks.map(function(t) {
+                var statusClass = t.status === 'IN_PROGRESS' ? 'rgba(45,212,191,.2)' : 'rgba(124,92,255,.2)';
+                var statusText = t.status === 'IN_PROGRESS' ? 'В работе' : 'Ожидает';
+                return '<div class="kv"><div class="row row--between row--wrap"><div><div class="kv__v">Заказ ' + t.order_number + '</div><div class="hint">' + t.zone_type_code + '</div></div><div><span style="padding:4px 8px;border-radius:6px;background:' + statusClass + ';">' + statusText + '</span></div></div></div>';
+              }).join('');
+            } else {
+              tasksList.innerHTML = '<p class="muted">Нет активных задач.</p>';
+            }
+          })
+          .catch(function(err) {
+            console.error('Failed to update monitoring:', err);
+          });
+      }
+
+      updateMonitoring();
+      setInterval(updateMonitoring, 5000);
+    })();
+  </script>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Приёмка — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div></div>
+    <div>
+      {% include "partials/help_modal.html" with title="Как работать с приёмкой" %}
+    </div>
+  </div>
+  
+  {% block help_content %}
+      <h3>Создание приёмки</h3>
+      <p>Нажмите кнопку <strong>+ Новая приёмка</strong> для создания нового документа приёмки товара.</p>
+      
+      <h3>Статусы приёмки</h3>
+      <ul>
+        <li><strong>Черновик</strong> — документ создан, но не завершён</li>
+        <li><strong>В процессе</strong> — приёмка начата</li>
+        <li><strong>Завершена</strong> — приёмка завершена, остатки созданы на складе</li>
+      </ul>
+      
+      <h3>Фильтрация</h3>
+      <p>Используйте фильтр по статусу для поиска нужных документов приёмки.</p>
+      
+      <h3>Завершение приёмки</h3>
+      <p>После завершения приёмки автоматически создаются остатки на складе для каждой позиции. Также автоматически выполняются backorder для товаров, которых было недостаточно.</p>
+      
+      <h3>Просмотр деталей</h3>
+      <p>Нажмите кнопку <strong>Открыть</strong> для просмотра деталей приёмки, добавления строк и завершения документа.</p>
+  {% endblock %}
+
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">Документы приёмки</h1>
+      <p class="muted">Учёт входящих поставок и подготовка к размещению.</p>
+    </div>
+    <div class="row row--wrap">
+      <a class="btn btn--primary" href="{% url 'receiving_create' %}">+ Новая приёмка</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="row row--between row--wrap">
+      <div class="field" style="min-width:180px;">
+        <div class="field__label">Статус</div>
+        <form method="get">
+          <select name="status" onchange="this.form.submit()">
+            <option value="">Все</option>
+            {% for code,label in statuses %}
+              <option value="{{ code }}" {% if status == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </form>
+      </div>
+    </div>
+
+    <div class="stack" style="margin-top:14px;">
+      {% for item in items %}
+        <div class="kv">
+          <div class="row row--between row--wrap">
+            <div>
+              <div class="hint">{{ item.get_status_display }}</div>
+              <div class="kv__v">{{ item.number }} — {{ item.supplier_name }}</div>
+              {% if item.supplier_doc_no %}
+                <div class="hint">Документ поставщика: {{ item.supplier_doc_no }}</div>
+              {% endif %}
+              <div class="hint">
+                Ожидаемо: {{ item.total_expected }} · Принято: {{ item.total_received }}
+              </div>
+            </div>
+            <div class="row row--wrap">
+              <a class="btn btn--ghost" href="{% url 'receiving_detail' item.pk %}">Открыть</a>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Документов приёмки пока нет.</p>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

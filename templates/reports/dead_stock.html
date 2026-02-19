@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">{{ title }}</h1>
+      <p class="muted">Товары без движения более {{ days_threshold }} дней. Общая стоимость: {{ total_value|floatformat:2 }} ₽</p>
+    </div>
+    <div class="row row--wrap">
+      <form method="get" class="row row--wrap" style="gap:10px;">
+        <input type="number" name="days" value="{{ days_threshold }}" class="form__input" style="width:100px;" placeholder="Дней">
+        <button type="submit" class="btn btn--primary">Применить</button>
+      </form>
+      <a class="btn btn--ghost" href="{% url 'reports_home' %}">← К отчётам</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="stack">
+      {% for item in items %}
+        <div class="kv">
+          <div class="row row--between row--wrap">
+            <div>
+              <div class="kv__v">{{ item.product.internal_sku }} — {{ item.product.name }}</div>
+              <div class="hint">Место: {{ item.stock.storage_location.code }}</div>
+            </div>
+            <div>
+              <div class="kv__v">Количество: {{ item.qty_available|floatformat:0 }} шт</div>
+              <div class="kv__v">Дней без движения: {{ item.days_without_movement }}</div>
+              <div class="kv__v">Стоимость: {{ item.estimated_value|floatformat:2 }} ₽</div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Мёртвых остатков не найдено.</p>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

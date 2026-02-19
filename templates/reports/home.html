@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Отчёты и аналитика — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap" style="margin-bottom:20px;">
+    <div></div>
+    <div>
+      {% include "partials/help_modal.html" with title="Как работать с аналитикой" %}
+    </div>
+  </div>
+  
+  {% block help_content %}
+      <h3>Отчёты и аналитика</h3>
+      <p>Раздел аналитики предоставляет доступ к различным отчётам и аналитическим данным. Все отчёты доступны только для просмотра (read-only).</p>
+      
+      <h3>Доступные отчёты</h3>
+      <ul>
+        <li><strong>ABC-XYZ анализ</strong> — классификация товаров по объёму продаж и стабильности спроса</li>
+        <li><strong>Мёртвые остатки</strong> — товары без движения за определённый период</li>
+        <li><strong>Анализ аналогов vs оригиналов</strong> — сравнение продаж оригинальных и аналоговых товаров</li>
+        <li><strong>Ошибки подбора</strong> — статистика ошибок при подборе товаров</li>
+        <li><strong>Прогноз спроса</strong> — прогнозирование спроса на основе исторических данных</li>
+      </ul>
+      
+      <h3>Фильтрация</h3>
+      <p>Используйте фильтры по дате, складам и другим параметрам для получения нужных данных.</p>
+      
+      <h3>Экспорт данных</h3>
+      <p>Некоторые отчёты поддерживают экспорт данных в различных форматах для дальнейшего анализа.</p>
+  {% endblock %}
+
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">Отчёты и аналитика</h1>
+      <p class="muted">Аналитические отчёты для управления складом.</p>
+    </div>
+  </div>
+
+  <div class="grid grid--3" style="margin-top:14px;">
+    <a href="{% url 'report_abc_xyz' %}" class="card card--glass" style="text-decoration:none;display:block;">
+      <div class="card__header">
+        <h3 class="h3">ABC-XYZ анализ</h3>
+        <p class="muted">Классификация товаров по объёму продаж и стабильности спроса.</p>
+      </div>
+    </a>
+
+    <a href="{% url 'report_dead_stock' %}" class="card card--glass" style="text-decoration:none;display:block;">
+      <div class="card__header">
+        <h3 class="h3">Мёртвые остатки</h3>
+        <p class="muted">Товары без движения за указанный период.</p>
+      </div>
+    </a>
+
+    <a href="{% url 'report_analogs_vs_originals' %}" class="card card--glass" style="text-decoration:none;display:block;">
+      <div class="card__header">
+        <h3 class="h3">Аналоги vs Оригиналы</h3>
+        <p class="muted">Анализ замещения оригинальных товаров аналогами.</p>
+      </div>
+    </a>
+
+    <a href="{% url 'report_picking_errors' %}" class="card card--glass" style="text-decoration:none;display:block;">
+      <div class="card__header">
+        <h3 class="h3">Ошибки подбора</h3>
+        <p class="muted">Статистика ошибок при комплектации заказов.</p>
+      </div>
+    </a>
+
+    <a href="{% url 'report_demand_forecast' %}" class="card card--glass" style="text-decoration:none;display:block;">
+      <div class="card__header">
+        <h3 class="h3">Прогноз спроса</h3>
+        <p class="muted">Прогнозирование спроса с учётом сезонности.</p>
+      </div>
+    </a>
+
+    <a href="{% url 'report_staff_efficiency' %}" class="card card--glass" style="text-decoration:none;display:block;">
+      <div class="card__header">
+        <h3 class="h3">Эффективность сотрудников</h3>
+        <p class="muted">Метрики выполнения задач и операций по ролям и сотрудникам.</p>
+      </div>
+    </a>
+  </div>
+{% endblock %}

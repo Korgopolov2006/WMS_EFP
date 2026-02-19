@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Приёмка {{ receiving.number }} — WMS{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/help-modal.css' %}">
+  <style>
+    .efp-check-btn {
+      margin-top: 8px;
+      width: 100%;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">Приёмка {{ receiving.number }}</h1>
+      <p class="muted">Поставщик: {{ receiving.supplier_name }}</p>
+    </div>
+    <div class="row row--wrap">
+      <a class="btn btn--ghost" href="{% url 'receiving_list' %}">К списку</a>
+      <a class="btn btn--primary" href="{% url 'receiving_pdf' receiving.pk %}">Скачать PDF</a>
+    </div>
+  </div>
+
+  <section class="grid grid--2" style="margin-top:14px;">
+    <div class="card card--glass card--lg">
+      <div class="card__header">
+        <h3 class="h3">Общая информация</h3>
+        <p class="muted">Статус: {{ receiving.get_status_display }}</p>
+      </div>
+      <div class="card__footer">
+        <div class="stack stack--sm">
+          <div class="kv">
+            <div class="kv__k">Документ поставщика</div>
+            <div class="kv__v">{{ receiving.supplier_doc_no|default:"—" }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Создал</div>
+            <div class="kv__v">{{ receiving.created_by }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Плановая дата поставки</div>
+            <div class="kv__v">{{ receiving.expected_at|date:"d.m.Y"|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card--glass card--lg">
+      <div class="card__header">
+        <h3 class="h3">Добавить строку</h3>
+        <p class="muted">Выберите товар и место хранения, укажите количество.</p>
+      </div>
+      <div class="card__footer">
+        <form method="post" action="{% url 'receiving_add_line' receiving.pk %}" class="form stack" id="receiving-line-form">
+          {% csrf_token %}
+          {% for field in line_form %}
+            <div class="field">
+              <div class="field__label">{{ field.label }}</div>
+              {{ field }}
+              {% if field.errors %}
+                <div class="hint" style="color: rgba(255,80,120,.9)">{{ field.errors }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+          
+          {% if user_role == "STOREKEEPER" or user.is_superuser or user_role == "ADMIN" %}
+            <div class="field">
+              <div class="field__label">OEM код для проверки</div>
+              <div style="display:flex;gap:8px;">
+                <input type="text" id="efp-oem-input" class="form__input" placeholder="Введите OEM код" style="flex:1;">
+                <button type="button" id="efp-check-btn" class="btn btn--ghost efp-check-btn" style="white-space:nowrap;">Проверить на EFP</button>
+              </div>
+              <div class="hint" style="margin-top:4px;">Проверьте деталь на сайте EFP Parts перед добавлением</div>
+            </div>
+          {% endif %}
+          
+          <button class="btn btn--primary" type="submit">Добавить</button>
+        </form>
+      </div>
+    </div>
+    
+    <script src="{% static 'js/product-selector.js' %}"></script>
+    <script src="{% static 'js/efp-checker.js' %}"></script>
+    <script>
+      function checkLineOnEFP(oemCode) {
+        if (!oemCode) {
+          alert('OEM код не указан для этой детали');
+          return;
+        }
+        const input = document.getElementById('efp-oem-input');
+        if (input) {
+          input.value = oemCode;
+        }
+        const btn = document.getElementById('efp-check-btn');
+        if (btn) {
+          btn.click();
+        }
+      }
+    </script>
+  </section>
+
+  <section style="margin-top:14px;">
+    <div class="grid grid--3" style="margin-bottom:14px;">
+      <div class="kv">
+        <div class="kv__k">Позиции в документе</div>
+        <div class="kv__v">{{ lines_count }}</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Ожидаемо (всего)</div>
+        <div class="kv__v">{{ total_expected }}</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Принято (всего)</div>
+        <div class="kv__v">{{ total_received }}</div>
+      </div>
+    </div>
+
+    <div class="card card--glass card--lg">
+      <div class="card__header">
+        <h3 class="h3">Строки приёмки</h3>
+      </div>
+      <div class="card__footer">
+        <div class="stack stack--sm">
+          {% for line in lines %}
+            <div class="kv">
+              <div class="row row--between row--wrap">
+                <div style="flex:1;">
+                  <div class="kv__k">{{ line.product.internal_sku }} · OEM {{ line.product.oem_number }}</div>
+                  <div class="kv__v">{{ line.product.name }}</div>
+                  <div class="hint">
+                    Ожидаемо: {{ line.qty_expected }} · Принято: {{ line.qty_received }}
+                    {% if line.storage_location %}
+                      · Место: {{ line.storage_location }}
+                    {% endif %}
+                  </div>
+                </div>
+                {% if user_role == "STOREKEEPER" or user.is_superuser or user_role == "ADMIN" %}
+                  <div class="row row--wrap">
+                    <button type="button" class="btn btn--ghost" onclick="checkLineOnEFP('{{ line.product.oem_number|default:"" }}')" style="font-size:12px;">Проверить на EFP</button>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% empty %}
+            <p class="muted">Пока нет строк приёмки.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

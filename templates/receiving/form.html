@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — Приёмка{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">{{ title }}</h1>
+      <p class="muted">Создание документа приёмки.</p>
+    </div>
+    <div class="row row--wrap">
+      <a class="btn btn--ghost" href="{% url 'receiving_list' %}">К списку приёмок</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <form method="post" class="form stack">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="toast toast--danger">
+          <div class="toast__title">{{ form.non_field_errors }}</div>
+        </div>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="field">
+          <div class="field__label">{{ field.label }}</div>
+          {{ field }}
+          {% if field.name == "number" %}
+            <div class="hint">Номер подставляется автоматически, при необходимости можно изменить вручную.</div>
+          {% elif field.name == "expected_at" %}
+            <div class="hint">По умолчанию установлена сегодняшняя дата, её можно скорректировать.</div>
+          {% endif %}
+          {% if field.errors %}
+            <div class="hint" style="color: rgba(255,80,120,.9)">{{ field.errors }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="row row--between row--wrap">
+        <button class="btn btn--primary" type="submit">Сохранить</button>
+        <a class="btn btn--ghost" href="{% url 'receiving_list' %}">Отмена</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

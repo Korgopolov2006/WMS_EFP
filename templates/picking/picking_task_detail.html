@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Задача подбора {{ task.order.number }} — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">Задача подбора</h1>
+      <p class="muted">Заказ {{ task.order.number }} — {{ task.get_zone_type_code_display|default:task.zone_type_code }}</p>
+    </div>
+    <div>
+      <a class="btn btn--ghost" href="{% url 'picking_task_list' %}">← К списку</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Информация</h3>
+    </div>
+    <div class="stack">
+      <div class="kv">
+        <div class="kv__k">Статус</div>
+        <div class="kv__v">{{ task.get_status_display }}</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Заказ</div>
+        <div class="kv__v">{{ task.order.number }} — {{ task.order.customer_name }}</div>
+      </div>
+      {% if task.assigned_to %}
+        <div class="kv">
+          <div class="kv__k">Назначен</div>
+          <div class="kv__v">{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</div>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if task.status == 'PENDING' %}
+      <div class="card__footer" style="margin-top:14px;">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="assign" value="1">
+          <button type="submit" class="btn btn--primary btn--block">Взять в работу</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Сканирование OEM</h3>
+    </div>
+    <form method="post" class="form stack">
+      {% csrf_token %}
+      <input type="hidden" name="scan" value="1">
+      <div class="row row--wrap" style="gap:10px;">
+        <div class="field" style="flex:1;min-width:200px;">
+          <div class="field__label">OEM номер</div>
+          <input type="text" name="oem" class="form__input" placeholder="Отсканируйте OEM" autofocus>
+        </div>
+        <div class="field" style="flex:1;min-width:200px;">
+          <div class="field__label">Строка заказа</div>
+          <select name="order_line_id" class="form__input" required>
+            <option value="">Выберите строку</option>
+            {% for item in order_lines_with_remaining %}
+              {% if item.is_pending %}
+                <option value="{{ item.line.pk }}">{{ item.line.product.internal_sku }} — {{ item.line.product.name }} (осталось {{ item.qty_remaining|floatformat:0 }} шт)</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button type="submit" class="btn btn--primary">Подобрать</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Строки заказа</h3>
+    </div>
+    <div class="stack">
+      {% for item in order_lines_with_remaining %}
+        <div class="kv">
+          <div class="row row--between row--wrap">
+            <div>
+              <div class="kv__v">{{ item.line.product.internal_sku }} — {{ item.line.product.name }}</div>
+              <div class="hint">OEM: {{ item.line.product.oem_number }}</div>
+            </div>
+            <div>
+              <div class="kv__v">Заказано: {{ item.line.qty_ordered }} шт</div>
+              <div class="kv__v">Подобрано: {{ item.line.qty_picked }} шт</div>
+              {% if item.is_pending %}
+                <div class="hint" style="color:rgba(255,200,80,.9);">Осталось: {{ item.qty_remaining|floatformat:0 }} шт</div>
+              {% else %}
+                <div class="hint" style="color:rgba(80,255,120,.9);">✓ Полностью подобран</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Строк заказа нет.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Подобранные товары</h3>
+    </div>
+    <div class="stack">
+      {% for picking_line in picking_lines %}
+        <div class="kv">
+          <div class="row row--between row--wrap">
+            <div>
+              <div class="kv__v">{{ picking_line.order_line.product.internal_sku }}</div>
+              <div class="hint">Место: {{ picking_line.stock.storage_location.code }}</div>
+            </div>
+            <div>
+              <div class="kv__v">Подобрано: {{ picking_line.qty_picked }} шт</div>
+              {% if picking_line.scanned_oem %}
+                <div class="hint">OEM: {{ picking_line.scanned_oem }}</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Товары ещё не подобраны.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if task.status == 'IN_PROGRESS' %}
+    <div class="card card--glass card--lg" style="margin-top:14px;">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="complete" value="1">
+        <button type="submit" class="btn btn--primary btn--block">Завершить задачу</button>
+      </form>
+    </div>
+  {% endif %}
+{% endblock %}

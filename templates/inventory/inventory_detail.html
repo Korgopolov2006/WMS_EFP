@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Инвентаризация {{ inventory.number }} — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">{{ inventory.number }}</h1>
+      <p class="muted">Статус: {{ inventory.get_status_display }}</p>
+    </div>
+    <div>
+      <a class="btn btn--ghost" href="{% url 'inventory_list' %}">← К списку</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Добавить строку</h3>
+    </div>
+    <form method="post" class="form stack">
+      {% csrf_token %}
+      <input type="hidden" name="add_line" value="1">
+      <div class="row row--wrap" style="gap:10px;">
+        <div class="field" style="min-width:150px;">
+          <div class="field__label">Товар ID</div>
+          <input type="number" name="product_id" required>
+        </div>
+        <div class="field" style="min-width:150px;">
+          <div class="field__label">Место ID</div>
+          <input type="number" name="location_id" required>
+        </div>
+        <div class="field" style="min-width:120px;">
+          <div class="field__label">Фактически, шт</div>
+          <input type="number" name="qty_actual" step="0.01" required>
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button type="submit" class="btn btn--primary">Добавить</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Строки инвентаризации</h3>
+    </div>
+    <div class="stack">
+      {% for line in lines %}
+        <div class="kv">
+          <div class="row row--between row--wrap">
+            <div>
+              <div class="kv__v">{{ line.product.internal_sku }} — {{ line.product.name }}</div>
+              <div class="hint">Место: {{ line.storage_location.code }}</div>
+            </div>
+            <div>
+              <div class="kv__v">По учёту: {{ line.qty_book }} шт</div>
+              <div class="kv__v">Фактически: {{ line.qty_actual|default:"—" }} шт</div>
+              {% if line.discrepancy != 0 %}
+                <div class="hint" style="color:rgba(255,80,120,.9);">Расхождение: {{ line.discrepancy }} шт</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Строк инвентаризации пока нет.</p>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
