@@ -38,6 +38,16 @@
             <div class="kv__v">{{ receiving.supplier_doc_no|default:"—" }}</div>
           </div>
           <div class="kv">
+            <div class="kv__k">Склад</div>
+            <div class="kv__v">
+              {% if receiving.warehouse %}
+                {{ receiving.warehouse.branch.code }} / {{ receiving.warehouse.code }} — {{ receiving.warehouse.name }}
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+          <div class="kv">
             <div class="kv__k">Создал</div>
             <div class="kv__v">{{ receiving.created_by }}</div>
           </div>
@@ -51,10 +61,23 @@
 
     <div class="card card--glass card--lg">
       <div class="card__header">
-        <h3 class="h3">Добавить строку</h3>
-        <p class="muted">Выберите товар и место хранения, укажите количество.</p>
+        <div class="row row--between row--wrap" style="gap:10px;">
+          <div>
+            <h3 class="h3">Добавить строку</h3>
+            <p class="muted">Место хранения подбирается автоматически по типу упаковки в ваших доступных складах. При необходимости можно выбрать вручную из доступного списка.</p>
+          </div>
+          <div>
+            <a class="btn btn--ghost" href="{{ create_product_url }}">+ Новый товар</a>
+          </div>
+        </div>
       </div>
       <div class="card__footer">
+        {% if not locations_available %}
+          <div class="toast toast--danger" style="margin-bottom:12px;">
+            <div class="toast__title">Нет доступных мест хранения для вашего филиала/склада.</div>
+            <div class="hint">Обратитесь к администратору: нужно назначить вам филиал и доступ к складу.</div>
+          </div>
+        {% endif %}
         <form method="post" action="{% url 'receiving_add_line' receiving.pk %}" class="form stack" id="receiving-line-form">
           {% csrf_token %}
           {% for field in line_form %}
@@ -103,6 +126,78 @@
     </script>
   </section>
 
+  {% if not receiving.warehouse %}
+    <section style="margin-top:14px;">
+      <div class="toast toast--danger">
+        <div class="toast__title">Для документа не указан склад.</div>
+        <div class="hint">Добавление корректных строк и завершение приёмки требуют фиксации склада.</div>
+      </div>
+      <div class="card card--glass card--lg" style="margin-top:10px;">
+        <div class="card__header">
+          <h3 class="h3">Зафиксировать склад документа</h3>
+          <p class="muted">Выберите склад, в котором фактически выполняется эта приёмка.</p>
+        </div>
+        <div class="card__footer">
+          <form method="post" class="row row--wrap" style="gap:10px;align-items:flex-end;">
+            {% csrf_token %}
+            <input type="hidden" name="set_warehouse" value="1">
+            <div class="field" style="min-width:320px;">
+              <div class="field__label">Склад</div>
+              <select name="warehouse_id" class="form__input" required>
+                <option value="">Выберите склад</option>
+                {% for wh in available_warehouses %}
+                  <option value="{{ wh.id }}">{{ wh.branch.code }} / {{ wh.code }} — {{ wh.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn btn--primary">Сохранить склад</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if user_role == "STOREKEEPER" or user.is_superuser or user_role == "ADMIN" %}
+    <section style="margin-top:14px;">
+      <div class="card card--glass card--lg">
+        <div class="card__header">
+          <h3 class="h3">Действия по приёмке</h3>
+          <p class="muted">Сначала добавьте строки и фактическое количество, затем завершите документ.</p>
+        </div>
+        <div class="card__footer">
+          <div class="row row--wrap" style="gap:10px;">
+            {% if receiving.status == "DRAFT" %}
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="change_status" value="1">
+                <input type="hidden" name="status" value="IN_PROGRESS">
+                <button type="submit" class="btn btn--ghost">Начать приёмку</button>
+              </form>
+            {% endif %}
+
+            {% if receiving.status == "DRAFT" or receiving.status == "IN_PROGRESS" %}
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="change_status" value="1">
+                <input type="hidden" name="status" value="COMPLETED">
+                <button type="submit" class="btn btn--primary">Завершить приёмку</button>
+              </form>
+            {% endif %}
+
+            {% if receiving.status == "DRAFT" or receiving.status == "IN_PROGRESS" %}
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="change_status" value="1">
+                <input type="hidden" name="status" value="CANCELLED">
+                <button type="submit" class="btn btn--ghost">Отменить</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
   <section style="margin-top:14px;">
     <div class="grid grid--3" style="margin-bottom:14px;">
       <div class="kv">
@@ -124,6 +219,15 @@
         <h3 class="h3">Строки приёмки</h3>
       </div>
       <div class="card__footer">
+        <form method="get" class="row row--wrap" style="gap:10px;margin-bottom:12px;">
+          <div class="field" style="min-width:260px;">
+            <div class="field__label">Поиск по строкам</div>
+            <input type="text" name="q" value="{{ line_q }}" class="form__input" placeholder="SKU, OEM, место, название">
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button type="submit" class="btn btn--primary">Найти</button>
+          </div>
+        </form>
         <div class="stack stack--sm">
           {% for line in lines %}
             <div class="kv">
@@ -149,6 +253,7 @@
             <p class="muted">Пока нет строк приёмки.</p>
           {% endfor %}
         </div>
+        {% include "partials/pagination.html" with page_obj=page_obj %}
       </div>
     </div>
   </section>

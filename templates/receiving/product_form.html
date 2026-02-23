@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Новый товар для приёмки {{ receiving.number }} — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">Новый товар</h1>
+      <p class="muted">Создание карточки товара для приёмки {{ receiving.number }}.</p>
+    </div>
+    <div class="row row--wrap">
+      <a class="btn btn--ghost" href="{{ next_url }}">Назад к приёмке</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Быстрое заполнение</h3>
+      <p class="muted">Введите OEM/SKU/название существующего товара и подтяните поля в форму.</p>
+    </div>
+    <div class="card__footer">
+      <div class="row row--wrap" style="gap:10px;align-items:flex-end;">
+        <div class="field" style="min-width:320px;">
+          <div class="field__label">Поиск шаблона товара</div>
+          <input id="prefill-query" class="form__input" type="text" placeholder="OEM, SKU или название">
+        </div>
+        <button id="prefill-btn" type="button" class="btn btn--ghost">Подтянуть поля</button>
+      </div>
+      <div id="prefill-msg" class="hint" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <form method="post" enctype="multipart/form-data" class="form stack">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+
+      {% if form.non_field_errors %}
+        <div class="toast toast--danger">
+          <div class="toast__title">{{ form.non_field_errors }}</div>
+        </div>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="field">
+          <div class="field__label">{{ field.label }}</div>
+          {% if field.name == "brand" %}
+            <input class="form__input js-option-filter" data-target="id_brand" type="text" placeholder="Поиск бренда..." style="margin-bottom:8px;">
+          {% elif field.name == "category" %}
+            <input class="form__input js-option-filter" data-target="id_category" type="text" placeholder="Поиск категории..." style="margin-bottom:8px;">
+          {% elif field.name == "applicability" %}
+            <input class="form__input js-option-filter" data-target="id_applicability" type="text" placeholder="Поиск по марке/модели..." style="margin-bottom:8px;">
+          {% endif %}
+          {{ field }}
+          {% if field.name == "packaging_type" %}
+            <div class="hint">Тип упаковки влияет на предложение места хранения при приёмке.</div>
+          {% elif field.name == "applicability" %}
+            <div class="hint">Список можно фильтровать поиском выше. Выбор множественный (Ctrl/Shift).</div>
+          {% endif %}
+          {% if field.errors %}
+            <div class="hint" style="color: rgba(255,80,120,.9)">{{ field.errors }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="row row--between row--wrap">
+        <button class="btn btn--primary" type="submit">Создать товар</button>
+        <a class="btn btn--ghost" href="{{ next_url }}">Отмена</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    (function() {
+      const prefillQuery = document.getElementById("prefill-query");
+      const prefillBtn = document.getElementById("prefill-btn");
+      const prefillMsg = document.getElementById("prefill-msg");
+      const prefillUrl = "{% url 'receiving_product_prefill' receiving.pk %}";
+      const oemInput = document.getElementById("id_oem_number");
+      const skuInput = document.getElementById("id_internal_sku");
+      const nameInput = document.getElementById("id_name");
+
+      function setMsg(text, isError) {
+        if (!prefillMsg) return;
+        prefillMsg.textContent = text || "";
+        prefillMsg.style.color = isError ? "rgba(255,80,120,.95)" : "var(--hint)";
+      }
+
+      function setMsgWithLinks(text, isError, links) {
+        if (!prefillMsg) return;
+        prefillMsg.textContent = "";
+        const label = document.createElement("span");
+        label.textContent = text || "";
+        prefillMsg.appendChild(label);
+
+        (links || []).forEach((item) => {
+          if (!item || !item.href) return;
+          const sep = document.createTextNode(" ");
+          const a = document.createElement("a");
+          a.href = item.href;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = item.label || "Открыть";
+          a.style.marginLeft = "8px";
+          prefillMsg.appendChild(sep);
+          prefillMsg.appendChild(a);
+        });
+        prefillMsg.style.color = isError ? "rgba(255,80,120,.95)" : "var(--hint)";
+      }
+
+      function setInputValue(id, value, overwriteIfEmptyOnly = true) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (overwriteIfEmptyOnly && el.value && String(el.value).trim() !== "") return;
+        el.value = value || "";
+      }
+
+      function setSelectValue(id, value, overwriteIfEmptyOnly = true) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (overwriteIfEmptyOnly && el.value && String(el.value).trim() !== "") return;
+        el.value = value || "";
+      }
+
+      function setMultiSelectValues(id, values) {
+        const el = document.getElementById(id);
+        if (!el || !Array.isArray(values)) return;
+        const selectedNow = Array.from(el.selectedOptions || []);
+        if (selectedNow.length > 0) return; // не перетираем ручной выбор
+        const setVals = new Set(values.map(String));
+        for (const opt of el.options) {
+          opt.selected = setVals.has(String(opt.value));
+        }
+      }
+
+      async function fetchPrefillPayload(query, tryEfp, taskId = "") {
+        const url = new URL(prefillUrl, window.location.origin);
+        url.searchParams.set("q", query);
+        if (tryEfp) {
+          url.searchParams.set("try_efp", "1");
+          url.searchParams.set("async_mode", "1");
+        }
+        if (taskId) {
+          url.searchParams.set("task_id", taskId);
+        }
+        const res = await fetch(url.toString());
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = {};
+        }
+        return { res, data };
+      }
+
+      function wait(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      async function runPrefill(query, options = {}) {
+          const silentMode = !!options.silentMode;
+          const tryEfp = !!options.tryEfp;
+          const q = (query || "").trim();
+          if (q.length < 2) {
+            if (!silentMode) setMsg("Введите минимум 2 символа для поиска.", true);
+            return;
+          }
+          if (!silentMode) {
+            setMsg(
+              tryEfp
+                ? "Ищем товар в номенклатуре и при необходимости проверяем EFP..."
+                : "Ищем подходящий товар в номенклатуре...",
+              false
+            );
+          }
+          try {
+            let taskId = "";
+            let finalRes = null;
+            let finalData = null;
+
+            const maxAttempts = tryEfp ? 20 : 1;
+            for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+              const payload = await fetchPrefillPayload(q, tryEfp, taskId);
+              finalRes = payload.res;
+              finalData = payload.data;
+
+              if (finalRes.status === 202 && finalData.queued && finalData.task_id) {
+                taskId = finalData.task_id;
+                if (!silentMode) {
+                  const prefix = finalData.queue_warning ? `${finalData.queue_warning} ` : "";
+                  setMsg(`${prefix}Проверяем EFP в фоновом режиме... (${attempt}/${maxAttempts})`, false);
+                }
+                await wait(1200);
+                continue;
+              }
+
+              break;
+            }
+
+            if (!finalRes || !finalData || !finalRes.ok || !finalData.success) {
+              if (!silentMode) {
+                const links = [];
+                if (finalData && finalData.manual_url) {
+                  links.push({ href: finalData.manual_url, label: "Открыть поиск EFP" });
+                }
+                if (finalData && finalData.queued) {
+                  setMsgWithLinks(
+                    "Проверка EFP занимает больше времени, чем ожидалось. Попробуйте снова через несколько секунд.",
+                    true,
+                    links
+                  );
+                  return;
+                }
+                const details = finalData && finalData.details ? ` (${finalData.details})` : "";
+                const errorText = finalData && finalData.error
+                  ? finalData.error
+                  : "Не удалось подтянуть данные.";
+                setMsgWithLinks(errorText + details, true, links);
+              }
+              return;
+            }
+
+            const p = finalData.prefill || {};
+            // SKU не заполняем автоматически, чтобы не поймать конфликт уникальности.
+            setInputValue("id_name", p.name || "", true);
+            setInputValue("id_oem_number", p.oem_number || "", true);
+            setInputValue("id_analog_number", p.analog_number || "", true);
+            setSelectValue("id_brand", String(p.brand_id || ""), true);
+            setSelectValue("id_category", String(p.category_id || ""), true);
+            setSelectValue("id_packaging_type", p.packaging_type || "", true);
+            setInputValue("id_weight_kg", p.weight_kg || "", true);
+            setInputValue("id_length_cm", p.length_cm || "", true);
+            setInputValue("id_width_cm", p.width_cm || "", true);
+            setInputValue("id_height_cm", p.height_cm || "", true);
+            setMultiSelectValues("id_applicability", p.applicability_ids || []);
+
+            const src = finalData.source || {};
+            if (!silentMode) {
+              if (finalData.source_type === "efp") {
+                const links = [];
+                if (src.detail_url) {
+                  links.push({ href: src.detail_url, label: "Карточка в EFP" });
+                }
+                if (src.manual_url) {
+                  links.push({ href: src.manual_url, label: "Поиск в EFP" });
+                }
+                setMsgWithLinks(
+                  finalData.warning || "Локальный товар не найден. Часть данных подтянута из EFP.",
+                  false,
+                  links
+                );
+              } else {
+                setMsg(`Данные подтянуты из товара: ${src.internal_sku || "-"} — ${src.name || "-"}.`, false);
+              }
+            }
+          } catch (e) {
+            if (!silentMode) setMsg("Ошибка запроса при подтягивании данных.", true);
+          }
+      }
+
+      if (prefillBtn && prefillQuery) {
+        prefillBtn.addEventListener("click", () => {
+          const query = (prefillQuery.value || "").trim();
+          const isOemQuery = oemInput && query && query === (oemInput.value || "").trim();
+          runPrefill(query, { silentMode: false, tryEfp: !!isOemQuery });
+        });
+      }
+
+      function tryAutoPrefillFrom(field, options = {}) {
+        const tryEfp = !!options.tryEfp;
+        if (!field) return;
+        field.addEventListener("blur", () => {
+          const val = (field.value || "").trim();
+          if (val.length < 3) return;
+          if (nameInput && (nameInput.value || "").trim() !== "") return;
+          if (prefillQuery && !prefillQuery.value.trim()) {
+            prefillQuery.value = val;
+          }
+          runPrefill(val, { silentMode: true, tryEfp });
+        });
+      }
+
+      tryAutoPrefillFrom(oemInput, { tryEfp: true });
+      tryAutoPrefillFrom(skuInput, { tryEfp: false });
+
+      function attachOptionFilters() {
+        const filters = document.querySelectorAll(".js-option-filter");
+        filters.forEach((input) => {
+          const targetId = input.getAttribute("data-target");
+          const select = document.getElementById(targetId);
+          if (!select) return;
+
+          input.addEventListener("input", () => {
+            const q = (input.value || "").trim().toLowerCase();
+            for (const opt of select.options) {
+              const text = (opt.textContent || "").toLowerCase();
+              const selected = !!opt.selected;
+              const visible = !q || text.includes(q) || selected;
+              opt.hidden = !visible;
+            }
+          });
+        });
+      }
+
+      attachOptionFilters();
+    })();
+  </script>
+{% endblock %}

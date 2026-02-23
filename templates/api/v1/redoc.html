@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap" style="margin-bottom:12px;">
+    <div>
+      <h1 class="h2">ReDoc</h1>
+      <p class="muted">Статическая документация API v1.</p>
+    </div>
+    <div class="row row--wrap">
+      <a class="btn btn--ghost" href="{{ spec_url }}" target="_blank" rel="noopener">OpenAPI JSON</a>
+      <a class="btn btn--ghost" href="{% url 'api_v1_docs' %}">Swagger UI</a>
+    </div>
+  </div>
+  <redoc spec-url="{{ spec_url }}"></redoc>
+  <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+{% endblock %}

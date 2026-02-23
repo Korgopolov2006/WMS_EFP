@@ -86,6 +86,13 @@ class InventoryService:
             return False, [
                 f"Не заполнены фактические количества для {incomplete_lines.count()} строк"
             ]
+
+        non_integer_lines = [
+            line for line in inventory.lines.all()
+            if line.qty_actual is not None and line.qty_actual != line.qty_actual.to_integral_value()
+        ]
+        if non_integer_lines:
+            return False, ["Фактические количества должны быть целыми числами (шт)"]
         
         # Обновляем остатки
         updated_count = 0

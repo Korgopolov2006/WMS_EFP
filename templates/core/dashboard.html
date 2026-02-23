@@ -4,10 +4,27 @@
 {% block title %}Дашборд — WMS{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=20260219-2">
+  <style>
+    .dashboard-page {
+      color: var(--text);
+    }
+    .dashboard-page h1,
+    .dashboard-page h2,
+    .dashboard-page h3,
+    .dashboard-page p,
+    .dashboard-page li {
+      color: var(--text);
+    }
+    .dashboard-page .muted,
+    .dashboard-page .progress-bar__text {
+      color: var(--muted);
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
+  <div class="dashboard-page">
   <div class="row row--between row--wrap dashboard-toolbar">
     <div class="stack stack--sm">
       <h1 class="h2">Сегодня в работе</h1>
@@ -150,4 +167,5 @@
       {% endfor %}
     </div>
   </section>
+  </div>
 {% endblock %}

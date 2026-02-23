@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 
 from catalog.models import Product
 from .models import Order, OrderLine
@@ -31,9 +32,19 @@ class OrderLineForm(forms.ModelForm):
         widgets = {
             "product": forms.HiddenInput(),
             "qty_ordered": forms.NumberInput(
-                attrs={"class": "form__input", "min": 0, "step": "0.01", "placeholder": "Количество"}
+                attrs={"class": "form__input", "min": 1, "step": 1, "placeholder": "Количество"}
             ),
             "price": forms.NumberInput(
                 attrs={"class": "form__input", "min": 0, "step": "0.01", "placeholder": "Цена (опционально)"}
             ),
         }
+
+    def clean_qty_ordered(self):
+        value = self.cleaned_data.get("qty_ordered")
+        if value is None:
+            raise ValidationError("Количество обязательно.")
+        if value != value.to_integral_value():
+            raise ValidationError("Количество должно быть целым числом (шт).")
+        if value <= 0:
+            raise ValidationError("Количество должно быть больше нуля.")
+        return value

@@ -301,6 +301,7 @@
         <p class="muted">Строк заказа пока нет.</p>
       {% endfor %}
     </div>
+    {% include "partials/pagination.html" with page_obj=line_page_obj %}
   </div>
 
   {% if can_add_lines %}

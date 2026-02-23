@@ -59,6 +59,15 @@
     <div class="card__header">
       <h3 class="h3">Места хранения</h3>
     </div>
+    <form method="get" class="row row--wrap" style="gap:10px;margin-bottom:12px;">
+      <div class="field" style="min-width:260px;">
+        <div class="field__label">Поиск по местам</div>
+        <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="Код места, зона, партия">
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button type="submit" class="btn btn--primary">Найти</button>
+      </div>
+    </form>
     <div class="stack">
       {% for item in stock_items %}
         <div class="kv">
@@ -82,5 +91,6 @@
         <p class="muted">Остатков по местам хранения нет.</p>
       {% endfor %}
     </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
   </div>
 {% endblock %}

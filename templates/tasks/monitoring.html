@@ -3,79 +3,521 @@
 
 {% block title %}{{ title }} — WMS{% endblock %}
 
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    .tm-shell {
+      display: grid;
+      gap: 14px;
+    }
+
+    .tm-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .tm-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(148, 163, 184, .12);
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .tm-live__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 6px rgba(34, 197, 94, .18);
+      animation: tmPulse 1.7s ease-out infinite;
+    }
+
+    @keyframes tmPulse {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, .35); }
+      70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    .tm-intro {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .tm-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .tm-kpi {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .tm-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .tm-bars {
+      display: grid;
+      gap: 8px;
+    }
+
+    .tm-bar {
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: rgba(148, 163, 184, .08);
+    }
+
+    .tm-bar__head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .tm-bar__track {
+      width: 100%;
+      height: 7px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(148, 163, 184, .26);
+    }
+
+    .tm-bar__fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(59, 130, 246, .85), rgba(6, 182, 212, .85));
+    }
+
+    .tm-table-wrap {
+      overflow-x: auto;
+    }
+
+    .tm-table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+    }
+
+    .tm-table th,
+    .tm-table td {
+      padding: 10px 9px;
+      border-bottom: 1px solid var(--stroke);
+      vertical-align: top;
+    }
+
+    .tm-table th {
+      text-align: left;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: var(--muted);
+    }
+
+    .tm-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .tm-badge--pending {
+      color: #a16207;
+      border-color: rgba(234, 179, 8, .45);
+      background: rgba(234, 179, 8, .16);
+    }
+
+    .tm-badge--progress {
+      color: #0369a1;
+      border-color: rgba(2, 132, 199, .45);
+      background: rgba(2, 132, 199, .14);
+    }
+
+    .tm-badge--urgent {
+      color: #9f1239;
+      border-color: rgba(244, 63, 94, .5);
+      background: rgba(244, 63, 94, .16);
+    }
+
+    .tm-badge--high {
+      color: #b45309;
+      border-color: rgba(249, 115, 22, .45);
+      background: rgba(249, 115, 22, .14);
+    }
+
+    .tm-badge--normal {
+      color: #1d4ed8;
+      border-color: rgba(59, 130, 246, .45);
+      background: rgba(59, 130, 246, .12);
+    }
+
+    .tm-badge--low {
+      color: #334155;
+      border-color: rgba(100, 116, 139, .45);
+      background: rgba(100, 116, 139, .14);
+    }
+
+    .tm-danger {
+      color: #be123c;
+      font-weight: 600;
+    }
+
+    :root[data-theme="dark"] .tm-badge--pending { color: #fcd34d; }
+    :root[data-theme="dark"] .tm-badge--progress { color: #7dd3fc; }
+    :root[data-theme="dark"] .tm-badge--urgent { color: #fda4af; }
+    :root[data-theme="dark"] .tm-badge--high { color: #fdba74; }
+    :root[data-theme="dark"] .tm-badge--normal { color: #93c5fd; }
+    :root[data-theme="dark"] .tm-badge--low { color: #cbd5e1; }
+
+    @media (max-width: 1120px) {
+      .tm-kpi {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 980px) {
+      .tm-intro,
+      .tm-grid,
+      .tm-kpi {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+{% endblock %}
+
 {% block content %}
-  <div class="row row--between row--wrap">
-    <div>
-      <h1 class="h2">{{ title }}</h1>
-      <p class="muted">Мониторинг задач подбора в реальном времени.</p>
+  <section class="tm-shell">
+    <div class="tm-header">
+      <div>
+        <h1 class="h2">{{ title }}</h1>
+        <p class="muted">Оперативная панель по задачам подбора и универсальным задачам склада.</p>
+      </div>
+      <div class="row row--wrap">
+        <span class="tm-live">
+          <span class="tm-live__dot"></span>
+          <span id="tm-last-update">Обновление...</span>
+        </span>
+        <button type="button" class="btn btn--ghost" id="tm-refresh-btn">Обновить</button>
+        <a class="btn btn--ghost" href="{% url 'task_list' %}">Все задачи</a>
+        <a class="btn btn--ghost" href="{% url 'picking_task_list' %}">Задачи подбора</a>
+      </div>
     </div>
-  </div>
 
-  <div class="grid grid--4" style="margin-top:14px;gap:14px;">
-    <div class="card card--glass">
-      <div class="card__header">
-        <div class="hint">Активные заказы</div>
-        <div class="h2" id="stat-active-orders">—</div>
-      </div>
-    </div>
-    <div class="card card--glass">
-      <div class="card__header">
-        <div class="hint">Ожидают</div>
-        <div class="h2" id="stat-pending-tasks">—</div>
-      </div>
-    </div>
-    <div class="card card--glass">
-      <div class="card__header">
-        <div class="hint">В работе</div>
-        <div class="h2" id="stat-in-progress-tasks">—</div>
-      </div>
-    </div>
-    <div class="card card--glass">
-      <div class="card__header">
-        <div class="hint">Завершено сегодня</div>
-        <div class="h2" id="stat-completed-today">—</div>
-      </div>
-    </div>
-  </div>
+    <section class="tm-intro">
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Как читать мониторинг</h3>
+        <ul class="tm-list">
+          <li>Сначала смотри нагрузку: активные заказы, задачи в ожидании и в работе.</li>
+          <li>Потом проверяй просроченные и застарелые задачи, чтобы не копить хвосты.</li>
+          <li>Распределение по зонам покажет узкие места маршрутов подбора.</li>
+        </ul>
+      </article>
+      <article class="card card--glass card--lg">
+        <h3 class="h3">На что реагировать в первую очередь</h3>
+        <ul class="tm-list">
+          <li>Рост ожидающих при низком завершении сегодня сигнализирует о перегрузе смены.</li>
+          <li>Просроченные универсальные задачи повышают риск срыва операций.</li>
+          <li>Если средний возраст активных задач растет, нужно перераспределять людей по зонам.</li>
+        </ul>
+      </article>
+    </section>
 
-  <div class="card card--glass card--lg" style="margin-top:14px;">
-    <div class="card__header">
-      <h3 class="h3">Активные задачи</h3>
-    </div>
-    <div id="tasks-list" class="stack">
-      <p class="muted">Загрузка...</p>
-    </div>
-  </div>
+    <section class="tm-kpi">
+      <article class="kv">
+        <div class="kv__k">Активные заказы</div>
+        <div class="kv__v h3" id="stat-active-orders">—</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Подбор: ожидают</div>
+        <div class="kv__v h3" id="stat-pending-tasks">—</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Подбор: в работе</div>
+        <div class="kv__v h3" id="stat-in-progress-tasks">—</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Завершено сегодня</div>
+        <div class="kv__v h3" id="stat-completed-today">—</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Просроченные задачи</div>
+        <div class="kv__v h3" id="stat-overdue-universal">—</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Средний возраст активных задач</div>
+        <div class="kv__v h3" id="stat-avg-open-age">—</div>
+      </article>
+    </section>
+
+    <section class="tm-grid">
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Нагрузка по зонам подбора</h3>
+        <p class="hint" style="margin-bottom:10px;">Помогает понять, где образуется очередь.</p>
+        <div id="zone-load-list" class="tm-bars">
+          <p class="muted">Загрузка...</p>
+        </div>
+      </article>
+
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Универсальные задачи</h3>
+        <div class="grid grid--2" style="gap:10px;">
+          <div>
+            <div class="hint" style="margin-bottom:8px;">По типам</div>
+            <div id="universal-by-type" class="tm-bars">
+              <p class="muted">Загрузка...</p>
+            </div>
+          </div>
+          <div>
+            <div class="hint" style="margin-bottom:8px;">По приоритетам</div>
+            <div id="universal-by-priority" class="tm-bars">
+              <p class="muted">Загрузка...</p>
+            </div>
+          </div>
+        </div>
+        <div class="row row--wrap" style="margin-top:10px;">
+          <span class="tm-badge tm-badge--pending">Ожидают: <span id="stat-universal-pending" style="margin-left:4px;">—</span></span>
+          <span class="tm-badge tm-badge--progress">В работе: <span id="stat-universal-progress" style="margin-left:4px;">—</span></span>
+          <span class="tm-badge tm-badge--urgent">Просрочено: <span id="stat-universal-overdue-inline" style="margin-left:4px;">—</span></span>
+        </div>
+      </article>
+    </section>
+
+    <section class="card card--glass card--lg">
+      <div class="card__header" style="padding:0 0 10px;">
+        <h3 class="h3">Активные задачи подбора</h3>
+      </div>
+      <div class="tm-table-wrap">
+        <table class="tm-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Заказ</th>
+              <th>Зона</th>
+              <th>Статус</th>
+              <th>Исполнитель</th>
+              <th>Создана</th>
+              <th>Возраст</th>
+            </tr>
+          </thead>
+          <tbody id="picking-tasks-body">
+            <tr><td colspan="7" class="muted" style="text-align:center;padding:20px;">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint" id="stat-stale-tasks" style="margin-top:10px;">Проверка застарелых задач...</p>
+    </section>
+
+    <section class="card card--glass card--lg">
+      <div class="card__header" style="padding:0 0 10px;">
+        <h3 class="h3">Универсальные задачи (оперативно)</h3>
+      </div>
+      <div class="tm-table-wrap">
+        <table class="tm-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Тип и приоритет</th>
+              <th>Задача</th>
+              <th>Документ</th>
+              <th>Срок</th>
+              <th>Статус</th>
+              <th>Исполнитель</th>
+            </tr>
+          </thead>
+          <tbody id="universal-tasks-body">
+            <tr><td colspan="7" class="muted" style="text-align:center;padding:20px;">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </section>
 
   <script>
     (function() {
+      var refreshMs = {{ refresh_interval_sec|default:8 }} * 1000;
+      var orderUrlTemplate = '{% url "order_detail" 0 %}';
+      var pickingTaskUrlTemplate = '{% url "picking_task_detail" 0 %}';
+      var taskDetailUrlTemplate = '{% url "task_detail" 0 %}';
+
+      function byId(id) {
+        return document.getElementById(id);
+      }
+
+      function withId(urlTemplate, id) {
+        return urlTemplate.replace(/0\/$/, String(id) + '/');
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      function formatDate(value) {
+        if (!value) return '—';
+        var date = new Date(value);
+        if (isNaN(date.getTime())) return '—';
+        return date.toLocaleString('ru-RU', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+
+      function formatAgeHours(isoDate) {
+        if (!isoDate) return '—';
+        var created = new Date(isoDate);
+        if (isNaN(created.getTime())) return '—';
+        var hours = Math.max(0, (Date.now() - created.getTime()) / 3600000);
+        return hours >= 24 ? (hours / 24).toFixed(1) + ' дн.' : hours.toFixed(1) + ' ч';
+      }
+
+      function renderBars(containerId, items, options) {
+        var container = byId(containerId);
+        if (!container) return;
+        if (!items || !items.length) {
+          container.innerHTML = '<p class="muted">Нет данных.</p>';
+          return;
+        }
+        var total = options.total || items.reduce(function(acc, item) { return acc + (item.count || 0); }, 0) || 1;
+        var labelKey = options.labelKey;
+        container.innerHTML = items.map(function(item) {
+          var label = item[labelKey] || '—';
+          var count = item.count || 0;
+          var share = Math.round((count / total) * 1000) / 10;
+          return '' +
+            '<div class="tm-bar">' +
+              '<div class="tm-bar__head"><span>' + escapeHtml(label) + '</span><span>' + count + ' (' + share + '%)</span></div>' +
+              '<div class="tm-bar__track"><div class="tm-bar__fill" style="width:' + share + '%;"></div></div>' +
+            '</div>';
+        }).join('');
+      }
+
+      function statusBadge(status) {
+        if (status === 'IN_PROGRESS') return '<span class="tm-badge tm-badge--progress">В работе</span>';
+        if (status === 'PENDING') return '<span class="tm-badge tm-badge--pending">Ожидает</span>';
+        return '<span class="tm-badge">' + escapeHtml(status || '—') + '</span>';
+      }
+
+      function priorityBadge(priorityLabel, priorityCode) {
+        if (priorityCode === 'URGENT') return '<span class="tm-badge tm-badge--urgent">' + escapeHtml(priorityLabel) + '</span>';
+        if (priorityCode === 'HIGH') return '<span class="tm-badge tm-badge--high">' + escapeHtml(priorityLabel) + '</span>';
+        if (priorityCode === 'LOW') return '<span class="tm-badge tm-badge--low">' + escapeHtml(priorityLabel) + '</span>';
+        return '<span class="tm-badge tm-badge--normal">' + escapeHtml(priorityLabel) + '</span>';
+      }
+
       function updateMonitoring() {
         fetch('{% url "tasks_monitoring_api" %}')
           .then(function(r) { return r.json(); })
           .then(function(data) {
-            document.getElementById('stat-active-orders').textContent = data.active_orders || 0;
-            document.getElementById('stat-pending-tasks').textContent = data.pending_tasks || 0;
-            document.getElementById('stat-in-progress-tasks').textContent = data.in_progress_tasks || 0;
-            document.getElementById('stat-completed-today').textContent = data.completed_tasks_today || 0;
+            byId('stat-active-orders').textContent = data.active_orders || 0;
+            byId('stat-pending-tasks').textContent = data.pending_tasks || 0;
+            byId('stat-in-progress-tasks').textContent = data.in_progress_tasks || 0;
+            byId('stat-completed-today').textContent = data.completed_tasks_today || 0;
+            byId('stat-overdue-universal').textContent = data.universal_overdue || 0;
+            byId('stat-avg-open-age').textContent = (data.avg_open_age_hours || 0) + ' ч';
+            byId('stat-universal-pending').textContent = data.universal_pending || 0;
+            byId('stat-universal-progress').textContent = data.universal_in_progress || 0;
+            byId('stat-universal-overdue-inline').textContent = data.universal_overdue || 0;
 
-            var tasksList = document.getElementById('tasks-list');
-            if (data.recent_tasks && data.recent_tasks.length > 0) {
-              tasksList.innerHTML = data.recent_tasks.map(function(t) {
-                var statusClass = t.status === 'IN_PROGRESS' ? 'rgba(45,212,191,.2)' : 'rgba(124,92,255,.2)';
-                var statusText = t.status === 'IN_PROGRESS' ? 'В работе' : 'Ожидает';
-                return '<div class="kv"><div class="row row--between row--wrap"><div><div class="kv__v">Заказ ' + t.order_number + '</div><div class="hint">' + t.zone_type_code + '</div></div><div><span style="padding:4px 8px;border-radius:6px;background:' + statusClass + ';">' + statusText + '</span></div></div></div>';
+            renderBars('zone-load-list', (data.zone_load || []).map(function(item) {
+              return { label: item.zone_type_code || 'Не указана', count: item.count || 0 };
+            }), { labelKey: 'label', total: (data.pending_tasks || 0) + (data.in_progress_tasks || 0) });
+            renderBars('universal-by-type', data.universal_by_type || [], { labelKey: 'label' });
+            renderBars('universal-by-priority', data.universal_by_priority || [], { labelKey: 'label' });
+
+            var stale = data.stale_picking_count || 0;
+            var staleEl = byId('stat-stale-tasks');
+            if (stale > 0) {
+              staleEl.innerHTML = 'Застарелые активные задачи (&gt; 4 часов): <span class="tm-danger">' + stale + '</span>';
+            } else {
+              staleEl.textContent = 'Застарелых активных задач (> 4 часов) не обнаружено.';
+            }
+
+            var pickingBody = byId('picking-tasks-body');
+            if (data.recent_tasks && data.recent_tasks.length) {
+              pickingBody.innerHTML = data.recent_tasks.map(function(t) {
+                var orderLink = t.order_id ? '<a href="' + withId(orderUrlTemplate, t.order_id) + '">' + escapeHtml(t.order_number) + '</a>' : escapeHtml(t.order_number);
+                var taskLink = '<a href="' + withId(pickingTaskUrlTemplate, t.id) + '">#' + t.id + '</a>';
+                return '' +
+                  '<tr>' +
+                    '<td>' + taskLink + '</td>' +
+                    '<td>' + orderLink + '</td>' +
+                    '<td>' + escapeHtml(t.zone_type_code || '—') + '</td>' +
+                    '<td>' + statusBadge(t.status) + '</td>' +
+                    '<td>' + escapeHtml(t.assigned_to || '—') + '</td>' +
+                    '<td>' + formatDate(t.created_at) + '</td>' +
+                    '<td>' + formatAgeHours(t.created_at) + '</td>' +
+                  '</tr>';
               }).join('');
             } else {
-              tasksList.innerHTML = '<p class="muted">Нет активных задач.</p>';
+              pickingBody.innerHTML = '<tr><td colspan="7" class="muted" style="text-align:center;padding:20px;">Нет активных задач подбора.</td></tr>';
             }
+
+            var universalBody = byId('universal-tasks-body');
+            if (data.universal_tasks && data.universal_tasks.length) {
+              universalBody.innerHTML = data.universal_tasks.map(function(t) {
+                var dueValue = t.due_date ? formatDate(t.due_date) : 'Без срока';
+                var dueHtml = t.is_overdue ? '<span class="tm-danger">' + dueValue + '</span>' : dueValue;
+                return '' +
+                  '<tr>' +
+                    '<td><a href="' + withId(taskDetailUrlTemplate, t.id) + '">#' + t.id + '</a></td>' +
+                    '<td>' +
+                      '<div>' + escapeHtml(t.type_label || t.type) + '</div>' +
+                      '<div style="margin-top:4px;">' + priorityBadge(t.priority_label || t.priority, t.priority) + '</div>' +
+                    '</td>' +
+                    '<td>' +
+                      '<div>' + escapeHtml(t.title || '—') + '</div>' +
+                      '<div class="hint">' + formatDate(t.created_at) + '</div>' +
+                    '</td>' +
+                    '<td>' + escapeHtml(t.reference || '—') + '</td>' +
+                    '<td>' + dueHtml + '</td>' +
+                    '<td>' + statusBadge(t.status) + '</td>' +
+                    '<td>' + escapeHtml(t.assigned_to || '—') + '</td>' +
+                  '</tr>';
+              }).join('');
+            } else {
+              universalBody.innerHTML = '<tr><td colspan="7" class="muted" style="text-align:center;padding:20px;">Нет универсальных задач в работе.</td></tr>';
+            }
+
+            byId('tm-last-update').textContent = 'Обновлено: ' + formatDate(data.generated_at);
           })
           .catch(function(err) {
             console.error('Failed to update monitoring:', err);
+            byId('tm-last-update').textContent = 'Ошибка обновления, повтор через ' + Math.round(refreshMs / 1000) + ' сек';
           });
       }
 
+      byId('tm-refresh-btn').addEventListener('click', updateMonitoring);
       updateMonitoring();
-      setInterval(updateMonitoring, 5000);
+      setInterval(updateMonitoring, refreshMs);
     })();
   </script>
 {% endblock %}

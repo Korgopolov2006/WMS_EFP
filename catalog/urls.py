@@ -26,9 +26,9 @@ urlpatterns = [
     path("api/warehouses/<int:warehouse_id>/objects/", views_api.warehouse_object_create, name="catalog_warehouse_object_create"),
     path("api/warehouses/<int:warehouse_id>/objects/<int:pk>/", views_api.warehouse_object_delete, name="catalog_warehouse_object_delete"),
     path("admin/products/", views.product_list, name="catalog_product_list"),
+    path("admin/products/audit/", views.product_audit_list, name="catalog_product_audit_list"),
     path("admin/products/new/", views.product_create, name="catalog_product_create"),
     path("admin/products/<int:pk>/edit/", views.product_update, name="catalog_product_update"),
     path("admin/products/<int:pk>/xref/", views.product_xref, name="catalog_product_xref"),
     path("admin/products/<int:pk>/xref/<int:xref_id>/delete/", views.product_xref_delete, name="catalog_product_xref_delete"),
 ]
-

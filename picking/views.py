@@ -4,6 +4,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -24,6 +25,11 @@ from .services import (
 )
 
 
+def _paginate(request: HttpRequest, items, per_page: int = 5):
+    paginator = Paginator(items, per_page)
+    return paginator.get_page(request.GET.get("page"))
+
+
 @role_required(Roles.ADMIN, Roles.SALES_MANAGER, Roles.STOREKEEPER)
 def order_list(request: HttpRequest) -> HttpResponse:
     q = (request.GET.get("q") or "").strip()
@@ -42,17 +48,19 @@ def order_list(request: HttpRequest) -> HttpResponse:
         qs = qs.filter(status=status)
 
     qs = qs.order_by("-id")
+    page_obj = _paginate(request, qs, per_page=5)
 
     return render(
         request,
         "picking/order_list.html",
         {
-            "orders": qs,
+            "orders": page_obj.object_list,
             "q": q,
             "status": status,
             "statuses": OrderStatus.choices,
             "title": "Заказы",
             "subtitle": "Управление заказами на отгрузку",
+            "page_obj": page_obj,
         },
     )
 
@@ -199,6 +207,7 @@ def order_detail(request: HttpRequest, pk: int) -> HttpResponse:
                 "state_tone": line_state_tone,
             }
         )
+    line_page_obj = _paginate(request, line_rows, per_page=5)
 
     can_add_lines = order.status == OrderStatus.DRAFT
     can_confirm = order.status == OrderStatus.DRAFT and total_lines > 0
@@ -211,7 +220,7 @@ def order_detail(request: HttpRequest, pk: int) -> HttpResponse:
     context = {
         "order": order,
         "lines": lines_list,
-        "line_rows": line_rows,
+        "line_rows": line_page_obj.object_list,
         "line_form": line_form,
         "picking_tasks": picking_tasks_list,
         "status_steps": status_steps,
@@ -230,6 +239,7 @@ def order_detail(request: HttpRequest, pk: int) -> HttpResponse:
         "can_ship": can_ship,
         "title": f"Заказ {order.number}",
         "subtitle": f"Клиент: {order.customer_name}",
+        "line_page_obj": line_page_obj,
     }
     return render(request, "picking/order_detail.html", context)
 
@@ -245,6 +255,7 @@ def order_line_delete(request: HttpRequest, pk: int, line_pk: int) -> HttpRespon
 
 @role_required(Roles.ADMIN, Roles.SMALL_PARTS_PICKER, Roles.LOADER)
 def picking_task_list(request: HttpRequest) -> HttpResponse:
+    q = (request.GET.get("q") or "").strip()
     status = (request.GET.get("status") or "").strip()
     zone_type = (request.GET.get("zone_type") or "").strip()
     order_id = (request.GET.get("order_id") or "").strip()
@@ -257,6 +268,13 @@ def picking_task_list(request: HttpRequest) -> HttpResponse:
         qs = qs.filter(zone_type_code=zone_type)
     if order_id.isdigit():
         qs = qs.filter(order_id=int(order_id))
+    if q:
+        qs = qs.filter(
+            Q(order__number__icontains=q)
+            | Q(order__customer_name__icontains=q)
+            | Q(zone_type_code__icontains=q)
+            | Q(assigned_to__username__icontains=q)
+        )
 
     if request.user.role == Roles.SMALL_PARTS_PICKER:
         qs = qs.filter(zone_type_code="CELL")
@@ -264,15 +282,18 @@ def picking_task_list(request: HttpRequest) -> HttpResponse:
         qs = qs.filter(zone_type_code__in=["SHELF", "FLOOR"])
 
     qs = qs.order_by("-id")
+    page_obj = _paginate(request, qs, per_page=5)
 
     return render(
         request,
         "picking/picking_task_list.html",
         {
-            "tasks": qs,
+            "tasks": page_obj.object_list,
+            "q": q,
             "status": status,
             "zone_type": zone_type,
             "statuses": PickingTaskStatus.choices,
+            "page_obj": page_obj,
         },
     )
 
@@ -291,7 +312,7 @@ def picking_task_detail(request: HttpRequest, pk: int) -> HttpResponse:
         }
         for line in order_lines
     ]
-    picking_lines = task.lines.select_related("order_line", "stock", "stock__storage_location").all()
+    picking_lines = task.lines.select_related("order_line", "stock", "stock__storage_location").order_by("-id")
 
     if request.method == "POST":
         if "assign" in request.POST:
@@ -366,10 +387,12 @@ def picking_task_detail(request: HttpRequest, pk: int) -> HttpResponse:
                     messages.error(request, msg)
             return redirect("picking_task_detail", pk=pk)
 
+    picking_lines_page_obj = _paginate(request, picking_lines, per_page=5)
     context = {
         "task": task,
         "order_lines_with_remaining": order_lines_with_remaining,
-        "picking_lines": picking_lines,
+        "picking_lines": picking_lines_page_obj.object_list,
+        "page_obj": picking_lines_page_obj,
     }
     return render(request, "picking/picking_task_detail.html", context)
 

@@ -2,7 +2,30 @@
 
 {% block title %}Приёмка — WMS{% endblock %}
 
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    .receiving-page {
+      color: var(--text);
+    }
+    .receiving-page h1,
+    .receiving-page h2,
+    .receiving-page h3,
+    .receiving-page p,
+    .receiving-page li {
+      color: var(--text);
+    }
+    .receiving-page .muted {
+      color: var(--muted);
+    }
+    .receiving-page .hint {
+      color: var(--hint);
+    }
+  </style>
+{% endblock %}
+
 {% block content %}
+  <section class="receiving-page">
   <div class="row row--between row--wrap">
     <div></div>
     <div>
@@ -37,24 +60,30 @@
       <p class="muted">Учёт входящих поставок и подготовка к размещению.</p>
     </div>
     <div class="row row--wrap">
+      <a class="btn btn--ghost" href="{% url 'supplier_list' %}">Поставщики</a>
       <a class="btn btn--primary" href="{% url 'receiving_create' %}">+ Новая приёмка</a>
     </div>
   </div>
 
   <div class="card card--glass card--lg" style="margin-top:14px;">
-    <div class="row row--between row--wrap">
+    <form method="get" class="row row--wrap" style="gap:10px;">
+      <div class="field" style="min-width:240px;">
+        <div class="field__label">Поиск</div>
+        <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="Номер, поставщик, док. поставщика">
+      </div>
       <div class="field" style="min-width:180px;">
         <div class="field__label">Статус</div>
-        <form method="get">
-          <select name="status" onchange="this.form.submit()">
-            <option value="">Все</option>
-            {% for code,label in statuses %}
-              <option value="{{ code }}" {% if status == code %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-        </form>
+        <select name="status" class="form__input">
+          <option value="">Все</option>
+          {% for code,label in statuses %}
+            <option value="{{ code }}" {% if status == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
       </div>
-    </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button type="submit" class="btn btn--primary">Применить</button>
+      </div>
+    </form>
 
     <div class="stack" style="margin-top:14px;">
       {% for item in items %}
@@ -63,6 +92,9 @@
             <div>
               <div class="hint">{{ item.get_status_display }}</div>
               <div class="kv__v">{{ item.number }} — {{ item.supplier_name }}</div>
+              {% if item.warehouse %}
+                <div class="hint">Склад: {{ item.warehouse.branch.code }} / {{ item.warehouse.code }}</div>
+              {% endif %}
               {% if item.supplier_doc_no %}
                 <div class="hint">Документ поставщика: {{ item.supplier_doc_no }}</div>
               {% endif %}
@@ -79,5 +111,7 @@
         <p class="muted">Документов приёмки пока нет.</p>
       {% endfor %}
     </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
   </div>
+  </section>
 {% endblock %}

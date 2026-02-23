@@ -25,8 +25,8 @@
       </ul>
       
       <h3>Выполнение задач</h3>
-      <p>Для задач в статусе "Ожидают выполнения" доступна кнопка <strong>Начать</strong>. После начала задача переходит в статус "В работе".</p>
-      <p>Для задач в статусе "В работе" доступна кнопка <strong>Завершить</strong>. После завершения задача закрывается.</p>
+      <p>Для задач в статусе "Ожидают выполнения" доступна кнопка <strong>Взять задачу</strong> (или <strong>Начать</strong>, если задача уже назначена на вас). После начала задача переходит в статус "В работе".</p>
+      <p>Для задач в статусе "В работе" доступна кнопка <strong>Завершить</strong>. Для задач приёмки сначала нужно завершить сам документ приёмки.</p>
       
       <h3>Связанные документы</h3>
       <p>Каждая задача может быть связана с документом (приёмка, инвентаризация, заказ, задача подбора). Переходите по ссылкам для просмотра деталей.</p>
@@ -49,6 +49,10 @@
 
   <div class="card card--glass card--lg" style="margin-top:14px;">
     <form method="get" class="row row--wrap" style="gap:10px;margin-bottom:14px;">
+      <div class="field" style="min-width:220px;">
+        <div class="field__label">Поиск</div>
+        <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="Название, заказ, документ, сотрудник">
+      </div>
       <div class="field" style="min-width:180px;">
         <div class="field__label">Тип задачи</div>
         <select name="type" onchange="this.form.submit()" class="form__input">
@@ -70,11 +74,14 @@
       {% if user.is_superuser or user_role == "ADMIN" %}
         <div style="display:flex;align-items:flex-end;">
           <label style="display:flex;align-items:center;gap:8px;">
-            <input type="checkbox" name="my_tasks" value="1" {% if request.GET.my_tasks == "1" %}checked{% endif %} onchange="this.form.submit()">
+            <input type="checkbox" name="my_tasks" value="1" {% if my_tasks %}checked{% endif %} onchange="this.form.submit()">
             <span>Только мои</span>
           </label>
         </div>
       {% endif %}
+      <div style="display:flex;align-items:flex-end;">
+        <button type="submit" class="btn btn--primary">Применить</button>
+      </div>
     </form>
 
     <div class="stack">
@@ -137,14 +144,20 @@
             
             <div class="row row--wrap" style="gap:8px;">
               <a class="btn btn--ghost" href="{% url 'task_detail' task.id %}">Открыть</a>
-              {% if task.status == 'PENDING' and task.assigned_to == user %}
+              {% if task.id in startable_task_ids %}
                 <form method="post" action="{% url 'task_detail' task.id %}" style="display:inline;">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="start">
-                  <button type="submit" class="btn btn--primary">Начать</button>
+                  <button type="submit" class="btn btn--primary">
+                    {% if task.assigned_to_id and task.assigned_to_id == user.id %}
+                      Начать
+                    {% else %}
+                      Взять задачу
+                    {% endif %}
+                  </button>
                 </form>
               {% endif %}
-              {% if task.status == 'IN_PROGRESS' and task.assigned_to == user %}
+              {% if task.id in completable_task_ids %}
                 <form method="post" action="{% url 'task_detail' task.id %}" style="display:inline;">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="complete">
@@ -158,5 +171,6 @@
         <p class="muted" style="text-align:center;padding:40px;">Задач не найдено.</p>
       {% endfor %}
     </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
   </div>
 {% endblock %}

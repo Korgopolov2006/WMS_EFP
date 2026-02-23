@@ -41,19 +41,24 @@
   </div>
 
   <div class="card card--glass card--lg" style="margin-top:14px;">
-    <div class="row row--between row--wrap">
+    <form method="get" class="row row--wrap" style="gap:10px;">
+      <div class="field" style="min-width:240px;">
+        <div class="field__label">Поиск</div>
+        <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="Номер, зона, создатель">
+      </div>
       <div class="field" style="min-width:180px;">
         <div class="field__label">Статус</div>
-        <form method="get">
-          <select name="status" onchange="this.form.submit()">
-            <option value="">Все</option>
-            <option value="DRAFT" {% if status == "DRAFT" %}selected{% endif %}>Черновик</option>
-            <option value="IN_PROGRESS" {% if status == "IN_PROGRESS" %}selected{% endif %}>В процессе</option>
-            <option value="COMPLETED" {% if status == "COMPLETED" %}selected{% endif %}>Завершена</option>
-          </select>
-        </form>
+        <select name="status" class="form__input">
+          <option value="">Все</option>
+          <option value="DRAFT" {% if status == "DRAFT" %}selected{% endif %}>Черновик</option>
+          <option value="IN_PROGRESS" {% if status == "IN_PROGRESS" %}selected{% endif %}>В процессе</option>
+          <option value="COMPLETED" {% if status == "COMPLETED" %}selected{% endif %}>Завершена</option>
+        </select>
       </div>
-    </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button type="submit" class="btn btn--primary">Применить</button>
+      </div>
+    </form>
 
     <div class="stack" style="margin-top:14px;">
       {% for item in items %}
@@ -75,5 +80,6 @@
         <p class="muted">Инвентаризаций пока нет.</p>
       {% endfor %}
     </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
   </div>
 {% endblock %}

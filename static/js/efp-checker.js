@@ -80,32 +80,92 @@
     document.body.style.overflow = 'hidden';
     
     // Показываем загрузку
-    resultsContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="hint">Поиск детали на EFP Parts...</div></div>';
+    resultsContainer.innerHTML = '<div style="text-align:center;padding:40px;"><div class="hint">Запускаем фоновую проверку EFP...</div></div>';
 
-    // Делаем запрос
-    fetch(`/efp/search/?oem=${encodeURIComponent(oemCode)}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && data.results && data.results.length > 0) {
-          displayEFPResults(data.results, oemCode);
-        } else {
-          resultsContainer.innerHTML = `
-            <div style="text-align:center;padding:40px;">
-              <div class="hint" style="color:rgba(255,80,120,.9);">${data.error || 'Деталь не найдена'}</div>
-              <button class="btn btn--ghost" style="margin-top:20px;" onclick="document.getElementById('efp-modal').classList.remove('help-modal--active'); document.body.style.overflow='';">Закрыть</button>
-            </div>
-          `;
+    runAsyncSearch(oemCode, resultsContainer);
+  }
+
+  async function runAsyncSearch(oemCode, resultsContainer) {
+    try {
+      const startUrl = `/efp/search/?oem=${encodeURIComponent(oemCode)}&async_mode=1`;
+      const startResponse = await fetch(startUrl);
+      const startData = await safeJson(startResponse);
+      if (!startData || !startData.task_id) {
+        if (startData && startData.success && startData.results && startData.results.length > 0) {
+          displayEFPResults(startData.results, oemCode);
+          return;
         }
-      })
-      .catch(error => {
-        console.error('EFP search error:', error);
-        resultsContainer.innerHTML = `
-          <div style="text-align:center;padding:40px;">
-            <div class="hint" style="color:rgba(255,80,120,.9);">Ошибка подключения к EFP Parts</div>
-            <button class="btn btn--ghost" style="margin-top:20px;" onclick="document.getElementById('efp-modal').classList.remove('help-modal--active'); document.body.style.overflow='';">Закрыть</button>
-          </div>
-        `;
-      });
+        renderEFPError((startData && (startData.error || startData.message)) || 'Не удалось запустить фоновую проверку EFP', startData && startData.manual_url);
+        return;
+      }
+
+      const taskId = startData.task_id;
+      const maxAttempts = 20;
+      const pollDelayMs = 1200;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        resultsContainer.innerHTML = `<div style="text-align:center;padding:40px;"><div class="hint">Проверка EFP выполняется... (${attempt}/${maxAttempts})</div></div>`;
+        await wait(pollDelayMs);
+        const pollUrl = `/efp/search/?oem=${encodeURIComponent(oemCode)}&async_mode=1&task_id=${encodeURIComponent(taskId)}`;
+        const pollResponse = await fetch(pollUrl);
+        const pollData = await safeJson(pollResponse);
+        if (!pollData) {
+          continue;
+        }
+        if (pollResponse.status === 202 && pollData.queued) {
+          continue;
+        }
+        if (pollData.success && pollData.results && pollData.results.length > 0) {
+          displayEFPResults(pollData.results, oemCode);
+          return;
+        }
+        renderEFPError(pollData.error || pollData.message || 'Деталь не найдена', pollData.manual_url);
+        return;
+      }
+
+      renderEFPError(
+        'Проверка EFP заняла слишком много времени. Попробуйте повторить или открыть поиск вручную.',
+        `http://efp-parts.ru/search?pcode=${encodeURIComponent(oemCode)}`
+      );
+    } catch (error) {
+      console.error('EFP search error:', error);
+      renderEFPError(
+        'Ошибка подключения к EFP Parts',
+        `http://efp-parts.ru/search?pcode=${encodeURIComponent(oemCode)}`
+      );
+    }
+  }
+
+  async function safeJson(response) {
+    try {
+      return await response.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function wait(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  function renderEFPError(message, manualUrl) {
+    const resultsContainer = document.getElementById('efp-results');
+    if (!resultsContainer) {
+      return;
+    }
+    const manualLink = manualUrl
+      ? `<a class="btn btn--primary" style="margin-top:12px;" href="${manualUrl}" target="_blank" rel="noopener">Открыть EFP вручную</a>`
+      : '';
+
+    resultsContainer.innerHTML = `
+      <div style="text-align:center;padding:40px;">
+        <div class="hint" style="color:rgba(255,80,120,.9);">${message}</div>
+        ${manualLink}
+        <button class="btn btn--ghost" style="margin-top:12px;" onclick="document.getElementById('efp-modal').classList.remove('help-modal--active'); document.body.style.overflow='';">Закрыть</button>
+      </div>
+    `;
   }
 
   function displayEFPResults(results, oemCode) {

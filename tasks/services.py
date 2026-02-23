@@ -8,6 +8,7 @@ from __future__ import annotations
 from django.utils import timezone
 
 from accounts.constants import Roles
+from receiving.models import ReceivingStatus
 from .models import Task, TaskStatus, TaskType, TaskPriority
 
 
@@ -112,22 +113,47 @@ class TaskService:
         Returns:
             True, если назначение успешно
         """
+        if task.status != TaskStatus.PENDING:
+            return False
+
+        # Обычный пользователь не может перехватить уже назначенную задачу.
+        if task.assigned_to and task.assigned_to != user and not (user.is_superuser or user.role == Roles.ADMIN):
+            return False
+
         if not task.can_be_assigned_to(user):
             return False
-        
+
+        # Для приёмки нельзя начать задачу по уже закрытому документу.
+        if task.task_type == TaskType.RECEIVING and task.receiving:
+            if task.receiving.status in [ReceivingStatus.COMPLETED, ReceivingStatus.CANCELLED]:
+                return False
+
         task.assigned_to = user
         task.status = TaskStatus.IN_PROGRESS
         task.started_at = timezone.now()
         task.save(update_fields=["assigned_to", "status", "started_at"])
-        
+
+        # Старт задачи приёмки переводит документ в "В процессе".
+        if task.task_type == TaskType.RECEIVING and task.receiving and task.receiving.status == ReceivingStatus.DRAFT:
+            task.receiving.status = ReceivingStatus.IN_PROGRESS
+            task.receiving.save(update_fields=["status"])
+
         return True
 
     @staticmethod
     def complete_task(task: Task, user) -> bool:
         """Завершает задачу."""
-        if task.assigned_to != user and not user.is_superuser:
+        if task.status != TaskStatus.IN_PROGRESS:
             return False
-        
+
+        if task.assigned_to != user and not user.is_superuser and user.role != Roles.ADMIN:
+            return False
+
+        # Задача приёмки закрывается только после завершения документа приёмки.
+        if task.task_type == TaskType.RECEIVING:
+            if not task.receiving or task.receiving.status != ReceivingStatus.COMPLETED:
+                return False
+
         task.status = TaskStatus.COMPLETED
         task.completed_at = timezone.now()
         task.save(update_fields=["status", "completed_at"])

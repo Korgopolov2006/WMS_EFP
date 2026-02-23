@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from django import forms
+from django.core.exceptions import ValidationError
 
 from .models import (
     Brand,
@@ -13,6 +14,7 @@ from .models import (
     VehicleMake,
     VehicleModel,
 )
+from .product_validation import validate_product_numbers_uniqueness
 
 
 class BrandForm(forms.ModelForm):
@@ -71,7 +73,7 @@ class ProductForm(forms.ModelForm):
         label="Применимость (модели ТС)",
         queryset=VehicleModel.objects.select_related("make").all().order_by("make__name", "name"),
         required=False,
-        widget=forms.SelectMultiple(attrs={"size": "8"}),
+        widget=forms.SelectMultiple(attrs={"size": "12"}),
     )
 
     class Meta:
@@ -94,8 +96,29 @@ class ProductForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["brand"].queryset = Brand.objects.all().order_by("name")
+        self.fields["category"].queryset = Category.objects.all().order_by("name")
         if self.instance and self.instance.pk:
             self.fields["applicability"].initial = self.instance.applicability.all()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        oem_number = (cleaned_data.get("oem_number") or "").strip()
+        analog_number = (cleaned_data.get("analog_number") or "").strip()
+
+        cleaned_data["oem_number"] = oem_number
+        cleaned_data["analog_number"] = analog_number
+
+        try:
+            validate_product_numbers_uniqueness(
+                oem_number=oem_number,
+                analog_number=analog_number,
+                exclude_id=self.instance.pk if self.instance and self.instance.pk else None,
+            )
+        except ValidationError as exc:
+            self.add_error("oem_number", exc)
+
+        return cleaned_data
 
     def save(self, commit: bool = True):
         obj = super().save(commit=commit)
@@ -108,4 +131,3 @@ class ProductCrossReferenceForm(forms.ModelForm):
     class Meta:
         model = ProductCrossReference
         fields = ["to_product", "relation_type", "note"]
-

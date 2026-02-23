@@ -31,7 +31,7 @@
         </div>
         <div class="field" style="min-width:120px;">
           <div class="field__label">Фактически, шт</div>
-          <input type="number" name="qty_actual" step="0.01" required>
+          <input type="number" name="qty_actual" min="0" step="1" required>
         </div>
         <div style="display:flex;align-items:flex-end;">
           <button type="submit" class="btn btn--primary">Добавить</button>
@@ -44,6 +44,15 @@
     <div class="card__header">
       <h3 class="h3">Строки инвентаризации</h3>
     </div>
+    <form method="get" class="row row--wrap" style="gap:10px;margin-bottom:12px;">
+      <div class="field" style="min-width:260px;">
+        <div class="field__label">Поиск по строкам</div>
+        <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="SKU, название, место">
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button type="submit" class="btn btn--primary">Найти</button>
+      </div>
+    </form>
     <div class="stack">
       {% for line in lines %}
         <div class="kv">
@@ -65,5 +74,6 @@
         <p class="muted">Строк инвентаризации пока нет.</p>
       {% endfor %}
     </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
   </div>
 {% endblock %}

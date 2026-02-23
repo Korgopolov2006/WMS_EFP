@@ -4,6 +4,8 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from .normalization import normalize_part_number
+
 
 class TimeStampedModel(models.Model):
     created_at = models.DateTimeField("Создано", auto_now_add=True)
@@ -273,6 +275,8 @@ class Product(TimeStampedModel):
 
     oem_number = models.CharField("OEM номер", max_length=64, db_index=True)
     analog_number = models.CharField("Номер аналога", max_length=64, blank=True, db_index=True)
+    oem_number_normalized = models.CharField(max_length=64, blank=True, default="", editable=False, db_index=True)
+    analog_number_normalized = models.CharField(max_length=64, blank=True, default="", editable=False, db_index=True)
 
     brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name="products", verbose_name="Бренд")
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products", verbose_name="Категория")
@@ -341,6 +345,18 @@ class Product(TimeStampedModel):
     def __str__(self) -> str:
         return f"{self.internal_sku} — {self.name}"
 
+    def save(self, *args, **kwargs):
+        self.oem_number_normalized = normalize_part_number(self.oem_number)
+        self.analog_number_normalized = normalize_part_number(self.analog_number)
+        from .product_validation import validate_product_numbers_uniqueness
+
+        validate_product_numbers_uniqueness(
+            oem_number=self.oem_number,
+            analog_number=self.analog_number,
+            exclude_id=self.pk,
+        )
+        super().save(*args, **kwargs)
+
 
 class ProductApplicability(TimeStampedModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="fitments", verbose_name="Товар")
@@ -403,6 +419,43 @@ class ProductCrossReference(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.from_product} → {self.to_product} ({self.relation_type})"
+
+
+class ProductChangeLog(TimeStampedModel):
+    class Action(models.TextChoices):
+        CREATE = "CREATE", "Создание"
+        UPDATE = "UPDATE", "Изменение"
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="change_logs",
+        verbose_name="Товар",
+    )
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="product_change_logs",
+        verbose_name="Пользователь",
+    )
+    action = models.CharField("Действие", max_length=16, choices=Action.choices, db_index=True)
+    source = models.CharField("Источник", max_length=32, default="ui")
+    changed_fields = models.JSONField("Изменения", default=dict, blank=True)
+    note = models.CharField("Комментарий", max_length=255, blank=True)
+
+    class Meta:
+        verbose_name = "Журнал изменения товара"
+        verbose_name_plural = "Журнал изменений товаров"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["product", "created_at"], name="idx_prod_chlog_product_created"),
+            models.Index(fields=["action", "created_at"], name="idx_prod_chlog_action_created"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.product.internal_sku}: {self.get_action_display()} ({self.created_at:%d.%m.%Y %H:%M})"
 
 
 class Backorder(TimeStampedModel):

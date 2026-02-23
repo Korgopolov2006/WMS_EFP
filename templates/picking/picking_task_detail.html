@@ -128,6 +128,7 @@
         <p class="muted">Товары ещё не подобраны.</p>
       {% endfor %}
     </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
   </div>
 
   {% if task.status == 'IN_PROGRESS' %}
