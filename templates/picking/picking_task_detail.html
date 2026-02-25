@@ -55,18 +55,25 @@
       <div class="row row--wrap" style="gap:10px;">
         <div class="field" style="flex:1;min-width:200px;">
           <div class="field__label">OEM номер</div>
-          <input type="text" name="oem" class="form__input" placeholder="Отсканируйте OEM" autofocus>
+          <input id="scan_oem" type="text" name="oem" class="form__input" placeholder="Отсканируйте OEM" autofocus>
         </div>
         <div class="field" style="flex:1;min-width:200px;">
           <div class="field__label">Строка заказа</div>
-          <select name="order_line_id" class="form__input" required>
+          <select id="order_line_id" name="order_line_id" class="form__input">
             <option value="">Выберите строку</option>
             {% for item in order_lines_with_remaining %}
               {% if item.is_pending %}
-                <option value="{{ item.line.pk }}">{{ item.line.product.internal_sku }} — {{ item.line.product.name }} (осталось {{ item.qty_remaining|floatformat:0 }} шт)</option>
+                <option
+                  value="{{ item.line.pk }}"
+                  data-oem="{{ item.line.product.oem_number }}"
+                  {% if item.line.pk == default_order_line_id %}selected{% endif %}
+                >
+                  {{ item.line.product.internal_sku }} — {{ item.line.product.name }} (осталось {{ item.qty_remaining|floatformat:0 }} шт)
+                </option>
               {% endif %}
             {% endfor %}
           </select>
+          <div class="hint">Подставляется автоматически по OEM, при необходимости можно выбрать вручную.</div>
         </div>
         <div style="display:flex;align-items:flex-end;">
           <button type="submit" class="btn btn--primary">Подобрать</button>
@@ -140,4 +147,39 @@
       </form>
     </div>
   {% endif %}
+
+  <script>
+    (function () {
+      var oemInput = document.getElementById("scan_oem");
+      var lineSelect = document.getElementById("order_line_id");
+      if (!oemInput || !lineSelect) return;
+
+      var manuallyChanged = false;
+      lineSelect.addEventListener("change", function () {
+        manuallyChanged = true;
+      });
+
+      function normalizeOem(value) {
+        return (value || "").toUpperCase().replace(/[^A-Z0-9А-ЯЁ]/g, "");
+      }
+
+      function autoSelectByOem() {
+        if (manuallyChanged) return;
+        var target = normalizeOem(oemInput.value);
+        if (!target) return;
+
+        var matches = Array.prototype.filter.call(lineSelect.options, function (opt) {
+          if (!opt.value) return false;
+          return normalizeOem(opt.dataset.oem) === target;
+        });
+
+        if (matches.length === 1) {
+          lineSelect.value = matches[0].value;
+        }
+      }
+
+      oemInput.addEventListener("input", autoSelectByOem);
+      oemInput.addEventListener("blur", autoSelectByOem);
+    })();
+  </script>
 {% endblock %}

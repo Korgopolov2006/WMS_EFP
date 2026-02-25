@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from accounts.constants import Roles
 from accounts.permissions import role_required
 from catalog.models import Product
+from tasks.models import TaskType
 
 from .forms import OrderForm, OrderLineForm
 from .models import Order, OrderLine, OrderStatus, PickingTask, PickingTaskStatus
@@ -30,12 +31,24 @@ def _paginate(request: HttpRequest, items, per_page: int = 5):
     return paginator.get_page(request.GET.get("page"))
 
 
-@role_required(Roles.ADMIN, Roles.SALES_MANAGER, Roles.STOREKEEPER)
+def _normalize_oem(value: str) -> str:
+    return "".join(ch for ch in (value or "").upper() if ch.isalnum())
+
+
+@role_required(Roles.ADMIN, Roles.SALES_MANAGER, Roles.STOREKEEPER, Roles.LOADER)
 def order_list(request: HttpRequest) -> HttpResponse:
     q = (request.GET.get("q") or "").strip()
     status = (request.GET.get("status") or "").strip()
+    can_create_order = bool(request.user.is_superuser or request.user.role in [Roles.ADMIN, Roles.SALES_MANAGER])
 
     qs = Order.objects.select_related("created_by", "picked_by").all()
+
+    if request.user.role == Roles.LOADER and not request.user.is_superuser:
+        # Грузчик видит заказы на этапе отгрузки и связанные с его shipping-задачами.
+        qs = qs.filter(
+            Q(status__in=[OrderStatus.PICKED, OrderStatus.RESERVED, OrderStatus.SHIPPED])
+            | Q(tasks__task_type=TaskType.SHIPPING, tasks__assigned_to=request.user)
+        ).distinct()
 
     if q:
         qs = qs.filter(
@@ -61,6 +74,7 @@ def order_list(request: HttpRequest) -> HttpResponse:
             "title": "Заказы",
             "subtitle": "Управление заказами на отгрузку",
             "page_obj": page_obj,
+            "can_create_order": can_create_order,
         },
     )
 
@@ -81,9 +95,30 @@ def order_create(request: HttpRequest) -> HttpResponse:
     return render(request, "picking/order_form.html", {"form": form, "title": "Новый заказ"})
 
 
-@role_required(Roles.ADMIN, Roles.SALES_MANAGER, Roles.STOREKEEPER)
+@role_required(Roles.ADMIN, Roles.SALES_MANAGER, Roles.STOREKEEPER, Roles.SMALL_PARTS_PICKER, Roles.LOADER)
 def order_detail(request: HttpRequest, pk: int) -> HttpResponse:
-    order = get_object_or_404(Order.objects.select_related("created_by", "picked_by"), pk=pk)
+    can_manage_order = bool(
+        request.user.is_superuser
+        or request.user.role in [Roles.ADMIN, Roles.SALES_MANAGER, Roles.STOREKEEPER]
+    )
+    can_ship_order = bool(
+        request.user.is_superuser
+        or request.user.role in [Roles.ADMIN, Roles.SALES_MANAGER, Roles.STOREKEEPER, Roles.LOADER]
+    )
+
+    order_qs = Order.objects.select_related("created_by", "picked_by")
+    if not can_manage_order:
+        if request.user.role == Roles.SMALL_PARTS_PICKER:
+            order_qs = order_qs.filter(picking_tasks__zone_type_code="CELL")
+        elif request.user.role == Roles.LOADER:
+            order_qs = order_qs.filter(
+                Q(picking_tasks__zone_type_code__in=["SHELF", "FLOOR"])
+                | Q(status__in=[OrderStatus.PICKED, OrderStatus.RESERVED, OrderStatus.SHIPPED])
+                | Q(tasks__task_type=TaskType.SHIPPING, tasks__assigned_to=request.user)
+            )
+        order_qs = order_qs.distinct()
+
+    order = get_object_or_404(order_qs, pk=pk)
     lines = order.lines.select_related("product", "product__brand", "product__category").all()
     picking_tasks = order.picking_tasks.select_related("assigned_to").all()
     lines_list = list(lines)
@@ -92,6 +127,9 @@ def order_detail(request: HttpRequest, pk: int) -> HttpResponse:
 
     if request.method == "POST":
         if "add_line" in request.POST:
+            if not can_manage_order:
+                messages.error(request, "Для вашей роли недоступно редактирование состава заказа.")
+                return redirect("order_detail", pk=pk)
             if order.status != OrderStatus.DRAFT:
                 messages.error(request, "Добавлять строки можно только в статусе 'Черновик'.")
                 return redirect("order_detail", pk=pk)
@@ -119,8 +157,44 @@ def order_detail(request: HttpRequest, pk: int) -> HttpResponse:
             msg_list: list[str] = []
 
             if new_status == OrderStatus.CONFIRMED:
+                if not can_manage_order:
+                    messages.error(request, "Для вашей роли недоступно подтверждение заказа.")
+                    return redirect("order_detail", pk=pk)
                 success, msg_list = OrderService.confirm_order(order)
             elif new_status == OrderStatus.SHIPPED:
+                if not can_ship_order:
+                    messages.error(request, "Для вашей роли недоступно подтверждение отгрузки.")
+                    return redirect("order_detail", pk=pk)
+
+                confirmation_errors: list[str] = []
+                if request.POST.get("ship_check_package") != "1":
+                    confirmation_errors.append("Подтвердите проверку комплектности и упаковки.")
+                if request.POST.get("ship_check_documents") != "1":
+                    confirmation_errors.append("Подтвердите передачу отгрузочных документов.")
+
+                confirm_number = (request.POST.get("ship_confirm_number") or "").strip()
+                if confirm_number != order.number:
+                    confirmation_errors.append("Номер заказа для подтверждения введён неверно.")
+
+                window_number = (request.POST.get("ship_window_number") or "").strip()
+                if not window_number:
+                    confirmation_errors.append("Укажите номер окна выдачи.")
+
+                if confirmation_errors:
+                    for err in confirmation_errors:
+                        messages.error(request, err)
+                    return redirect("order_detail", pk=pk)
+
+                updated_fields: list[str] = []
+                if order.window_number != window_number:
+                    order.window_number = window_number
+                    updated_fields.append("window_number")
+                if not order.reserved_at_window:
+                    order.reserved_at_window = True
+                    updated_fields.append("reserved_at_window")
+                if updated_fields:
+                    order.save(update_fields=updated_fields)
+
                 success, msg_list = OrderService.ship_order(order, request.user)
             else:
                 msg_list = ["Ручной перевод в этот статус запрещён. Используйте операции подтверждения/отгрузки."]
@@ -209,13 +283,16 @@ def order_detail(request: HttpRequest, pk: int) -> HttpResponse:
         )
     line_page_obj = _paginate(request, line_rows, per_page=5)
 
-    can_add_lines = order.status == OrderStatus.DRAFT
-    can_confirm = order.status == OrderStatus.DRAFT and total_lines > 0
+    can_add_lines = can_manage_order and order.status == OrderStatus.DRAFT
+    can_confirm = can_manage_order and order.status == OrderStatus.DRAFT and total_lines > 0
     can_ship = (
+        can_ship_order
+        and
         order.status in [OrderStatus.PICKED, OrderStatus.RESERVED]
         and total_qty_ordered > 0
         and total_qty_picked >= total_qty_ordered
     )
+    back_url = "order_list" if (can_manage_order or request.user.role == Roles.LOADER) else "picking_task_list"
 
     context = {
         "order": order,
@@ -237,6 +314,9 @@ def order_detail(request: HttpRequest, pk: int) -> HttpResponse:
         "can_add_lines": can_add_lines,
         "can_confirm": can_confirm,
         "can_ship": can_ship,
+        "can_manage_order": can_manage_order,
+        "can_ship_order": can_ship_order,
+        "back_url": back_url,
         "title": f"Заказ {order.number}",
         "subtitle": f"Клиент: {order.customer_name}",
         "line_page_obj": line_page_obj,
@@ -337,43 +417,65 @@ def picking_task_detail(request: HttpRequest, pk: int) -> HttpResponse:
                 return redirect("picking_task_detail", pk=pk)
             oem = request.POST.get("oem", "").strip()
             order_line_id = request.POST.get("order_line_id", "").strip()
+            normalized_oem = _normalize_oem(oem)
 
-            if oem and order_line_id.isdigit():
+            if not normalized_oem:
+                messages.error(request, "Введите OEM номер.")
+                return redirect("picking_task_detail", pk=pk)
+
+            order_line = None
+            if order_line_id.isdigit():
                 order_line = next((line for line in order_lines if line.pk == int(order_line_id)), None)
-                if not order_line:
-                    messages.error(request, "Строка заказа не относится к этой задаче подбора.")
+            else:
+                pending_matches = [
+                    line
+                    for line in order_lines
+                    if (line.qty_ordered > line.qty_picked)
+                    and _normalize_oem(line.product.oem_number) == normalized_oem
+                ]
+                if len(pending_matches) == 1:
+                    order_line = pending_matches[0]
+                elif len(pending_matches) > 1:
+                    messages.error(request, "По этому OEM найдено несколько строк. Выберите нужную строку вручную.")
                     return redirect("picking_task_detail", pk=pk)
-                product = order_line.product
-
-                if product.oem_number != oem:
-                    messages.error(request, f"OEM не совпадает! Ожидается: {product.oem_number}, отсканирован: {oem}")
-                    return redirect("picking_task_detail", pk=pk)
-
-                stock = suggest_stock_for_order_line(order_line)
-                if not stock:
-                    messages.error(request, "Не найдено подходящего остатка для подбора.")
-                    return redirect("picking_task_detail", pk=pk)
-
-                qty_needed = order_line.qty_ordered - order_line.qty_picked
-                if qty_needed <= 0:
-                    messages.warning(request, "Товар уже полностью подобран.")
-                    return redirect("picking_task_detail", pk=pk)
-
-                qty_to_pick = min(qty_needed, stock.qty_available)
-
-                if reserve_stock_for_order_line(order_line, stock, qty_to_pick):
-                    picking_line, created = task.lines.get_or_create(
-                        order_line=order_line,
-                        stock=stock,
-                        defaults={"qty_picked": qty_to_pick, "scanned_oem": oem},
-                    )
-                    if not created:
-                        picking_line.qty_picked += qty_to_pick
-                        picking_line.scanned_oem = oem
-                        picking_line.save(update_fields=["qty_picked", "scanned_oem"])
-                    messages.success(request, f"Подобрано {qty_to_pick} шт. из {stock.storage_location.code}")
                 else:
-                    messages.error(request, "Ошибка при резервировании остатка.")
+                    messages.error(request, "Не удалось автоматически определить строку заказа. Выберите строку вручную.")
+                    return redirect("picking_task_detail", pk=pk)
+
+            if not order_line:
+                messages.error(request, "Строка заказа не относится к этой задаче подбора.")
+                return redirect("picking_task_detail", pk=pk)
+            product = order_line.product
+
+            if _normalize_oem(product.oem_number) != normalized_oem:
+                messages.error(request, f"OEM не совпадает! Ожидается: {product.oem_number}, отсканирован: {oem}")
+                return redirect("picking_task_detail", pk=pk)
+
+            stock = suggest_stock_for_order_line(order_line)
+            if not stock:
+                messages.error(request, "Не найдено подходящего остатка для подбора.")
+                return redirect("picking_task_detail", pk=pk)
+
+            qty_needed = order_line.qty_ordered - order_line.qty_picked
+            if qty_needed <= 0:
+                messages.warning(request, "Товар уже полностью подобран.")
+                return redirect("picking_task_detail", pk=pk)
+
+            qty_to_pick = min(qty_needed, stock.qty_available)
+
+            if reserve_stock_for_order_line(order_line, stock, qty_to_pick):
+                picking_line, created = task.lines.get_or_create(
+                    order_line=order_line,
+                    stock=stock,
+                    defaults={"qty_picked": qty_to_pick, "scanned_oem": oem},
+                )
+                if not created:
+                    picking_line.qty_picked += qty_to_pick
+                    picking_line.scanned_oem = oem
+                    picking_line.save(update_fields=["qty_picked", "scanned_oem"])
+                messages.success(request, f"Подобрано {qty_to_pick} шт. из {stock.storage_location.code}")
+            else:
+                messages.error(request, "Ошибка при резервировании остатка.")
 
             return redirect("picking_task_detail", pk=pk)
 
@@ -388,11 +490,13 @@ def picking_task_detail(request: HttpRequest, pk: int) -> HttpResponse:
             return redirect("picking_task_detail", pk=pk)
 
     picking_lines_page_obj = _paginate(request, picking_lines, per_page=5)
+    default_pending_line = next((item["line"] for item in order_lines_with_remaining if item["is_pending"]), None)
     context = {
         "task": task,
         "order_lines_with_remaining": order_lines_with_remaining,
         "picking_lines": picking_lines_page_obj.object_list,
         "page_obj": picking_lines_page_obj,
+        "default_order_line_id": default_pending_line.pk if default_pending_line else "",
     }
     return render(request, "picking/picking_task_detail.html", context)
 

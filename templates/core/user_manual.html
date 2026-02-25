@@ -118,7 +118,7 @@
   <section class="manual-hero">
     <div class="card card--glass card--lg">
       <h1 class="h2">Инструкция по работе в WMS</h1>
-      <p class="muted">Короткий гид по ролям, рабочему процессу и технической архитектуре системы.</p>
+      <p class="muted">Практическая инструкция: что именно должен делать сотрудник в программе по своей роли.</p>
       <div class="pillbar" style="margin-top:10px;">
         <span class="pill">Роль: {{ request.user.get_role_display|default:request.user.role }}</span>
         <span class="pill">Пользователь: {{ request.user.username }}</span>
@@ -127,7 +127,11 @@
     <div class="card card--glass card--lg">
       <h2 class="h3">Быстрые ссылки</h2>
       <div class="stack stack--sm">
-        <button id="open-manual-role-modal" type="button" class="btn btn--primary btn--block">Скачать инструкцию (PDF)</button>
+        {% if allow_role_switch %}
+          <button id="open-manual-role-modal" type="button" class="btn btn--primary btn--block">Скачать инструкцию (PDF)</button>
+        {% else %}
+          <a class="btn btn--primary btn--block" href="{% url 'user_manual_download' %}?role={{ request.user.role }}">Скачать мою инструкцию (PDF)</a>
+        {% endif %}
         {% for label, url in quick_links %}
           <a class="btn btn--ghost btn--block" href="{{ url }}">{{ label }}</a>
         {% endfor %}
@@ -136,7 +140,7 @@
   </section>
 
   <section class="card card--glass card--lg">
-    <h2 class="h3">Функционал по ролям</h2>
+    <h2 class="h3">{% if role_cards|length == 1 %}Ваш функционал{% else %}Функционал по ролям{% endif %}</h2>
     <div class="manual-grid">
       {% for card in role_cards %}
         <article class="kv" style="height:100%;">
@@ -153,7 +157,7 @@
   </section>
 
   <section class="card card--glass card--lg" style="margin-top:14px;">
-    <h2 class="h3">Сквозной workflow (как работает система)</h2>
+    <h2 class="h3">Как работать в программе (по шагам)</h2>
     <div class="manual-workflow">
       {% for step in workflow_steps %}
         <article class="manual-step">
@@ -166,40 +170,42 @@
   </section>
 
   <section class="card card--glass card--lg" style="margin-top:14px;">
-    <h2 class="h3">Как система работает с БД и API</h2>
+    <h2 class="h3">Правила работы сотрудника</h2>
     <ul class="manual-list">
-      {% for note in architecture_notes %}
+      {% for note in work_principles %}
         <li>{{ note }}</li>
       {% endfor %}
     </ul>
   </section>
 
-  <div id="manual-role-modal" class="help-modal" aria-hidden="true">
-    <div class="help-modal__content">
-      <div class="help-modal__header">
-        <h2 class="help-modal__title">Выберите роль для инструкции</h2>
-        <button type="button" class="help-modal__close" aria-label="Закрыть">&times;</button>
-      </div>
-      <div class="help-modal__body">
-        <p class="muted">Система сформирует отдельный PDF с шагами, обязанностями и ключевыми страницами для выбранной роли.</p>
-        <form class="manual-role-form" action="{% url 'user_manual_download' %}" method="get">
-          {% for role in role_choices %}
-            <label class="manual-role-option">
-              <span>
-                <input type="radio" name="role" value="{{ role.code }}" {% if role.code == request.user.role %}checked{% endif %}>
-                <strong>{{ role.label }}</strong>
-              </span>
-              <small>{{ role.scope }}</small>
-            </label>
-          {% endfor %}
-          <div class="manual-role-actions">
-            <button type="button" class="btn btn--ghost" id="manual-role-cancel">Отмена</button>
-            <button type="submit" class="btn btn--primary">Скачать PDF</button>
-          </div>
-        </form>
+  {% if allow_role_switch %}
+    <div id="manual-role-modal" class="help-modal" aria-hidden="true">
+      <div class="help-modal__content">
+        <div class="help-modal__header">
+          <h2 class="help-modal__title">Выберите роль для инструкции</h2>
+          <button type="button" class="help-modal__close" aria-label="Закрыть">&times;</button>
+        </div>
+        <div class="help-modal__body">
+          <p class="muted">Система сформирует отдельный PDF с шагами, обязанностями и ключевыми страницами для выбранной роли.</p>
+          <form class="manual-role-form" action="{% url 'user_manual_download' %}" method="get">
+            {% for role in role_choices %}
+              <label class="manual-role-option">
+                <span>
+                  <input type="radio" name="role" value="{{ role.code }}" {% if role.code == request.user.role %}checked{% endif %}>
+                  <strong>{{ role.label }}</strong>
+                </span>
+                <small>{{ role.scope }}</small>
+              </label>
+            {% endfor %}
+            <div class="manual-role-actions">
+              <button type="button" class="btn btn--ghost" id="manual-role-cancel">Отмена</button>
+              <button type="submit" class="btn btn--primary">Скачать PDF</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
+  {% endif %}
   </div>
 
   <script>

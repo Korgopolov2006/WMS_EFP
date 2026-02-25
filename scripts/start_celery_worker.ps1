@@ -35,5 +35,5 @@ if (!(Test-Path "logs")) {
 }
 
 $cmd = "cd /d $ProjectRoot && celery -A wms worker -l info --pool=solo --concurrency=1 >> $LogFile 2>&1"
-$proc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $cmd -PassThru
+$proc = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $cmd -WindowStyle Hidden -PassThru
 Write-Output "Started Celery worker. PID=$($proc.Id)"

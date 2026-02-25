@@ -1,0 +1,478 @@
+В Таблице 4 представлены полные входные данные системы управления складом (WMS).
+Таблица 4 - Входные данные (полная версия)
+
+Примечание: перечень сформирован по всем прикладным моделям проекта. Данные вводятся через web-формы, Django Admin и REST API.
+
+Раздел: accounts
+Сущность: User
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | password | CharField | max_length=128; nullable=False; blank=False | Текстовое поле | Пароль пользователя
+3 | last_login | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности User
+4 | is_superuser | BooleanField | nullable=False; blank=False; default=False | Чекбокс / true|false | Поле сущности User
+5 | username | CharField | max_length=150; unique=True; nullable=False; blank=False | Текстовое поле | Логин пользователя
+6 | first_name | CharField | max_length=150; nullable=False; blank=True | Текстовое поле | Поле сущности User
+7 | last_name | CharField | max_length=150; nullable=False; blank=True | Текстовое поле | Поле сущности User
+8 | email | CharField | max_length=254; nullable=False; blank=True | Текстовое поле | Электронная почта
+9 | is_staff | BooleanField | nullable=False; blank=False; default=False | Чекбокс / true|false | Поле сущности User
+10 | is_active | BooleanField | nullable=False; blank=False; default=True | Чекбокс / true|false | Поле сущности User
+11 | date_joined | DateTimeField | nullable=False; blank=False; default=now | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности User
+12 | role | CharField | max_length=32; nullable=False; blank=False; choices=[ADMIN, STOREKEEPER, SMALL_PARTS_PICKER, LOADER, SALES_MANAGER, ANALYST, INTEGRATION]; default=STOREKEEPER | Текстовое поле | Роль пользователя в системе
+13 | groups | ManyToManyField | Связь M2M с Group.id; nullable=False; blank=True | Множественный выбор (список ID) | Поле сущности User
+14 | user_permissions | ManyToManyField | Связь M2M с Permission.id; nullable=False; blank=True | Множественный выбор (список ID) | Поле сущности User
+15 | branches | ManyToManyField | Связь M2M с Branch.id; nullable=False; blank=True | Множественный выбор (список ID) | Поле сущности User
+
+Раздел: catalog
+Сущность: Branch
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | code | CharField | max_length=32; unique=True; nullable=False; blank=False | Текстовое поле | Код объекта
+5 | name | CharField | max_length=255; nullable=False; blank=False | Текстовое поле | Наименование объекта
+6 | address | TextField | nullable=False; blank=True | Многострочное текстовое поле | Поле сущности Branch
+7 | is_active | BooleanField | nullable=False; blank=False; default=True | Чекбокс / true|false | Поле сущности Branch
+
+Сущность: Warehouse
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | branch | ForeignKey | Связь с Branch.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Warehouse
+5 | code | CharField | max_length=32; nullable=False; blank=False | Текстовое поле | Код объекта
+6 | name | CharField | max_length=255; nullable=False; blank=False | Текстовое поле | Наименование объекта
+7 | width_m | DecimalField | max_digits=8, decimal_places=2; nullable=False; blank=False; default=30.0 | Числовое поле (дробное) | Поле сущности Warehouse
+8 | length_m | DecimalField | max_digits=8, decimal_places=2; nullable=False; blank=False; default=40.0 | Числовое поле (дробное) | Поле сущности Warehouse
+9 | height_m | DecimalField | max_digits=8, decimal_places=2; nullable=False; blank=False; default=8.0 | Числовое поле (дробное) | Поле сущности Warehouse
+10 | is_active | BooleanField | nullable=False; blank=False; default=True | Чекбокс / true|false | Поле сущности Warehouse
+
+Сущность: WarehouseAccess
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | user | ForeignKey | Связь с User.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности WarehouseAccess
+5 | warehouse | ForeignKey | Связь с Warehouse.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности WarehouseAccess
+6 | access_level | CharField | max_length=16; nullable=False; blank=False; choices=[VIEW, EDIT, ADMIN]; default=VIEW | Текстовое поле | Поле сущности WarehouseAccess
+
+Сущность: Brand
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | name | CharField | max_length=120; unique=True; nullable=False; blank=False | Текстовое поле | Наименование объекта
+
+Сущность: Category
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | name | CharField | max_length=120; unique=True; nullable=False; blank=False | Текстовое поле | Наименование объекта
+5 | parent | ForeignKey | Связь с Category.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Category
+
+Сущность: VehicleMake
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | name | CharField | max_length=120; unique=True; nullable=False; blank=False | Текстовое поле | Наименование объекта
+
+Сущность: VehicleModel
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | make | ForeignKey | Связь с VehicleMake.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности VehicleModel
+5 | name | CharField | max_length=120; nullable=False; blank=False | Текстовое поле | Наименование объекта
+
+Сущность: StorageZoneType
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | code | CharField | max_length=32; unique=True; nullable=False; blank=False | Текстовое поле | Код объекта
+5 | name | CharField | max_length=120; nullable=False; blank=False | Текстовое поле | Наименование объекта
+6 | description | TextField | nullable=False; blank=True | Многострочное текстовое поле | Текстовое описание
+7 | sort_order | PositiveIntegerField | nullable=False; blank=False; default=100 | Числовое поле (целое) | Поле сущности StorageZoneType
+
+Сущность: StorageZone
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | warehouse | ForeignKey | Связь с Warehouse.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности StorageZone
+5 | code | CharField | max_length=32; nullable=False; blank=False | Текстовое поле | Код объекта
+6 | name | CharField | max_length=120; nullable=False; blank=False | Текстовое поле | Наименование объекта
+7 | zone_type | ForeignKey | Связь с StorageZoneType.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности StorageZone
+8 | description | TextField | nullable=False; blank=True | Многострочное текстовое поле | Текстовое описание
+
+Сущность: StorageLocation
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | zone | ForeignKey | Связь с StorageZone.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности StorageLocation
+5 | code | CharField | max_length=32; nullable=False; blank=False | Текстовое поле | Код объекта
+6 | name | CharField | max_length=120; nullable=False; blank=True | Текстовое поле | Наименование объекта
+7 | aisle | CharField | max_length=16; nullable=False; blank=True | Текстовое поле | Поле сущности StorageLocation
+8 | rack | CharField | max_length=16; nullable=False; blank=True | Текстовое поле | Поле сущности StorageLocation
+9 | shelf | CharField | max_length=16; nullable=False; blank=True | Текстовое поле | Поле сущности StorageLocation
+10 | level | CharField | max_length=16; nullable=False; blank=True | Текстовое поле | Поле сущности StorageLocation
+11 | max_weight_kg | DecimalField | max_digits=10, decimal_places=3; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности StorageLocation
+
+Сущность: Product
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | internal_sku | CharField | max_length=64; unique=True; nullable=False; blank=False | Текстовое поле | Поле сущности Product
+5 | name | CharField | max_length=255; nullable=False; blank=False | Текстовое поле | Наименование объекта
+6 | oem_number | CharField | max_length=64; nullable=False; blank=False | Текстовое поле | Поле сущности Product
+7 | analog_number | CharField | max_length=64; nullable=False; blank=True | Текстовое поле | Поле сущности Product
+8 | oem_number_normalized | CharField | max_length=64; nullable=False; blank=True; default= | Текстовое поле | Поле сущности Product
+9 | analog_number_normalized | CharField | max_length=64; nullable=False; blank=True; default= | Текстовое поле | Поле сущности Product
+10 | brand | ForeignKey | Связь с Brand.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Product
+11 | category | ForeignKey | Связь с Category.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Product
+12 | weight_kg | DecimalField | max_digits=10, decimal_places=3; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности Product
+13 | length_cm | DecimalField | max_digits=10, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности Product
+14 | width_cm | DecimalField | max_digits=10, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности Product
+15 | height_cm | DecimalField | max_digits=10, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности Product
+16 | packaging_type | CharField | max_length=16; nullable=False; blank=False; choices=[SMALL, LARGE, PALLET]; default=SMALL | Текстовое поле | Поле сущности Product
+17 | photo | FileField | max_length=100; nullable=True; blank=True | Загрузка файла | Поле сущности Product
+18 | applicability | ManyToManyField | Связь M2M с VehicleModel.id; nullable=False; blank=True | Множественный выбор (список ID) | Поле сущности Product
+
+Сущность: ProductApplicability
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности ProductApplicability
+5 | vehicle_model | ForeignKey | Связь с VehicleModel.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности ProductApplicability
+
+Сущность: ProductCrossReference
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | from_product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности ProductCrossReference
+5 | to_product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности ProductCrossReference
+6 | relation_type | CharField | max_length=16; nullable=False; blank=False; choices=[ANALOG, OEM, REPLACED_BY] | Текстовое поле | Поле сущности ProductCrossReference
+7 | note | CharField | max_length=255; nullable=False; blank=True | Текстовое поле | Поле сущности ProductCrossReference
+
+Сущность: ProductChangeLog
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности ProductChangeLog
+5 | changed_by | ForeignKey | Связь с User.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности ProductChangeLog
+6 | action | CharField | max_length=16; nullable=False; blank=False; choices=[CREATE, UPDATE] | Текстовое поле | Поле сущности ProductChangeLog
+7 | source | CharField | max_length=32; nullable=False; blank=False; default=ui | Текстовое поле | Поле сущности ProductChangeLog
+8 | changed_fields | JSONField | nullable=False; blank=True; default=dict | JSON-объект | Поле сущности ProductChangeLog
+9 | note | CharField | max_length=255; nullable=False; blank=True | Текстовое поле | Поле сущности ProductChangeLog
+
+Сущность: Backorder
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | order | ForeignKey | Связь с Order.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Backorder
+5 | product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Backorder
+6 | qty_ordered | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False | Числовое поле (дробное) | Поле сущности Backorder
+7 | qty_fulfilled | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0 | Числовое поле (дробное) | Поле сущности Backorder
+8 | status | CharField | max_length=16; nullable=False; blank=False; choices=[PENDING, PARTIAL, FULFILLED, CANCELLED]; default=PENDING | Текстовое поле | Статус объекта/процесса
+9 | expected_arrival_date | DateField | nullable=True; blank=True | Поле даты (YYYY-MM-DD) | Поле сущности Backorder
+10 | fulfilled_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Backorder
+11 | created_by | ForeignKey | Связь с User.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Backorder
+12 | notes | TextField | nullable=False; blank=True | Многострочное текстовое поле | Служебные примечания
+
+Сущность: Tool
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | warehouse | ForeignKey | Связь с Warehouse.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Tool
+5 | tool_type | CharField | max_length=32; nullable=False; blank=False; choices=[FORKLIFT, HAND_TRUCK, SCANNER, PRINTER, OTHER] | Текстовое поле | Поле сущности Tool
+6 | code | CharField | max_length=64; unique=True; nullable=False; blank=False | Текстовое поле | Код объекта
+7 | name | CharField | max_length=255; nullable=False; blank=False | Текстовое поле | Наименование объекта
+8 | brand | CharField | max_length=120; nullable=False; blank=True | Текстовое поле | Поле сущности Tool
+9 | model | CharField | max_length=120; nullable=False; blank=True | Текстовое поле | Поле сущности Tool
+10 | is_available | BooleanField | nullable=False; blank=False; default=True | Чекбокс / true|false | Поле сущности Tool
+11 | is_active | BooleanField | nullable=False; blank=False; default=True | Чекбокс / true|false | Поле сущности Tool
+12 | current_user | ForeignKey | Связь с User.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Tool
+13 | checked_out_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Tool
+14 | expected_return_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Tool
+15 | last_maintenance_date | DateField | nullable=True; blank=True | Поле даты (YYYY-MM-DD) | Поле сущности Tool
+16 | next_maintenance_date | DateField | nullable=True; blank=True | Поле даты (YYYY-MM-DD) | Поле сущности Tool
+17 | maintenance_notes | TextField | nullable=False; blank=True | Многострочное текстовое поле | Поле сущности Tool
+18 | notes | TextField | nullable=False; blank=True | Многострочное текстовое поле | Служебные примечания
+
+Раздел: receiving
+Сущность: Supplier
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | code | CharField | max_length=24; unique=True; nullable=False; blank=False | Текстовое поле | Код объекта
+5 | name | CharField | max_length=255; unique=True; nullable=False; blank=False | Текстовое поле | Наименование объекта
+6 | is_active | BooleanField | nullable=False; blank=False; default=True | Чекбокс / true|false | Поле сущности Supplier
+
+Сущность: Receiving
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | number | CharField | max_length=32; unique=True; nullable=False; blank=False | Текстовое поле | Номер документа/объекта
+5 | supplier_name | CharField | max_length=255; nullable=False; blank=False | Текстовое поле | Поле сущности Receiving
+6 | supplier_doc_no | CharField | max_length=64; nullable=False; blank=True | Текстовое поле | Поле сущности Receiving
+7 | warehouse | ForeignKey | Связь с Warehouse.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Receiving
+8 | status | CharField | max_length=16; nullable=False; blank=False; choices=[DRAFT, IN_PROGRESS, COMPLETED, CANCELLED]; default=DRAFT | Текстовое поле | Статус объекта/процесса
+9 | expected_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Receiving
+10 | completed_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Receiving
+11 | created_by | ForeignKey | Связь с User.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Receiving
+
+Сущность: ReceivingLine
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | receiving | ForeignKey | Связь с Receiving.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности ReceivingLine
+3 | product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности ReceivingLine
+4 | supplier_sku | CharField | max_length=64; nullable=False; blank=True | Текстовое поле | Поле сущности ReceivingLine
+5 | qty_expected | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности ReceivingLine
+6 | qty_received | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности ReceivingLine
+7 | storage_location | ForeignKey | Связь с StorageLocation.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности ReceivingLine
+8 | has_serial_numbers | BooleanField | nullable=False; blank=False; default=False | Чекбокс / true|false | Поле сущности ReceivingLine
+
+Сущность: ReceivingSerial
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | line | ForeignKey | Связь с ReceivingLine.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности ReceivingSerial
+3 | serial_number | CharField | max_length=128; nullable=False; blank=False | Текстовое поле | Поле сущности ReceivingSerial
+
+Раздел: inventory
+Сущность: Stock
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Stock
+3 | storage_location | ForeignKey | Связь с StorageLocation.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Stock
+4 | qty_available | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности Stock
+5 | qty_reserved | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности Stock
+6 | batch_no | CharField | max_length=64; nullable=False; blank=True | Текстовое поле | Поле сущности Stock
+7 | expiry_date | DateField | nullable=True; blank=True | Поле даты (YYYY-MM-DD) | Поле сущности Stock
+
+Сущность: Inventory
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | number | CharField | max_length=32; unique=True; nullable=False; blank=False | Текстовое поле | Номер документа/объекта
+5 | zone | ForeignKey | Связь с StorageZone.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Inventory
+6 | status | CharField | max_length=16; nullable=False; blank=False; choices=[DRAFT, IN_PROGRESS, COMPLETED, CANCELLED]; default=DRAFT | Текстовое поле | Статус объекта/процесса
+7 | started_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Inventory
+8 | completed_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Inventory
+9 | created_by | ForeignKey | Связь с User.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Inventory
+
+Сущность: InventoryLine
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | inventory | ForeignKey | Связь с Inventory.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности InventoryLine
+3 | product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности InventoryLine
+4 | storage_location | ForeignKey | Связь с StorageLocation.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности InventoryLine
+5 | qty_book | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности InventoryLine
+6 | qty_actual | DecimalField | max_digits=10, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности InventoryLine
+7 | discrepancy | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности InventoryLine
+
+Раздел: picking
+Сущность: Order
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | number | CharField | max_length=32; unique=True; nullable=False; blank=False | Текстовое поле | Номер документа/объекта
+5 | customer_name | CharField | max_length=255; nullable=False; blank=False | Текстовое поле | Поле сущности Order
+6 | customer_phone | CharField | max_length=32; nullable=False; blank=True | Текстовое поле | Поле сущности Order
+7 | customer_email | CharField | max_length=254; nullable=False; blank=True | Текстовое поле | Поле сущности Order
+8 | status | CharField | max_length=16; nullable=False; blank=False; choices=[DRAFT, CONFIRMED, IN_PICKING, PICKED, RESERVED, SHIPPED, CANCELLED]; default=DRAFT | Текстовое поле | Статус объекта/процесса
+9 | source | CharField | max_length=32; nullable=False; blank=False; default=MANUAL | Текстовое поле | Поле сущности Order
+10 | external_id | CharField | max_length=64; nullable=False; blank=True | Текстовое поле | Поле сущности Order
+11 | confirmed_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Order
+12 | picked_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Order
+13 | shipped_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Order
+14 | reserved_at_window | BooleanField | nullable=False; blank=False; default=False | Чекбокс / true|false | Поле сущности Order
+15 | window_number | CharField | max_length=16; nullable=False; blank=True | Текстовое поле | Поле сущности Order
+16 | created_by | ForeignKey | Связь с User.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Order
+17 | picked_by | ForeignKey | Связь с User.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Order
+
+Сущность: OrderLine
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | order | ForeignKey | Связь с Order.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности OrderLine
+3 | product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности OrderLine
+4 | qty_ordered | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False | Числовое поле (дробное) | Поле сущности OrderLine
+5 | qty_picked | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности OrderLine
+6 | price | DecimalField | max_digits=10, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности OrderLine
+
+Сущность: PickingTask
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | order | ForeignKey | Связь с Order.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности PickingTask
+5 | status | CharField | max_length=16; nullable=False; blank=False; choices=[PENDING, IN_PROGRESS, COMPLETED, CANCELLED]; default=PENDING | Текстовое поле | Статус объекта/процесса
+6 | zone_type_code | CharField | max_length=32; nullable=False; blank=False | Текстовое поле | Поле сущности PickingTask
+7 | assigned_to | ForeignKey | Связь с User.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности PickingTask
+8 | started_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности PickingTask
+9 | completed_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности PickingTask
+
+Сущность: PickingLine
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | task | ForeignKey | Связь с PickingTask.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности PickingLine
+3 | order_line | ForeignKey | Связь с OrderLine.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности PickingLine
+4 | stock | ForeignKey | Связь с Stock.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности PickingLine
+5 | qty_picked | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False | Числовое поле (дробное) | Поле сущности PickingLine
+6 | scanned_oem | CharField | max_length=64; nullable=False; blank=True | Текстовое поле | Поле сущности PickingLine
+
+Раздел: tasks
+Сущность: Task
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | task_type | CharField | max_length=32; nullable=False; blank=False; choices=[RECEIVING, INVENTORY, PICKING, SHIPPING, STOCK_MOVEMENT, OTHER] | Текстовое поле | Поле сущности Task
+5 | status | CharField | max_length=16; nullable=False; blank=False; choices=[PENDING, IN_PROGRESS, COMPLETED, CANCELLED, ON_HOLD]; default=PENDING | Текстовое поле | Статус объекта/процесса
+6 | priority | CharField | max_length=16; nullable=False; blank=False; choices=[LOW, NORMAL, HIGH, URGENT]; default=NORMAL | Текстовое поле | Поле сущности Task
+7 | title | CharField | max_length=255; nullable=False; blank=False | Текстовое поле | Поле сущности Task
+8 | description | TextField | nullable=False; blank=True | Многострочное текстовое поле | Текстовое описание
+9 | receiving | ForeignKey | Связь с Receiving.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Task
+10 | inventory | ForeignKey | Связь с Inventory.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Task
+11 | order | ForeignKey | Связь с Order.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Task
+12 | picking_task | ForeignKey | Связь с PickingTask.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Task
+13 | assigned_to | ForeignKey | Связь с User.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности Task
+14 | created_by | ForeignKey | Связь с User.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности Task
+15 | due_date | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Task
+16 | started_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Task
+17 | completed_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности Task
+18 | metadata | JSONField | nullable=False; blank=True; default=dict | JSON-объект | Поле сущности Task
+
+Сущность: TaskComment
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | task | ForeignKey | Связь с Task.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности TaskComment
+5 | author | ForeignKey | Связь с User.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности TaskComment
+6 | text | TextField | nullable=False; blank=False | Многострочное текстовое поле | Поле сущности TaskComment
+
+Раздел: reports
+Сущность: ABCXYZAnalysis
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности ABCXYZAnalysis
+3 | period_start | DateField | nullable=False; blank=False | Поле даты (YYYY-MM-DD) | Поле сущности ABCXYZAnalysis
+4 | period_end | DateField | nullable=False; blank=False | Поле даты (YYYY-MM-DD) | Поле сущности ABCXYZAnalysis
+5 | total_sales_qty | DecimalField | max_digits=12, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности ABCXYZAnalysis
+6 | total_sales_amount | DecimalField | max_digits=12, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности ABCXYZAnalysis
+7 | abc_class | CharField | max_length=1; nullable=False; blank=True | Текстовое поле | Поле сущности ABCXYZAnalysis
+8 | xyz_class | CharField | max_length=1; nullable=False; blank=True | Текстовое поле | Поле сущности ABCXYZAnalysis
+9 | coefficient_variation | DecimalField | max_digits=10, decimal_places=4; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности ABCXYZAnalysis
+
+Сущность: DeadStockReport
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности DeadStockReport
+3 | stock | ForeignKey | Связь с Stock.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности DeadStockReport
+4 | qty_available | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности DeadStockReport
+5 | days_without_movement | IntegerField | nullable=False; blank=False; default=0 | Числовое поле (целое) | Поле сущности DeadStockReport
+6 | last_movement_date | DateField | nullable=True; blank=True | Поле даты (YYYY-MM-DD) | Поле сущности DeadStockReport
+7 | estimated_value | DecimalField | max_digits=12, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности DeadStockReport
+8 | calculated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности DeadStockReport
+
+Сущность: PickingError
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | order_line | ForeignKey | Связь с OrderLine.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности PickingError
+3 | picking_line | ForeignKey | Связь с PickingLine.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности PickingError
+4 | error_type | CharField | max_length=32; nullable=False; blank=False; choices=[WRONG_PRODUCT, WRONG_QTY, WRONG_LOCATION, DAMAGED, MISSING] | Текстовое поле | Поле сущности PickingError
+5 | expected_product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности PickingError
+6 | actual_product | ForeignKey | Связь с Product.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности PickingError
+7 | expected_qty | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False | Числовое поле (дробное) | Поле сущности PickingError
+8 | actual_qty | DecimalField | max_digits=10, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности PickingError
+9 | detected_by | ForeignKey | Связь с User.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности PickingError
+10 | detected_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности PickingError
+11 | resolved | BooleanField | nullable=False; blank=False; default=False | Чекбокс / true|false | Поле сущности PickingError
+12 | resolved_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности PickingError
+13 | resolved_by | ForeignKey | Связь с User.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности PickingError
+14 | notes | TextField | nullable=False; blank=True | Многострочное текстовое поле | Служебные примечания
+
+Сущность: AnalogVsOriginalReport
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | period_start | DateField | nullable=False; blank=False | Поле даты (YYYY-MM-DD) | Поле сущности AnalogVsOriginalReport
+3 | period_end | DateField | nullable=False; blank=False | Поле даты (YYYY-MM-DD) | Поле сущности AnalogVsOriginalReport
+4 | original_product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности AnalogVsOriginalReport
+5 | analog_product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности AnalogVsOriginalReport
+6 | original_sales_qty | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности AnalogVsOriginalReport
+7 | analog_sales_qty | DecimalField | max_digits=10, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности AnalogVsOriginalReport
+8 | original_sales_amount | DecimalField | max_digits=12, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности AnalogVsOriginalReport
+9 | analog_sales_amount | DecimalField | max_digits=12, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности AnalogVsOriginalReport
+10 | substitution_rate | DecimalField | max_digits=5, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности AnalogVsOriginalReport
+11 | calculated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности AnalogVsOriginalReport
+
+Сущность: DemandForecast
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | product | ForeignKey | Связь с Product.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности DemandForecast
+3 | forecast_date | DateField | nullable=False; blank=False | Поле даты (YYYY-MM-DD) | Поле сущности DemandForecast
+4 | period_start | DateField | nullable=False; blank=False | Поле даты (YYYY-MM-DD) | Поле сущности DemandForecast
+5 | period_end | DateField | nullable=False; blank=False | Поле даты (YYYY-MM-DD) | Поле сущности DemandForecast
+6 | forecasted_qty | DecimalField | max_digits=12, decimal_places=2; nullable=False; blank=False; default=0.00 | Числовое поле (дробное) | Поле сущности DemandForecast
+7 | confidence_level | DecimalField | max_digits=5, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности DemandForecast
+8 | seasonal_factor | DecimalField | max_digits=5, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности DemandForecast
+9 | trend_factor | DecimalField | max_digits=5, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности DemandForecast
+10 | historical_sales_qty | DecimalField | max_digits=12, decimal_places=2; nullable=True; blank=True | Числовое поле (дробное) | Поле сущности DemandForecast
+11 | historical_period_start | DateField | nullable=True; blank=True | Поле даты (YYYY-MM-DD) | Поле сущности DemandForecast
+12 | historical_period_end | DateField | nullable=True; blank=True | Поле даты (YYYY-MM-DD) | Поле сущности DemandForecast
+13 | calculated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности DemandForecast
+14 | calculated_by | ForeignKey | Связь с User.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности DemandForecast
+15 | notes | TextField | nullable=False; blank=True | Многострочное текстовое поле | Служебные примечания
+
+Раздел: warehouse_3d
+Сущность: WarehouseLayout
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | warehouse | OneToOneField | Связь с Warehouse.id; unique=True; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности WarehouseLayout
+5 | floor_points | JSONField | nullable=False; blank=False; default=list | JSON-объект | Поле сущности WarehouseLayout
+6 | is_layout_defined | BooleanField | nullable=False; blank=False; default=False | Чекбокс / true|false | Поле сущности WarehouseLayout
+
+Сущность: StorageObject
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+3 | updated_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время последнего обновления
+4 | warehouse | ForeignKey | Связь с Warehouse.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности StorageObject
+5 | object_type | CharField | max_length=16; nullable=False; blank=False; choices=[RACK, SHELF, CELL, FLOOR] | Текстовое поле | Поле сущности StorageObject
+6 | code | CharField | max_length=64; nullable=False; blank=True | Текстовое поле | Код объекта
+7 | name | CharField | max_length=255; nullable=False; blank=True | Текстовое поле | Наименование объекта
+8 | position_x | FloatField | nullable=False; blank=False; default=0.0 | Числовое поле (дробное) | Поле сущности StorageObject
+9 | position_z | FloatField | nullable=False; blank=False; default=0.0 | Числовое поле (дробное) | Поле сущности StorageObject
+10 | position_y | FloatField | nullable=False; blank=False; default=0.0 | Числовое поле (дробное) | Поле сущности StorageObject
+11 | width | FloatField | nullable=False; blank=False; default=1.0 | Числовое поле (дробное) | Поле сущности StorageObject
+12 | depth | FloatField | nullable=False; blank=False; default=1.0 | Числовое поле (дробное) | Поле сущности StorageObject
+13 | height | FloatField | nullable=False; blank=False; default=1.0 | Числовое поле (дробное) | Поле сущности StorageObject
+14 | rotation_y | FloatField | nullable=False; blank=False; default=0.0 | Числовое поле (дробное) | Поле сущности StorageObject
+15 | is_active | BooleanField | nullable=False; blank=False; default=True | Чекбокс / true|false | Поле сущности StorageObject
+16 | storage_location | ForeignKey | Связь с StorageLocation.id; nullable=True; blank=True | Выпадающий список (ID связанной записи) | Поле сущности StorageObject
+
+Раздел: api
+Сущность: ApiToken
+No | Имя | Тип | Ограничение | Формат ввода | Описание
+1 | id | BigAutoField | unique=True; nullable=False; blank=True | Числовое поле (целое) | Уникальный идентификатор записи
+2 | name | CharField | max_length=120; nullable=False; blank=False | Текстовое поле | Наименование объекта
+3 | token | CharField | max_length=64; unique=True; nullable=False; blank=False | Текстовое поле | Поле сущности ApiToken
+4 | user | ForeignKey | Связь с User.id; nullable=False; blank=False | Выпадающий список (ID связанной записи) | Поле сущности ApiToken
+5 | is_active | BooleanField | nullable=False; blank=False; default=True | Чекбокс / true|false | Поле сущности ApiToken
+6 | created_at | DateTimeField | nullable=False; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Дата и время создания записи
+7 | last_used_at | DateTimeField | nullable=True; blank=True | Поле даты и времени (YYYY-MM-DD HH:MM[:SS]) | Поле сущности ApiToken
+

@@ -1,0 +1,297 @@
+Таблица: User
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+password	varchar(128)	NOT NULL	Хеш пароля
+last_login	timestamptz	NULL	Служебное поле бизнес-сущности
+is_superuser	bool	NOT NULL	Признак администратора
+username	varchar(150)	NOT NULL	Логин пользователя
+first_name	varchar(150)	NOT NULL	Наименование сущности
+last_name	varchar(150)	NOT NULL	Наименование сущности
+email	varchar(254)	NOT NULL	Email адрес
+is_staff	bool	NOT NULL	Признак сотрудника
+is_active	bool	NOT NULL	Признак активности
+date_joined	timestamptz	NOT NULL	Служебное поле бизнес-сущности
+role	varchar(32)	NOT NULL	Служебное поле бизнес-сущности
+
+Таблица: UserBranch
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+FK: user_id	bigint	FOREIGN KEY -> accounts_user.id, NOT NULL	Ссылка на user (accounts_user.id)
+FK: branch_id	bigint	FOREIGN KEY -> catalog_branch.id, NOT NULL	Ссылка на branch (catalog_branch.id)
+
+Таблица: ApiToken
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+name	varchar(120)	NOT NULL	Наименование
+token	varchar(64)	NOT NULL	Служебное поле бизнес-сущности
+is_active	bool	NOT NULL	Признак активности
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+last_used_at	timestamptz	NULL	Дата и время события
+FK: user_id	bigint	FOREIGN KEY -> accounts_user.id, NOT NULL	Ссылка на user (accounts_user.id)
+
+Таблица: Branch
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+code	varchar(32)	NOT NULL	Код сущности
+name	varchar(255)	NOT NULL	Наименование
+address	text	NOT NULL	Служебное поле бизнес-сущности
+is_active	bool	NOT NULL	Признак активности
+
+Таблица: Brand
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+name	varchar(120)	NOT NULL	Наименование
+
+Таблица: Category
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+name	varchar(120)	NOT NULL	Наименование
+FK: parent_id	bigint	FOREIGN KEY -> catalog_category.id, NULL	Ссылка на parent (catalog_category.id)
+
+Таблица: Warehouse
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+code	varchar(32)	NOT NULL	Код сущности
+name	varchar(255)	NOT NULL	Наименование
+width_m	decimal(8,2)	NOT NULL	Служебное поле бизнес-сущности
+length_m	decimal(8,2)	NOT NULL	Служебное поле бизнес-сущности
+height_m	decimal(8,2)	NOT NULL	Служебное поле бизнес-сущности
+is_active	bool	NOT NULL	Признак активности
+FK: branch_id	bigint	FOREIGN KEY -> catalog_branch.id, NOT NULL	Ссылка на branch (catalog_branch.id)
+
+Таблица: WarehouseAccess
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+access_level	varchar(16)	NOT NULL	Служебное поле бизнес-сущности
+FK: user_id	bigint	FOREIGN KEY -> accounts_user.id, NOT NULL	Ссылка на user (accounts_user.id)
+FK: warehouse_id	bigint	FOREIGN KEY -> catalog_warehouse.id, NOT NULL	Ссылка на warehouse (catalog_warehouse.id)
+
+Таблица: StorageZoneType
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+code	varchar(32)	NOT NULL	Код сущности
+name	varchar(120)	NOT NULL	Наименование
+description	text	NOT NULL	Описание
+sort_order	int	NOT NULL	Служебное поле бизнес-сущности
+
+Таблица: StorageZone
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+code	varchar(32)	NOT NULL	Код сущности
+name	varchar(120)	NOT NULL	Наименование
+description	text	NOT NULL	Описание
+FK: zone_type_id	bigint	FOREIGN KEY -> catalog_storagezonetype.id, NOT NULL	Ссылка на zone_type (catalog_storagezonetype.id)
+FK: warehouse_id	bigint	FOREIGN KEY -> catalog_warehouse.id, NULL	Ссылка на warehouse (catalog_warehouse.id)
+
+Таблица: StorageLocation
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+code	varchar(32)	NOT NULL	Код сущности
+name	varchar(120)	NOT NULL	Наименование
+aisle	varchar(16)	NOT NULL	Служебное поле бизнес-сущности
+rack	varchar(16)	NOT NULL	Служебное поле бизнес-сущности
+shelf	varchar(16)	NOT NULL	Служебное поле бизнес-сущности
+level	varchar(16)	NOT NULL	Служебное поле бизнес-сущности
+max_weight_kg	decimal(10,3)	NULL	Служебное поле бизнес-сущности
+FK: zone_id	bigint	FOREIGN KEY -> catalog_storagezone.id, NOT NULL	Ссылка на zone (catalog_storagezone.id)
+
+Таблица: Product
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+internal_sku	varchar(64)	NOT NULL	Служебное поле бизнес-сущности
+name	varchar(255)	NOT NULL	Наименование
+oem_number	varchar(64)	NOT NULL	Номер/идентификатор документа
+analog_number	varchar(64)	NOT NULL	Номер/идентификатор документа
+weight_kg	decimal(10,3)	NULL	Служебное поле бизнес-сущности
+length_cm	decimal(10,2)	NULL	Служебное поле бизнес-сущности
+width_cm	decimal(10,2)	NULL	Служебное поле бизнес-сущности
+height_cm	decimal(10,2)	NULL	Служебное поле бизнес-сущности
+packaging_type	varchar(16)	NOT NULL	Служебное поле бизнес-сущности
+photo	varchar(100)	NULL	Служебное поле бизнес-сущности
+FK: brand_id	bigint	FOREIGN KEY -> catalog_brand.id, NOT NULL	Ссылка на brand (catalog_brand.id)
+FK: category_id	bigint	FOREIGN KEY -> catalog_category.id, NOT NULL	Ссылка на category (catalog_category.id)
+analog_number_normalized	varchar(64)	NOT NULL	Служебное поле бизнес-сущности
+oem_number_normalized	varchar(64)	NOT NULL	Служебное поле бизнес-сущности
+
+Таблица: Stock
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+qty_available	decimal(10,2)	NOT NULL	Служебное поле бизнес-сущности
+qty_reserved	decimal(10,2)	NOT NULL	Служебное поле бизнес-сущности
+batch_no	varchar(64)	NOT NULL	Служебное поле бизнес-сущности
+expiry_date	date	NULL	Дата события
+FK: product_id	bigint	FOREIGN KEY -> catalog_product.id, NOT NULL	Ссылка на product (catalog_product.id)
+FK: storage_location_id	bigint	FOREIGN KEY -> catalog_storagelocation.id, NOT NULL	Ссылка на storage_location (catalog_storagelocation.id)
+
+Таблица: WarehouseLayout
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+floor_points	jsonb	NOT NULL	Служебное поле бизнес-сущности
+is_layout_defined	bool	NOT NULL	Логический флаг состояния
+FK: warehouse_id	bigint	FOREIGN KEY -> catalog_warehouse.id, NOT NULL	Ссылка на warehouse (catalog_warehouse.id)
+
+Таблица: StorageObject
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+object_type	varchar(16)	NOT NULL	Служебное поле бизнес-сущности
+code	varchar(64)	NOT NULL	Код сущности
+name	varchar(255)	NOT NULL	Наименование
+position_x	double	NOT NULL	Служебное поле бизнес-сущности
+position_z	double	NOT NULL	Служебное поле бизнес-сущности
+position_y	double	NOT NULL	Служебное поле бизнес-сущности
+width	double	NOT NULL	Служебное поле бизнес-сущности
+depth	double	NOT NULL	Служебное поле бизнес-сущности
+height	double	NOT NULL	Служебное поле бизнес-сущности
+rotation_y	double	NOT NULL	Служебное поле бизнес-сущности
+is_active	bool	NOT NULL	Признак активности
+FK: warehouse_id	bigint	FOREIGN KEY -> catalog_warehouse.id, NOT NULL	Ссылка на warehouse (catalog_warehouse.id)
+FK: storage_location_id	bigint	FOREIGN KEY -> catalog_storagelocation.id, NULL	Ссылка на storage_location (catalog_storagelocation.id)
+
+Таблица: Receiving
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+number	varchar(32)	NOT NULL	Служебное поле бизнес-сущности
+supplier_name	varchar(255)	NOT NULL	Наименование сущности
+supplier_doc_no	varchar(64)	NOT NULL	Служебное поле бизнес-сущности
+status	varchar(16)	NOT NULL	Текущий статус
+expected_at	timestamptz	NULL	Дата и время события
+completed_at	timestamptz	NULL	Дата и время события
+FK: created_by_id	bigint	FOREIGN KEY -> accounts_user.id, NOT NULL	Ссылка на created_by (accounts_user.id)
+FK: warehouse_id	bigint	FOREIGN KEY -> catalog_warehouse.id, NULL	Ссылка на warehouse (catalog_warehouse.id)
+
+Таблица: ReceivingLine
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+supplier_sku	varchar(64)	NOT NULL	Служебное поле бизнес-сущности
+qty_expected	decimal(10,2)	NOT NULL	Служебное поле бизнес-сущности
+qty_received	decimal(10,2)	NOT NULL	Служебное поле бизнес-сущности
+has_serial_numbers	bool	NOT NULL	Служебное поле бизнес-сущности
+FK: product_id	bigint	FOREIGN KEY -> catalog_product.id, NOT NULL	Ссылка на product (catalog_product.id)
+FK: receiving_id	bigint	FOREIGN KEY -> receiving_receiving.id, NOT NULL	Ссылка на receiving (receiving_receiving.id)
+FK: storage_location_id	bigint	FOREIGN KEY -> catalog_storagelocation.id, NULL	Ссылка на storage_location (catalog_storagelocation.id)
+
+Таблица: Inventory
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+number	varchar(32)	NOT NULL	Служебное поле бизнес-сущности
+status	varchar(16)	NOT NULL	Текущий статус
+started_at	timestamptz	NULL	Дата и время события
+completed_at	timestamptz	NULL	Дата и время события
+FK: created_by_id	bigint	FOREIGN KEY -> accounts_user.id, NOT NULL	Ссылка на created_by (accounts_user.id)
+FK: zone_id	bigint	FOREIGN KEY -> catalog_storagezone.id, NULL	Ссылка на zone (catalog_storagezone.id)
+
+Таблица: InventoryLine
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+qty_book	decimal(10,2)	NOT NULL	Служебное поле бизнес-сущности
+qty_actual	decimal(10,2)	NULL	Служебное поле бизнес-сущности
+discrepancy	decimal(10,2)	NOT NULL	Служебное поле бизнес-сущности
+FK: inventory_id	bigint	FOREIGN KEY -> inventory_inventory.id, NOT NULL	Ссылка на inventory (inventory_inventory.id)
+FK: product_id	bigint	FOREIGN KEY -> catalog_product.id, NOT NULL	Ссылка на product (catalog_product.id)
+FK: storage_location_id	bigint	FOREIGN KEY -> catalog_storagelocation.id, NOT NULL	Ссылка на storage_location (catalog_storagelocation.id)
+
+Таблица: Order
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+number	varchar(32)	NOT NULL	Служебное поле бизнес-сущности
+customer_name	varchar(255)	NOT NULL	Наименование сущности
+customer_phone	varchar(32)	NOT NULL	Служебное поле бизнес-сущности
+customer_email	varchar(254)	NOT NULL	Служебное поле бизнес-сущности
+status	varchar(16)	NOT NULL	Текущий статус
+source	varchar(32)	NOT NULL	Служебное поле бизнес-сущности
+external_id	varchar(64)	NOT NULL	Служебное поле бизнес-сущности
+confirmed_at	timestamptz	NULL	Дата и время события
+picked_at	timestamptz	NULL	Дата и время события
+shipped_at	timestamptz	NULL	Дата и время события
+reserved_at_window	bool	NOT NULL	Служебное поле бизнес-сущности
+window_number	varchar(16)	NOT NULL	Номер/идентификатор документа
+FK: created_by_id	bigint	FOREIGN KEY -> accounts_user.id, NOT NULL	Ссылка на created_by (accounts_user.id)
+FK: picked_by_id	bigint	FOREIGN KEY -> accounts_user.id, NULL	Ссылка на picked_by (accounts_user.id)
+
+Таблица: OrderLine
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+qty_ordered	decimal(10,2)	NOT NULL	Служебное поле бизнес-сущности
+qty_picked	decimal(10,2)	NOT NULL	Служебное поле бизнес-сущности
+price	decimal(10,2)	NULL	Цена
+FK: order_id	bigint	FOREIGN KEY -> picking_order.id, NOT NULL	Ссылка на order (picking_order.id)
+FK: product_id	bigint	FOREIGN KEY -> catalog_product.id, NOT NULL	Ссылка на product (catalog_product.id)
+
+Таблица: PickingTask
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+status	varchar(16)	NOT NULL	Текущий статус
+zone_type_code	varchar(32)	NOT NULL	Код сущности
+started_at	timestamptz	NULL	Дата и время события
+completed_at	timestamptz	NULL	Дата и время события
+FK: assigned_to_id	bigint	FOREIGN KEY -> accounts_user.id, NULL	Ссылка на assigned_to (accounts_user.id)
+FK: order_id	bigint	FOREIGN KEY -> picking_order.id, NOT NULL	Ссылка на order (picking_order.id)
+
+Таблица: PickingLine
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+qty_picked	decimal(10,2)	NOT NULL	Служебное поле бизнес-сущности
+scanned_oem	varchar(64)	NOT NULL	Служебное поле бизнес-сущности
+FK: order_line_id	bigint	FOREIGN KEY -> picking_orderline.id, NOT NULL	Ссылка на order_line (picking_orderline.id)
+FK: stock_id	bigint	FOREIGN KEY -> inventory_stock.id, NOT NULL	Ссылка на stock (inventory_stock.id)
+FK: task_id	bigint	FOREIGN KEY -> picking_pickingtask.id, NOT NULL	Ссылка на task (picking_pickingtask.id)
+
+Таблица: Task
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+task_type	varchar(32)	NOT NULL	Служебное поле бизнес-сущности
+status	varchar(16)	NOT NULL	Текущий статус
+priority	varchar(16)	NOT NULL	Служебное поле бизнес-сущности
+title	varchar(255)	NOT NULL	Заголовок
+description	text	NOT NULL	Описание
+due_date	timestamptz	NULL	Дата события
+started_at	timestamptz	NULL	Дата и время события
+completed_at	timestamptz	NULL	Дата и время события
+metadata	jsonb	NOT NULL	Служебное поле бизнес-сущности
+FK: assigned_to_id	bigint	FOREIGN KEY -> accounts_user.id, NULL	Ссылка на assigned_to (accounts_user.id)
+FK: created_by_id	bigint	FOREIGN KEY -> accounts_user.id, NOT NULL	Ссылка на created_by (accounts_user.id)
+FK: inventory_id	bigint	FOREIGN KEY -> inventory_inventory.id, NULL	Ссылка на inventory (inventory_inventory.id)
+FK: order_id	bigint	FOREIGN KEY -> picking_order.id, NULL	Ссылка на order (picking_order.id)
+FK: picking_task_id	bigint	FOREIGN KEY -> picking_pickingtask.id, NULL	Ссылка на picking_task (picking_pickingtask.id)
+FK: receiving_id	bigint	FOREIGN KEY -> receiving_receiving.id, NULL	Ссылка на receiving (receiving_receiving.id)
+
+Таблица: TaskComment
+Атрибут	Тип данных	Ограничение	Описание
+PK: id	bigint	PRIMARY KEY, NOT NULL, AUTO_INCREMENT	Уникальный идентификатор записи
+created_at	timestamptz	NOT NULL	Дата и время создания записи
+updated_at	timestamptz	NOT NULL	Дата и время обновления записи
+text	text	NOT NULL	Служебное поле бизнес-сущности
+FK: author_id	bigint	FOREIGN KEY -> accounts_user.id, NOT NULL	Ссылка на author (accounts_user.id)
+FK: task_id	bigint	FOREIGN KEY -> tasks_task.id, NOT NULL	Ссылка на task (tasks_task.id)

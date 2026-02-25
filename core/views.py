@@ -245,20 +245,25 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
     quick_links = [
         {
-            "title": "Справочники",
-            "description": "Номенклатура, бренды, категории и зоны.",
-            "url": reverse("catalog_admin_home"),
-        },
-        {
             "title": "Профиль",
             "description": "Настройки пользователя и роль.",
             "url": reverse("me"),
         },
     ]
 
+    if is_admin_mode:
+        quick_links.insert(
+            0,
+            {
+                "title": "Справочники",
+                "description": "Номенклатура, бренды, категории и зоны.",
+                "url": reverse("catalog_admin_home"),
+            },
+        )
+
     if warehouse_3d_url:
         quick_links.insert(
-            1,
+            1 if is_admin_mode else 0,
             {
                 "title": "3D склад",
                 "description": "Основной модуль 3D-склада для ежедневной работы.",
@@ -318,13 +323,13 @@ def user_manual_download(request: HttpRequest) -> HttpResponse:
     elif user_role in role_map:
         selected_role_code = user_role
     else:
-        selected_role_code = Roles.STOREKEEPER if Roles.STOREKEEPER in role_map else next(iter(role_map.keys()))
+        selected_role_code = next(iter(role_map.keys()))
 
     selected_role = role_map[selected_role_code]
     pdf_content = _build_manual_pdf(
         role=selected_role,
         workflow_steps=context["workflow_steps"],
-        architecture_notes=context["architecture_notes"],
+        work_principles=context["work_principles"],
     )
 
     response = HttpResponse(pdf_content, content_type="application/pdf")
@@ -337,54 +342,69 @@ def _build_manual_context(request: HttpRequest) -> dict:
     first_warehouse = request.user.get_accessible_warehouses().first()
     warehouse_3d_url = reverse("warehouse_3d:view", args=[first_warehouse.id]) if first_warehouse else None
 
-    role_cards = _get_manual_role_cards(warehouse_3d_url)
+    all_role_cards = _get_manual_role_cards(warehouse_3d_url)
+    user_role = getattr(request.user, "role", "")
+    is_admin_mode = bool(request.user.is_superuser or user_role == Roles.ADMIN)
+
+    if is_admin_mode:
+        role_cards = all_role_cards
+    else:
+        role_cards = [card for card in all_role_cards if card["code"] == user_role]
+        if not role_cards:
+            # Безопасный fallback, если роль отсутствует в справочнике.
+            role_cards = [card for card in all_role_cards if card["code"] == Roles.STOREKEEPER]
 
     workflow_steps = [
         {
-            "title": "1. Приёмка",
-            "desc": "Кладовщик создаёт документ приёмки, добавляет строки, завершает приёмку.",
-            "url": reverse("receiving_list"),
-            "cta": "Открыть приёмку",
+            "title": "1. Начните смену с задач",
+            "desc": "Откройте список задач, возьмите приоритетные и проверьте сроки выполнения.",
+            "url": reverse("task_list") + "?my_tasks=1",
+            "cta": "Открыть мои задачи",
         },
         {
-            "title": "2. Хранение и инвентаризация",
-            "desc": "Остатки размещаются в местах хранения, затем периодически проверяются инвентаризацией.",
-            "url": reverse("inventory_list"),
-            "cta": "Открыть инвентаризацию",
+            "title": "2. Выполняйте операции по своему этапу",
+            "desc": "Работайте в роли: приёмка, инвентаризация, подбор, отгрузка или контроль заказов.",
+            "url": reverse("dashboard"),
+            "cta": "Открыть дашборд",
         },
         {
-            "title": "3. Заказы и подбор",
-            "desc": "Менеджер подтверждает заказ, система создаёт задачи подбора по зонам.",
-            "url": reverse("order_list"),
-            "cta": "Открыть заказы",
+            "title": "3. Фиксируйте фактический результат",
+            "desc": "Вносите реальные количества, места хранения и статусы без пропусков и допущений.",
+            "url": reverse("task_list") + "?my_tasks=1",
+            "cta": "Вернуться к задачам",
         },
         {
-            "title": "4. Отгрузка",
-            "desc": "После завершения подбора заказ отгружается, остатки списываются.",
-            "url": reverse("picking_task_list"),
-            "cta": "Открыть задачи подбора",
-        },
-        {
-            "title": "5. Аналитика",
-            "desc": "Аналитик и администратор проверяют отчёты и ключевые показатели.",
-            "url": reverse("reports_home"),
-            "cta": "Открыть отчёты",
+            "title": "4. Завершайте этап и передавайте дальше",
+            "desc": "Закрывайте документ только после проверки, затем передавайте работу следующей роли.",
+            "url": reverse("task_list") + "?my_tasks=1",
+            "cta": "Проверить статус задач",
         },
     ]
 
-    architecture_notes = [
-        "Веб-страницы работают через Django Views и Django ORM (прямой серверный доступ к PostgreSQL).",
-        "Браузер не подключается к базе данных напрямую.",
-        "Для динамических сценариев используются внутренние JSON-эндпоинты (например, мониторинг задач, 3D-операции, EFP/TecDoc и отчётные API).",
-        "3D-страница отправляет операции сохранения/удаления через HTTP-запросы к Django endpoint'ам, а уже сервер выполняет ORM-запросы в БД.",
+    work_principles = [
+        "Работайте только в рамках своей роли и назначенных задач.",
+        "Перед началом операции проверяйте исходные данные документа и статус.",
+        "Фиксируйте только фактические значения: количество, место, результат выполнения.",
+        "При расхождениях оформляйте комментарий и не закрывайте этап без проверки.",
+        "В конце смены проверьте, что незавершённые задачи переведены в корректный статус.",
     ]
 
-    quick_links = [
-        ("Дашборд", reverse("dashboard")),
-        ("Мои задачи", reverse("task_list") + "?my_tasks=1"),
-        ("Остатки", reverse("stock_list")),
-        ("Справочники", reverse("catalog_admin_home")),
-    ]
+    quick_links = [("Дашборд", reverse("dashboard"))]
+    if is_admin_mode or user_role in {Roles.STOREKEEPER, Roles.SMALL_PARTS_PICKER, Roles.LOADER}:
+        quick_links.append(("Мои задачи", reverse("task_list") + "?my_tasks=1"))
+    if is_admin_mode or user_role == Roles.STOREKEEPER:
+        quick_links.append(("Приёмка", reverse("receiving_list")))
+        quick_links.append(("Инвентаризация", reverse("inventory_list")))
+        quick_links.append(("Остатки", reverse("stock_list")))
+    if is_admin_mode or user_role == Roles.SALES_MANAGER:
+        quick_links.append(("Заказы", reverse("order_list")))
+    if is_admin_mode or user_role in {Roles.SMALL_PARTS_PICKER, Roles.LOADER}:
+        quick_links.append(("Задачи подбора", reverse("picking_task_list")))
+    if is_admin_mode or user_role == Roles.ANALYST:
+        quick_links.append(("Отчёты", reverse("reports_home")))
+    if is_admin_mode:
+        quick_links.append(("Справочники", reverse("catalog_admin_home")))
+
     if warehouse_3d_url:
         quick_links.append(("3D-склад", warehouse_3d_url))
 
@@ -401,8 +421,9 @@ def _build_manual_context(request: HttpRequest) -> dict:
         "title": "Инструкция по работе",
         "role_cards": role_cards,
         "role_choices": role_choices,
+        "allow_role_switch": is_admin_mode,
         "workflow_steps": workflow_steps,
-        "architecture_notes": architecture_notes,
+        "work_principles": work_principles,
         "quick_links": quick_links,
     }
 
@@ -470,12 +491,12 @@ def _get_manual_role_cards(warehouse_3d_url: str | None) -> list[dict]:
             "actions": [
                 "Подготовка заказов к выдаче клиенту",
                 "Работа с крупногабаритными позициями и FLOOR-задачами",
-                "Подтверждение отгрузки и передача заказа",
+                "Подтверждение отгрузки по задаче SHIPPING или из карточки заказа",
             ],
             "daily_flow": [
-                "Проверить готовые к выдаче заказы.",
+                "Открыть 'Мои задачи' и взять в работу задачу типа 'Отгрузка'.",
                 "Собрать и перепроверить комплектность для отгрузки.",
-                "Подтвердить выдачу и закрыть этап.",
+                "Подтвердить отгрузку и убедиться, что заказ перешёл в статус 'Отгружен'.",
             ],
             "key_pages": [
                 ("Заказы (готовые)", reverse("order_list") + "?status=PICKED"),
@@ -563,7 +584,7 @@ def _get_manual_role_cards(warehouse_3d_url: str | None) -> list[dict]:
     return cards
 
 
-def _build_manual_pdf(*, role: dict, workflow_steps: list[dict], architecture_notes: list[str]) -> bytes:
+def _build_manual_pdf(*, role: dict, workflow_steps: list[dict], work_principles: list[str]) -> bytes:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -630,13 +651,13 @@ def _build_manual_pdf(*, role: dict, workflow_steps: list[dict], architecture_no
         story.append(Paragraph(f"• {escape(label)}: {escape(url)}", styles["text"]))
 
     story.append(Spacer(1, 6))
-    story.append(Paragraph("Сквозной workflow WMS", styles["h2"]))
+    story.append(Paragraph("Пошаговая работа сотрудника", styles["h2"]))
     for step in workflow_steps:
         story.append(Paragraph(f"• {escape(step['title'])}: {escape(step['desc'])}", styles["text"]))
         story.append(Paragraph(f"URL: {escape(step['url'])}", styles["meta"]))
 
-    story.append(Paragraph("Как система работает с БД и API", styles["h2"]))
-    for note in architecture_notes:
+    story.append(Paragraph("Правила работы в программе", styles["h2"]))
+    for note in work_principles:
         story.append(Paragraph(f"• {escape(note)}", styles["text"]))
 
     doc.build(story)
@@ -661,3 +682,18 @@ def _resolve_pdf_font_name() -> str:
             pdfmetrics.registerFont(TTFont(font_name, font_path))
             return font_name
     return "Helvetica"
+
+
+def permission_denied_view(request: HttpRequest, exception=None) -> HttpResponse:
+    message = "У вас нет доступа к этой странице."
+    if exception:
+        message = str(exception)
+    return render(
+        request,
+        "errors/403.html",
+        {
+            "title": "Нет доступа",
+            "error_message": message,
+        },
+        status=403,
+    )

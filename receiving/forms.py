@@ -155,7 +155,7 @@ class SupplierForm(forms.ModelForm):
 class ReceivingLineForm(forms.ModelForm):
     class Meta:
         model = ReceivingLine
-        fields = ["product", "supplier_sku", "qty_expected", "qty_received", "storage_location", "has_serial_numbers"]
+        fields = ["product", "supplier_sku", "qty_expected", "qty_received", "storage_location"]
 
     def __init__(self, *args, user=None, warehouse=None, **kwargs):
         self.user = user

@@ -154,6 +154,20 @@ class TaskService:
             if not task.receiving or task.receiving.status != ReceivingStatus.COMPLETED:
                 return False
 
+        # Задача отгрузки закрывается только через бизнес-операцию отгрузки заказа.
+        if task.task_type == TaskType.SHIPPING:
+            if not task.order:
+                return False
+            from picking.services import OrderService
+
+            shipped, _ = OrderService.ship_order(task.order, user)
+            if not shipped:
+                return False
+
+            # OrderService.ship_order уже завершает активную задачу отгрузки.
+            task.refresh_from_db(fields=["status", "completed_at"])
+            return task.status == TaskStatus.COMPLETED
+
         task.status = TaskStatus.COMPLETED
         task.completed_at = timezone.now()
         task.save(update_fields=["status", "completed_at"])

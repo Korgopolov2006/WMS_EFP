@@ -13,7 +13,7 @@ from django.db.models import QuerySet
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
-from catalog.models import Product, StorageLocation, StorageZone, Warehouse
+from catalog.models import Product, StorageLocation, Warehouse
 from catalog.services import BackorderService
 from inventory.models import Stock
 from .models import Receiving, ReceivingLine, ReceivingStatus
@@ -58,25 +58,36 @@ def suggest_storage_location(product: Product, user=None, warehouse: Warehouse |
         Product.PackagingType.LARGE: "SHELF",
         Product.PackagingType.PALLET: "FLOOR",
     }
-    code = mapping.get(product.packaging_type)
-    if not code:
-        return None
+    preferred_zone_type_code = mapping.get(product.packaging_type)
 
-    zones = StorageZone.objects.filter(
-        zone_type__code=code,
-        warehouse__isnull=False,
-        warehouse__is_active=True,
+    base_locations = StorageLocation.objects.select_related("zone", "zone__warehouse", "zone__warehouse__branch").filter(
+        zone__warehouse__isnull=False,
+        zone__warehouse__is_active=True,
     )
     if user is not None:
         user_warehouses = get_user_warehouses(user)
-        zones = zones.filter(warehouse__in=user_warehouses)
+        base_locations = base_locations.filter(zone__warehouse__in=user_warehouses)
     if warehouse is not None:
-        zones = zones.filter(warehouse=warehouse)
+        base_locations = base_locations.filter(zone__warehouse=warehouse)
 
-    zone = zones.select_related("warehouse").order_by("warehouse__branch__code", "warehouse__code", "id").first()
-    if not zone:
-        return None
-    return StorageLocation.objects.filter(zone=zone).order_by("code", "id").first()
+    if preferred_zone_type_code:
+        preferred = base_locations.filter(zone__zone_type__code=preferred_zone_type_code).order_by(
+            "zone__warehouse__branch__code",
+            "zone__warehouse__code",
+            "zone__code",
+            "code",
+            "id",
+        ).first()
+        if preferred:
+            return preferred
+
+    return base_locations.order_by(
+        "zone__warehouse__branch__code",
+        "zone__warehouse__code",
+        "zone__code",
+        "code",
+        "id",
+    ).first()
 
 
 class ReceivingService:

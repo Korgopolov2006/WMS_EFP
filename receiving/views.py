@@ -9,7 +9,7 @@ from django.db.models import DecimalField, Sum, Value
 from django.db.models.functions import Coalesce
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import F, Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -246,6 +246,18 @@ def receiving_detail(request: HttpRequest, pk: int) -> HttpResponse:
 
             return redirect("receiving_detail", pk=pk)
 
+    if request.method == "POST" and "receive_all" in request.POST:
+        if obj.status not in {ReceivingStatus.DRAFT, ReceivingStatus.IN_PROGRESS}:
+            messages.error(request, "Массовое принятие доступно только для черновика или документа в работе.")
+            return redirect("receiving_detail", pk=pk)
+
+        updated = obj.lines.exclude(qty_received=F("qty_expected")).update(qty_received=F("qty_expected"))
+        if updated:
+            messages.success(request, f"Готово: {updated} строк(и) заполнены как полностью принятые.")
+        else:
+            messages.info(request, "Все строки уже приняты полностью.")
+        return redirect("receiving_detail", pk=pk)
+
     all_lines = obj.lines.select_related("product", "storage_location").order_by("id")
     total_expected = all_lines.aggregate(total=Coalesce(Sum("qty_expected"), Value(0), output_field=DecimalField(max_digits=12, decimal_places=2)))["total"]
     total_received = all_lines.aggregate(total=Coalesce(Sum("qty_received"), Value(0), output_field=DecimalField(max_digits=12, decimal_places=2)))["total"]
@@ -322,6 +334,36 @@ def receiving_add_line(request: HttpRequest, pk: int) -> HttpResponse:
         else:
             messages.error(request, "Ошибка в строке приёмки.")
     return redirect("receiving_detail", pk=obj.pk)
+
+
+@role_required(Roles.STOREKEEPER, Roles.ADMIN)
+def receiving_suggest_location(request: HttpRequest, pk: int) -> JsonResponse:
+    obj = get_object_or_404(
+        Receiving.objects.select_related("warehouse").filter(_receiving_visibility_q(request.user)).distinct(),
+        pk=pk,
+    )
+    product_id_raw = (request.GET.get("product_id") or "").strip()
+    if not product_id_raw.isdigit():
+        return JsonResponse({"success": False, "error": "product_id is required"}, status=400)
+
+    product = Product.objects.only("id", "packaging_type").filter(pk=int(product_id_raw)).first()
+    if not product:
+        return JsonResponse({"success": False, "error": "Товар не найден"}, status=404)
+
+    location = suggest_storage_location(product, user=request.user, warehouse=obj.warehouse)
+    if not location:
+        return JsonResponse({"success": True, "location": None})
+
+    return JsonResponse(
+        {
+            "success": True,
+            "location": {
+                "id": location.pk,
+                "label": str(location),
+                "code": location.code,
+            },
+        }
+    )
 
 
 @role_required(Roles.STOREKEEPER, Roles.ADMIN)

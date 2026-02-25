@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import models
 from django.db.models import Q
 from django.db.models import Count
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -55,6 +56,13 @@ def _can_complete_task(task: Task, user) -> bool:
         if not task.receiving:
             return False
         if task.receiving.status != ReceivingStatus.COMPLETED:
+            return False
+    elif task.task_type == TaskType.SHIPPING:
+        if not task.order:
+            return False
+        if task.order.status not in [OrderStatus.PICKED, OrderStatus.RESERVED, OrderStatus.CONFIRMED]:
+            return False
+        if task.order.lines.filter(qty_picked__lt=models.F("qty_ordered")).exists():
             return False
 
     if task.assigned_to_id == user.id:
@@ -322,9 +330,41 @@ def task_detail(request: HttpRequest, task_id: int) -> HttpResponse:
             if not _can_complete_task(task, request.user):
                 if task.task_type == TaskType.RECEIVING:
                     messages.error(request, "Сначала завершите документ приёмки, затем закройте задачу.")
+                elif task.task_type == TaskType.SHIPPING:
+                    messages.error(request, "Заказ ещё не готов к отгрузке: не все позиции подобраны.")
                 else:
                     messages.error(request, "Нельзя завершить эту задачу.")
                 return redirect("task_detail", task_id=task_id)
+
+            if task.task_type == TaskType.SHIPPING:
+                confirm_errors: list[str] = []
+                if request.POST.get("ship_check_package") != "1":
+                    confirm_errors.append("Подтвердите проверку комплектности и упаковки.")
+                if request.POST.get("ship_check_documents") != "1":
+                    confirm_errors.append("Подтвердите передачу отгрузочных документов.")
+                confirm_number = (request.POST.get("ship_confirm_number") or "").strip()
+                order_number = task.order.number if task.order else ""
+                if not order_number or confirm_number != order_number:
+                    confirm_errors.append("Номер заказа для подтверждения введён неверно.")
+                window_number = (request.POST.get("ship_window_number") or "").strip()
+                if not window_number:
+                    confirm_errors.append("Укажите номер окна выдачи.")
+
+                if confirm_errors:
+                    for err in confirm_errors:
+                        messages.error(request, err)
+                    return redirect("task_detail", task_id=task_id)
+
+                if task.order:
+                    changed_fields: list[str] = []
+                    if task.order.window_number != window_number:
+                        task.order.window_number = window_number
+                        changed_fields.append("window_number")
+                    if not task.order.reserved_at_window:
+                        task.order.reserved_at_window = True
+                        changed_fields.append("reserved_at_window")
+                    if changed_fields:
+                        task.order.save(update_fields=changed_fields)
 
             if TaskService.complete_task(task, request.user):
                 messages.success(request, "Задача завершена.")

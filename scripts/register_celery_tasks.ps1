@@ -10,8 +10,8 @@ $watchdogScript = "$ProjectRoot\scripts\watchdog_celery.ps1"
 $taskStartName = "WMS_CeleryWorker_OnLogon"
 $taskWatchdogName = "WMS_CeleryWatchdog_5min"
 
-$startCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$startScript`" -ProjectRoot `"$ProjectRoot`""
-$watchdogCmd = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$watchdogScript`" -ProjectRoot `"$ProjectRoot`""
+$startCmd = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$startScript`" -ProjectRoot `"$ProjectRoot`""
+$watchdogCmd = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$watchdogScript`" -ProjectRoot `"$ProjectRoot`""
 
 function Register-WithTaskScheduler {
     $startOk = $false
@@ -36,8 +36,8 @@ function Register-WithStartupFolder {
     $watchdogLoopScript = "$ProjectRoot\scripts\celery_watchdog_loop.ps1"
     $content = @"
 @echo off
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$startScript" -ProjectRoot "$ProjectRoot"
-start "" /min powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$watchdogLoopScript" -ProjectRoot "$ProjectRoot"
+powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$startScript" -ProjectRoot "$ProjectRoot"
+start "" powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "$watchdogLoopScript" -ProjectRoot "$ProjectRoot"
 "@
     Set-Content -Path $startupCmd -Value $content -Encoding ASCII
     Write-Output "Task Scheduler is unavailable. Startup fallback configured:"

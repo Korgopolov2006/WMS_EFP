@@ -152,13 +152,66 @@ def inventory_detail(request: HttpRequest, pk: int) -> HttpResponse:
 
     if request.method == "POST" and "add_line" in request.POST:
         product_id = request.POST.get("product_id", "").strip()
+        product_query = request.POST.get("product_query", "").strip()
         location_id = request.POST.get("location_id", "").strip()
+        location_code = request.POST.get("location_code", "").strip()
         qty_actual = request.POST.get("qty_actual", "").strip()
 
-        if product_id.isdigit() and location_id.isdigit() and qty_actual:
+        if qty_actual:
             try:
-                product = Product.objects.get(pk=int(product_id))
-                location = StorageLocation.objects.get(pk=int(location_id))
+                product = None
+                if product_id.isdigit():
+                    product = Product.objects.filter(pk=int(product_id)).first()
+                elif product_query:
+                    exact_product = Product.objects.filter(
+                        Q(internal_sku__iexact=product_query)
+                        | Q(oem_number__iexact=product_query)
+                        | Q(name__iexact=product_query)
+                    ).first()
+                    if exact_product:
+                        product = exact_product
+                    else:
+                        product_qs = Product.objects.filter(
+                            Q(internal_sku__icontains=product_query)
+                            | Q(oem_number__icontains=product_query)
+                            | Q(name__icontains=product_query)
+                        ).order_by("name")
+                        product_matches = list(product_qs[:6])
+                        if not product_matches:
+                            raise ValueError("Товар не найден. Уточните SKU/OEM/название.")
+                        if len(product_matches) > 1:
+                            suggestions = ", ".join(f"{p.internal_sku} — {p.name}" for p in product_matches[:3])
+                            raise ValueError(f"Найдено несколько товаров. Уточните запрос: {suggestions}")
+                        product = product_matches[0]
+
+                if not product:
+                    raise ValueError("Укажите товар (поиск по SKU/OEM/названию).")
+
+                location = None
+                if location_id.isdigit():
+                    location = StorageLocation.objects.filter(pk=int(location_id)).first()
+                elif location_code:
+                    location_qs = StorageLocation.objects.filter(code__iexact=location_code)
+                    if inventory.zone_id:
+                        location_qs = location_qs.filter(zone=inventory.zone)
+                    location = location_qs.select_related("zone").first()
+                    if not location:
+                        fuzzy_locations = StorageLocation.objects.filter(code__icontains=location_code)
+                        if inventory.zone_id:
+                            fuzzy_locations = fuzzy_locations.filter(zone=inventory.zone)
+                        location_matches = list(fuzzy_locations.select_related("zone")[:6])
+                        if not location_matches:
+                            raise ValueError("Место хранения не найдено. Укажите код места (например A01).")
+                        if len(location_matches) > 1:
+                            suggestions = ", ".join(loc.code for loc in location_matches[:4])
+                            raise ValueError(f"Найдено несколько мест. Уточните код: {suggestions}")
+                        location = location_matches[0]
+
+                if not location:
+                    raise ValueError("Укажите место хранения (по коду).")
+                if inventory.zone_id and location.zone_id != inventory.zone_id:
+                    raise ValueError("Место хранения должно относиться к зоне инвентаризации.")
+
                 qty_actual_val = Decimal(qty_actual)
                 if qty_actual_val != qty_actual_val.to_integral_value():
                     raise ValueError("Фактическое количество должно быть целым числом (шт).")
@@ -174,10 +227,8 @@ def inventory_detail(request: HttpRequest, pk: int) -> HttpResponse:
                     storage_location=location,
                     defaults={"qty_book": qty_book, "qty_actual": qty_actual_val},
                 )
-                messages.success(request, "Строка добавлена")
+                messages.success(request, "Строка инвентаризации сохранена.")
                 return redirect("inventory_detail", pk=pk)
-            except (Product.DoesNotExist, StorageLocation.DoesNotExist):
-                messages.error(request, "Ошибка при добавлении строки")
             except (InvalidOperation, ValueError) as exc:
                 messages.error(request, str(exc))
 
