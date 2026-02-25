@@ -2,31 +2,266 @@
 
 {% block title %}Профиль — WMS{% endblock %}
 
-{% block content %}
-  <section class="card card--glass">
-    <div class="card__header">
-      <h1 class="h2">Профиль</h1>
-      <p class="muted">Информация для контроля прав и доступа.</p>
-    </div>
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    .profile-shell {
+      display: grid;
+      gap: 14px;
+    }
 
-    <div class="grid grid--2">
-      <div class="kv">
-        <div class="kv__k">Пользователь</div>
-        <div class="kv__v">{{ request.user.username }}</div>
-      </div>
-      <div class="kv">
-        <div class="kv__k">Роль</div>
-        <div class="kv__v">{{ request.user.get_role_display|default:request.user.role }}</div>
-      </div>
-      <div class="kv">
-        <div class="kv__k">Email</div>
-        <div class="kv__v">{{ request.user.email|default:"—" }}</div>
-      </div>
-      <div class="kv">
-        <div class="kv__k">Активен</div>
-        <div class="kv__v">{% if request.user.is_active %}Да{% else %}Нет{% endif %}</div>
-      </div>
-    </div>
-  </section>
+    .profile-hero {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .profile-head {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .profile-avatar {
+      width: 62px;
+      height: 62px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      font-weight: 700;
+      border: 1px solid rgba(99, 102, 241, .45);
+      background: linear-gradient(135deg, rgba(99, 102, 241, .28), rgba(14, 165, 233, .24));
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    .profile-name {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+      color: var(--text);
+    }
+
+    .profile-role {
+      margin: 4px 0 0;
+      color: var(--muted);
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .badge-pill {
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .06);
+      color: var(--text);
+    }
+
+    .badge-pill--ok {
+      border-color: rgba(34, 197, 94, .45);
+      background: rgba(34, 197, 94, .14);
+    }
+
+    .badge-pill--warn {
+      border-color: rgba(244, 63, 94, .45);
+      background: rgba(244, 63, 94, .14);
+    }
+
+    .profile-actions {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .profile-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+    }
+
+    .profile-list__item {
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .04);
+      padding: 10px 12px;
+    }
+
+    .profile-list__title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .profile-list__meta {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .profile-kv {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 980px) {
+      .profile-hero,
+      .profile-grid,
+      .profile-stats,
+      .profile-kv {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 {% endblock %}
 
+{% block content %}
+  <section class="profile-shell">
+    <article class="profile-hero">
+      <div class="card card--glass card--lg">
+        <div class="profile-head">
+          <div class="profile-avatar">{{ user_obj.username|first|upper }}</div>
+          <div>
+            <h1 class="profile-name">{{ user_obj.get_full_name|default:user_obj.username }}</h1>
+            <p class="profile-role">{{ role_label }}</p>
+          </div>
+        </div>
+        <div class="badge-row">
+          <span class="badge-pill {% if user_obj.is_active %}badge-pill--ok{% else %}badge-pill--warn{% endif %}">
+            {% if user_obj.is_active %}Аккаунт активен{% else %}Аккаунт отключён{% endif %}
+          </span>
+          <span class="badge-pill {% if user_obj.is_staff %}badge-pill--ok{% else %}badge-pill--warn{% endif %}">
+            {% if user_obj.is_staff %}Доступ в админку{% else %}Без доступа в админку{% endif %}
+          </span>
+          {% if user_obj.is_superuser %}
+            <span class="badge-pill badge-pill--ok">Superuser</span>
+          {% endif %}
+        </div>
+        <p class="muted" style="margin-top:12px;">{{ role_description }}</p>
+      </div>
+
+      <div class="card card--glass card--lg">
+        <h2 class="h3">Быстрые действия</h2>
+        <div class="profile-actions">
+          {% for link in quick_links %}
+            <a class="btn {% if link.variant == 'primary' %}btn--primary{% else %}btn--ghost{% endif %} btn--block" href="{{ link.url }}">
+              {{ link.label }}
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </article>
+
+    <article class="profile-stats">
+      <div class="kv">
+        <div class="kv__k">Доступных складов</div>
+        <div class="kv__v">{{ warehouses_count }}</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Активных филиалов</div>
+        <div class="kv__v">{{ branches_count }}</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Стаж в системе</div>
+        <div class="kv__v">{{ account_age_days }} дн.</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Последний вход</div>
+        <div class="kv__v">{% if user_obj.last_login %}{{ user_obj.last_login|date:"d.m.Y H:i" }}{% else %}—{% endif %}</div>
+      </div>
+    </article>
+
+    <article class="card card--glass card--lg">
+      <form method="get" class="row row--wrap" style="gap:10px;">
+        <div class="field" style="min-width:260px;">
+          <div class="field__label">Поиск по филиалам и складам</div>
+          <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="Код, название, адрес">
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button type="submit" class="btn btn--primary">Найти</button>
+        </div>
+      </form>
+    </article>
+
+    <article class="profile-grid">
+      <div class="card card--glass card--lg">
+        <h2 class="h3">Склады в доступе</h2>
+        {% if accessible_warehouses %}
+          <ul class="profile-list">
+            {% for wh in accessible_warehouses %}
+              <li class="profile-list__item">
+                <p class="profile-list__title">{{ wh.code }} — {{ wh.name }}</p>
+                <p class="profile-list__meta">Филиал: {{ wh.branch.code }} — {{ wh.branch.name }}</p>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">Склады не назначены. Обратитесь к администратору.</p>
+        {% endif %}
+        {% include "partials/pagination.html" with page_obj=warehouses_page_obj page_param="wh_page" %}
+      </div>
+
+      <div class="card card--glass card--lg">
+        <h2 class="h3">Филиалы пользователя</h2>
+        {% if branches %}
+          <ul class="profile-list">
+            {% for branch in branches %}
+              <li class="profile-list__item">
+                <p class="profile-list__title">{{ branch.code }} — {{ branch.name }}</p>
+                <p class="profile-list__meta">{{ branch.address|default:"Адрес не указан" }}</p>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="muted">Филиалы не назначены.</p>
+        {% endif %}
+        {% include "partials/pagination.html" with page_obj=branches_page_obj page_param="branch_page" %}
+      </div>
+    </article>
+
+    <article class="card card--glass card--lg">
+      <h2 class="h3">Учётные данные</h2>
+      <div class="profile-kv">
+        <div class="kv">
+          <div class="kv__k">Логин</div>
+          <div class="kv__v">{{ user_obj.username }}</div>
+        </div>
+        <div class="kv">
+          <div class="kv__k">Email</div>
+          <div class="kv__v">{{ user_obj.email|default:"—" }}</div>
+        </div>
+        <div class="kv">
+          <div class="kv__k">Дата регистрации</div>
+          <div class="kv__v">{{ user_obj.date_joined|date:"d.m.Y H:i" }}</div>
+        </div>
+        <div class="kv">
+          <div class="kv__k">Роль (код)</div>
+          <div class="kv__v">{{ user_obj.role }}</div>
+        </div>
+      </div>
+    </article>
+  </section>
+{% endblock %}

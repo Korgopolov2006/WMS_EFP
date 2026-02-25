@@ -34,6 +34,15 @@
 
     <div class="card card--glass card--lg">
       <h2 class="h3">Текущие связи</h2>
+      <form method="get" class="row row--wrap" style="gap:10px;margin-top:10px;">
+        <div class="field" style="min-width:240px;">
+          <div class="field__label">Поиск по связям</div>
+          <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="SKU, название, тип связи">
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button type="submit" class="btn btn--primary">Найти</button>
+        </div>
+      </form>
       <div class="stack stack--sm" style="margin-top: 10px;">
         {% for item in items %}
           <div class="kv">
@@ -45,7 +54,7 @@
                   <div class="hint">{{ item.note }}</div>
                 {% endif %}
               </div>
-              <form method="post" action="{% url 'catalog_product_xref_delete' product.pk item.pk %}">
+              <form method="post" action="{% url 'catalog_product_xref_delete' product.pk item.pk %}{% if q %}?q={{ q|urlencode }}{% endif %}">
                 {% csrf_token %}
                 <button class="btn" type="submit">Удалить</button>
               </form>
@@ -55,7 +64,7 @@
           <p class="muted">Пока нет связей.</p>
         {% endfor %}
       </div>
+      {% include "partials/pagination.html" with page_obj=page_obj %}
     </div>
   </div>
 {% endblock %}
-

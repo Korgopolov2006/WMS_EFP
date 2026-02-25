@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Поставщики — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">Поставщики</h1>
+      <p class="muted">Справочник контрагентов для приёмки.</p>
+    </div>
+    <div class="row row--wrap" style="gap:8px;">
+      <a class="btn btn--ghost" href="{% url 'receiving_list' %}">К приёмкам</a>
+      <a class="btn btn--primary" href="{% url 'supplier_create' %}?next={{ request.get_full_path|urlencode }}">+ Новый поставщик</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <form method="get" class="row row--wrap" style="gap:10px;">
+      <div class="field" style="min-width:260px;">
+        <div class="field__label">Поиск</div>
+        <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="Код или название">
+      </div>
+      <div class="field" style="min-width:200px;">
+        <div class="field__label">Статус</div>
+        <select name="status" class="form__input">
+          <option value="" {% if not status %}selected{% endif %}>Все</option>
+          <option value="active" {% if status == "active" %}selected{% endif %}>Только активные</option>
+          <option value="inactive" {% if status == "inactive" %}selected{% endif %}>Только неактивные</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button type="submit" class="btn btn--primary">Применить</button>
+      </div>
+    </form>
+
+    <div class="stack" style="margin-top:14px;">
+      {% for item in items %}
+        <div class="kv">
+          <div class="row row--between row--wrap">
+            <div>
+              <div class="hint">{{ item.code }}</div>
+              <div class="kv__v">{{ item.name }}</div>
+            </div>
+            <div>
+              {% if item.is_active %}
+                <span class="pill" style="background:rgba(100,255,150,0.2);color:rgba(50,200,100,1);">Активен</span>
+              {% else %}
+                <span class="pill" style="background:rgba(255,150,150,0.2);color:rgba(220,90,90,1);">Неактивен</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Поставщики не найдены.</p>
+      {% endfor %}
+    </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
+  </div>
+{% endblock %}

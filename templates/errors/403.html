@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Нет доступа — WMS{% endblock %}
+
+{% block content %}
+  <section style="margin-top:14px;">
+    <div class="card card--glass card--lg">
+      <div class="card__header">
+        <h1 class="h2">Доступ запрещён</h1>
+        <p class="muted">{{ error_message|default:"У вас нет доступа к этой странице." }}</p>
+      </div>
+      <div class="card__footer">
+        <a class="btn btn--primary" href="{% url 'dashboard' %}">Вернуться на дашборд</a>
+      </div>
+    </div>
+  </section>
+{% endblock %}

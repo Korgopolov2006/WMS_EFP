@@ -9,21 +9,46 @@ from decimal import Decimal
 from datetime import date
 
 from django.db import transaction
+from django.db.models import QuerySet
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
-from catalog.models import Product, StorageLocation, StorageZone
+from catalog.models import Product, StorageLocation, Warehouse
 from catalog.services import BackorderService
 from inventory.models import Stock
 from .models import Receiving, ReceivingLine, ReceivingStatus
 
 
-def suggest_storage_location(product: Product) -> StorageLocation | None:
+def get_user_warehouses(user) -> QuerySet[Warehouse]:
+    """
+    Возвращает склады, в которых пользователь может выполнять операции.
+
+    Приоритет:
+    1) Явные доступы через get_accessible_warehouses();
+    2) fallback по филиалам пользователя (если доступы не заведены);
+    3) для админа - все активные склады.
+    """
+    if getattr(user, "is_superuser", False) or getattr(user, "is_admin", lambda: False)():
+        return Warehouse.objects.filter(is_active=True)
+
+    explicit = user.get_accessible_warehouses()
+    if explicit.exists():
+        return explicit
+
+    return Warehouse.objects.filter(
+        branch__in=user.branches.filter(is_active=True),
+        is_active=True,
+    ).distinct()
+
+
+def suggest_storage_location(product: Product, user=None, warehouse: Warehouse | None = None) -> StorageLocation | None:
     """
     Предлагает место хранения для товара на основе его типа упаковки.
     
     Args:
         product: Товар
+        user: Пользователь (для ограничения по доступным складам)
+        warehouse: Склад документа приёмки
         
     Returns:
         StorageLocation или None
@@ -33,13 +58,36 @@ def suggest_storage_location(product: Product) -> StorageLocation | None:
         Product.PackagingType.LARGE: "SHELF",
         Product.PackagingType.PALLET: "FLOOR",
     }
-    code = mapping.get(product.packaging_type)
-    if not code:
-        return None
-    zone = StorageZone.objects.filter(zone_type__code=code).order_by("id").first()
-    if not zone:
-        return None
-    return StorageLocation.objects.filter(zone=zone).order_by("id").first()
+    preferred_zone_type_code = mapping.get(product.packaging_type)
+
+    base_locations = StorageLocation.objects.select_related("zone", "zone__warehouse", "zone__warehouse__branch").filter(
+        zone__warehouse__isnull=False,
+        zone__warehouse__is_active=True,
+    )
+    if user is not None:
+        user_warehouses = get_user_warehouses(user)
+        base_locations = base_locations.filter(zone__warehouse__in=user_warehouses)
+    if warehouse is not None:
+        base_locations = base_locations.filter(zone__warehouse=warehouse)
+
+    if preferred_zone_type_code:
+        preferred = base_locations.filter(zone__zone_type__code=preferred_zone_type_code).order_by(
+            "zone__warehouse__branch__code",
+            "zone__warehouse__code",
+            "zone__code",
+            "code",
+            "id",
+        ).first()
+        if preferred:
+            return preferred
+
+    return base_locations.order_by(
+        "zone__warehouse__branch__code",
+        "zone__warehouse__code",
+        "zone__code",
+        "code",
+        "id",
+    ).first()
 
 
 class ReceivingService:
@@ -58,6 +106,10 @@ class ReceivingService:
             (success: bool, messages: list[str])
         """
         errors = []
+
+        if not receiving.warehouse:
+            errors.append("Для приёмки не указан склад.")
+            return False, errors
         
         # Валидация: нельзя завершить без строк
         if not receiving.lines.exists():
@@ -72,6 +124,11 @@ class ReceivingService:
                 errors.append(f"Строка {line.product.internal_sku}: принято значительно больше ожидаемого")
             if not line.storage_location:
                 errors.append(f"Строка {line.product.internal_sku}: не указано место хранения")
+            elif line.storage_location.zone.warehouse_id != receiving.warehouse_id:
+                errors.append(
+                    f"Строка {line.product.internal_sku}: место {line.storage_location} "
+                    f"не относится к складу документа ({receiving.warehouse.code})"
+                )
         
         if errors:
             return False, errors
@@ -160,9 +217,15 @@ class ReceivingService:
         
         if line.qty_expected <= 0:
             errors.append("Ожидаемое количество должно быть больше нуля")
+
+        if line.qty_expected != line.qty_expected.to_integral_value():
+            errors.append("Ожидаемое количество должно быть целым числом (шт)")
         
         if line.qty_received < 0:
             errors.append("Принятое количество не может быть отрицательным")
+
+        if line.qty_received != line.qty_received.to_integral_value():
+            errors.append("Принятое количество должно быть целым числом (шт)")
         
         if line.qty_received > line.qty_expected * Decimal('1.2'):  # Допускаем 20% перебор
             errors.append("Принятое количество значительно превышает ожидаемое")
@@ -192,12 +255,19 @@ class ReceivingService:
         
         if receiving.status == ReceivingStatus.CANCELLED:
             return False, ["Нельзя завершить отменённую приёмку"]
+
+        if not receiving.warehouse:
+            return False, ["Для документа не указан склад"]
         
         if not receiving.lines.exists():
             return False, ["Нет строк приёмки"]
         
         errors = []
         for line in receiving.lines.all():
+            if line.storage_location and line.storage_location.zone.warehouse_id != receiving.warehouse_id:
+                errors.append(
+                    f"{line.product.internal_sku}: место хранения не относится к складу документа ({receiving.warehouse.code})"
+                )
             line_errors = ReceivingService.validate_receiving_line(line)
             errors.extend([f"{line.product.internal_sku}: {e}" for e in line_errors])
         

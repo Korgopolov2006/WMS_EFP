@@ -126,6 +126,9 @@
     </div>
     <div class="admin-list-head__actions">
       <a class="btn btn--ghost" href="{% url 'catalog_admin_home' %}">Справочники</a>
+      {% if secondary_url and secondary_label %}
+        <a class="btn btn--ghost" href="{% url secondary_url %}">{{ secondary_label }}</a>
+      {% endif %}
       <a class="btn btn--primary" href="{% url create_url %}">+ Добавить</a>
     </div>
   </div>
@@ -141,7 +144,7 @@
       </div>
     </form>
     <div class="admin-list-toolbar">
-      <span class="admin-pill">Найдено: {{ items|length }}</span>
+      <span class="admin-pill">Найдено: {% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ items|length }}{% endif %}</span>
       {% if q %}
         <span class="admin-pill">Запрос: "{{ q }}"</span>
       {% else %}
@@ -152,5 +155,6 @@
     <div style="margin-top:14px">
       {% block table %}{% endblock %}
     </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
   </div>
 {% endblock %}

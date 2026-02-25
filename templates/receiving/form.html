@@ -26,9 +26,32 @@
       {% for field in form %}
         <div class="field">
           <div class="field__label">{{ field.label }}</div>
-          {{ field }}
+          {% if field.name == "number" or field.name == "supplier_doc_no" %}
+            <div class="row row--wrap" style="gap:8px;align-items:center;">
+              <div style="flex:1;min-width:220px;">{{ field }}</div>
+              <button
+                type="button"
+                class="btn btn--ghost"
+                data-unlock-target="{{ field.id_for_label }}"
+              >
+                Заполнить вручную
+              </button>
+            </div>
+          {% else %}
+            {{ field }}
+          {% endif %}
           {% if field.name == "number" %}
-            <div class="hint">Номер подставляется автоматически, при необходимости можно изменить вручную.</div>
+            <div class="hint">Номер подставляется автоматически. Для изменения нажмите "Заполнить вручную".</div>
+          {% elif field.name == "supplier" %}
+            <div class="hint">Выберите поставщика из базы контрагентов.</div>
+            <div class="row row--wrap" style="gap:8px;margin-top:8px;">
+              <a class="btn btn--ghost" href="{% url 'supplier_list' %}" target="_blank" rel="noopener">Справочник поставщиков</a>
+              <a class="btn btn--ghost" href="{% url 'supplier_create' %}?next={{ request.get_full_path|urlencode }}" target="_blank" rel="noopener">+ Новый поставщик</a>
+            </div>
+          {% elif field.name == "warehouse" %}
+            <div class="hint">Склад фиксируется для всего документа приёмки. Строки можно размещать только в местах этого склада.</div>
+          {% elif field.name == "supplier_doc_no" %}
+            <div class="hint">Номер документа подставляется автоматически по выбранному поставщику. Для ручного номера нажмите "Заполнить вручную".</div>
           {% elif field.name == "expected_at" %}
             <div class="hint">По умолчанию установлена сегодняшняя дата, её можно скорректировать.</div>
           {% endif %}
@@ -44,4 +67,69 @@
       </div>
     </form>
   </div>
+
+  <script>
+    (function() {
+      const supplierSelect = document.getElementById("id_supplier");
+      const supplierDocInput = document.getElementById("id_supplier_doc_no");
+      const expectedAtInput = document.getElementById("id_expected_at");
+      const endpoint = "{% url 'receiving_next_supplier_doc' %}";
+      const unlockButtons = document.querySelectorAll("[data-unlock-target]");
+
+      unlockButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const targetId = btn.getAttribute("data-unlock-target");
+          const targetInput = document.getElementById(targetId);
+          if (!targetInput) {
+            return;
+          }
+          targetInput.removeAttribute("readonly");
+          targetInput.dataset.manual = "1";
+          targetInput.focus();
+          btn.disabled = true;
+          btn.textContent = "Ручной ввод включен";
+        });
+      });
+
+      if (!supplierSelect || !supplierDocInput) {
+        return;
+      }
+
+      async function refreshSupplierDocNo() {
+        if (supplierDocInput.dataset.manual === "1") {
+          return;
+        }
+        const supplierId = supplierSelect.value;
+        if (!supplierId) {
+          supplierDocInput.value = "";
+          return;
+        }
+
+        try {
+          const params = new URLSearchParams({ supplier_id: supplierId });
+          if (expectedAtInput && expectedAtInput.value) {
+            params.set("expected_at", expectedAtInput.value);
+          }
+          const res = await fetch(`${endpoint}?${params.toString()}`);
+          if (!res.ok) {
+            return;
+          }
+          const data = await res.json();
+          if (data && data.supplier_doc_no) {
+            supplierDocInput.value = data.supplier_doc_no;
+          }
+        } catch (e) {
+          // Ignore network errors in UI helper.
+        }
+      }
+
+      supplierSelect.addEventListener("change", refreshSupplierDocNo);
+      if (expectedAtInput) {
+        expectedAtInput.addEventListener("change", refreshSupplierDocNo);
+      }
+      if (!supplierDocInput.value.trim() && supplierSelect.value) {
+        refreshSupplierDocNo();
+      }
+    })();
+  </script>
 {% endblock %}

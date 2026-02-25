@@ -56,6 +56,8 @@ class User(AbstractUser):
 
     def can_access_warehouse(self, warehouse):
         """Проверяет, есть ли у пользователя доступ к складу."""
+        from catalog.models import WarehouseAccess
+
         if self.is_admin():
             return True
 

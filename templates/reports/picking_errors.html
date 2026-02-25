@@ -2,78 +2,383 @@
 
 {% block title %}{{ title }} — WMS{% endblock %}
 
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    .pe-shell {
+      display: grid;
+      gap: 14px;
+    }
+
+    .pe-intro {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+    }
+
+    .pe-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .pe-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .pe-bars {
+      display: grid;
+      gap: 8px;
+    }
+
+    .pe-bar {
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .04);
+      padding: 8px 10px;
+    }
+
+    .pe-bar__head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .pe-bar__track {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, .2);
+      overflow: hidden;
+    }
+
+    .pe-bar__fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(244, 63, 94, .85), rgba(251, 191, 36, .85));
+    }
+
+    .pe-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .pe-table th,
+    .pe-table td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, .1);
+      vertical-align: top;
+    }
+
+    .pe-table th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .pe-table td.is-center,
+    .pe-table th.is-center {
+      text-align: center;
+    }
+
+    .pe-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 96px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--stroke);
+    }
+
+    .pe-status--ok {
+      border-color: rgba(34, 197, 94, .5);
+      background: rgba(34, 197, 94, .16);
+    }
+
+    .pe-status--bad {
+      border-color: rgba(244, 63, 94, .55);
+      background: rgba(244, 63, 94, .2);
+    }
+
+    .pe-chart-grid {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 12px;
+    }
+
+    .pe-donut-wrap {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    .pe-donut {
+      width: 170px;
+      height: 170px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      position: relative;
+    }
+
+    .pe-donut::after {
+      content: "";
+      position: absolute;
+      inset: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--glass2), var(--glass));
+      z-index: 1;
+    }
+
+    .pe-donut__center {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-content: center;
+      text-align: center;
+    }
+
+    .pe-donut__center strong {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .pe-legend {
+      width: 100%;
+      display: grid;
+      gap: 6px;
+    }
+
+    .pe-legend__item {
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      background: rgba(148, 163, 184, .08);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 980px) {
+      .pe-intro,
+      .pe-grid,
+      .pe-chart-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+{% endblock %}
+
 {% block content %}
-  <div class="row row--between row--wrap">
-    <div>
-      <h1 class="h2">{{ title }}</h1>
-      <p class="muted">Период: {{ period_start|date:"d.m.Y" }} — {{ period_end|date:"d.m.Y" }}</p>
-    </div>
-    <div class="row row--wrap">
-      <a class="btn btn--ghost" href="{% url 'reports_home' %}">← К отчётам</a>
-    </div>
-  </div>
-
-  <div class="grid grid--2" style="margin-top:14px;gap:14px;">
-    <div class="card card--glass">
-      <div class="card__header">
-        <h3 class="h3">Статистика</h3>
+  <section class="pe-shell">
+    <div class="row row--between row--wrap">
+      <div>
+        <h1 class="h2">{{ title }}</h1>
+        <p class="muted">Период: {{ period_start|date:"d.m.Y" }} — {{ period_end|date:"d.m.Y" }}</p>
       </div>
-      <div class="stack">
-        <div class="kv">
-          <div class="kv__k">Всего ошибок</div>
-          <div class="kv__v">{{ summary.total_errors }}</div>
-        </div>
-        <div class="kv">
-          <div class="kv__k">Исправлено</div>
-          <div class="kv__v">{{ summary.resolved_errors }}</div>
-        </div>
-        <div class="kv">
-          <div class="kv__k">Не исправлено</div>
-          <div class="kv__v">{{ summary.unresolved_errors }}</div>
-        </div>
+      <div class="row row--wrap">
+        <form method="get" class="row row--wrap" style="gap:10px;">
+          <input type="text" name="q" value="{{ q }}" class="form__input" style="min-width:240px;" placeholder="Заказ, SKU, сотрудник, тип">
+          <select name="period" class="form__input" style="width:auto;">
+            <option value="7" {% if period_days == 7 %}selected{% endif %}>7 дней</option>
+            <option value="30" {% if period_days == 30 %}selected{% endif %}>30 дней</option>
+            <option value="90" {% if period_days == 90 %}selected{% endif %}>90 дней</option>
+            <option value="180" {% if period_days == 180 %}selected{% endif %}>180 дней</option>
+          </select>
+          <button type="submit" class="btn btn--primary">Применить</button>
+        </form>
+        <a class="btn btn--ghost" href="{% url 'reports_home' %}">← К отчётам</a>
       </div>
     </div>
 
-    <div class="card card--glass">
-      <div class="card__header">
-        <h3 class="h3">По типам</h3>
-      </div>
-      <div class="stack">
-        {% for item in summary.errors_by_type %}
+    <section class="pe-intro">
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Как читать отчёт</h3>
+        <p class="muted">
+          Отчёт фиксирует ошибки при подборе заказов: неверный товар, количество, место и т.д.
+          Главная цель — снизить количество ошибок и время их закрытия.
+        </p>
+        <ul class="pe-list">
+          <li>Сначала смотрите “не исправлено” и просроченные ошибки.</li>
+          <li>Далее анализируйте типы ошибок — это покажет слабое место процесса.</li>
+          <li>После этого проверяйте топ SKU и сотрудников, где ошибки повторяются чаще всего.</li>
+        </ul>
+      </article>
+
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Контрольный ориентир</h3>
+        <ul class="pe-list">
+          <li>Высокий <strong>% исправления</strong> — процесс отработки инцидентов стабилен.</li>
+          <li>Рост <strong>неисправленных 48+ часов</strong> — риск срыва SLA и отгрузок.</li>
+          <li>Концентрация по одному типу ошибок — повод менять инструкцию/контроль.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="pe-grid">
+      <article class="kv">
+        <div class="kv__k">Всего ошибок</div>
+        <div class="kv__v">{{ total_errors }}</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Исправлено</div>
+        <div class="kv__v">{{ resolved_errors }}</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Не исправлено</div>
+        <div class="kv__v">{{ unresolved_errors }}</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Процент исправления</div>
+        <div class="kv__v">{{ resolved_rate }}%</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Не закрыто &gt; 48 часов</div>
+        <div class="kv__v">{{ unresolved_old_count }}</div>
+      </article>
+    </section>
+
+    <section class="pe-chart-grid">
+      <article class="card card--glass card--lg pe-donut-wrap">
+        <h3 class="h3">Статус закрытия ошибок</h3>
+        <div
+          class="pe-donut"
+          style="background:conic-gradient(
+            rgba(34, 197, 94, .85) 0 {{ status_distribution.0.end }}%,
+            rgba(244, 63, 94, .85) {{ status_distribution.0.end }}% 100%
+          );"
+        >
+          <div class="pe-donut__center">
+            <strong>{{ total_errors }}</strong>
+            <span class="hint">ошибок</span>
+          </div>
+        </div>
+        <div class="pe-legend">
+          {% for item in status_distribution %}
+            <div class="pe-legend__item">
+              <span>{{ item.label }}</span>
+              <span>{{ item.count }} ({{ item.share }}%)</span>
+            </div>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Распределение по типам</h3>
+        <div class="pe-bars">
+          {% for item in errors_by_type %}
+            <div class="pe-bar">
+              <div class="pe-bar__head">
+                <span>{{ item.label }}</span>
+                <span>{{ item.count }} ({{ item.share }}%)</span>
+              </div>
+              <div class="pe-bar__track">
+                <div class="pe-bar__fill" style="width:{{ item.share }}%;"></div>
+              </div>
+            </div>
+          {% empty %}
+            <p class="muted">Нет данных по типам ошибок.</p>
+          {% endfor %}
+        </div>
+      </article>
+    </section>
+
+    <section class="grid grid--2">
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Где чаще возникают ошибки</h3>
+        <div class="stack stack--sm">
           <div class="kv">
-            <div class="kv__k">{{ item.error_type }}</div>
-            <div class="kv__v">{{ item.count }}</div>
+            <div class="kv__k">Топ SKU</div>
+            {% for p in top_products %}
+              <div class="row row--between row--wrap">
+                <span>{{ p.expected_product__internal_sku }}</span>
+                <span class="hint">{{ p.count }}</span>
+              </div>
+            {% empty %}
+              <div class="muted">Нет данных</div>
+            {% endfor %}
           </div>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-
-  <div class="card card--glass card--lg" style="margin-top:14px;">
-    <div class="card__header">
-      <h3 class="h3">Список ошибок</h3>
-    </div>
-    <div class="stack">
-      {% for error in errors %}
-        <div class="kv">
-          <div class="row row--between row--wrap">
-            <div>
-              <div class="kv__v">{{ error.expected_product.internal_sku }}</div>
-              <div class="hint">{{ error.get_error_type_display }}</div>
-            </div>
-            <div>
-              <div class="hint">{{ error.detected_at|date:"d.m.Y H:i" }}</div>
-              {% if error.resolved %}
-                <div class="hint" style="color:rgba(80,255,120,.9);">✓ Исправлено</div>
-              {% else %}
-                <div class="hint" style="color:rgba(255,80,120,.9);">Не исправлено</div>
-              {% endif %}
-            </div>
+          <div class="kv">
+            <div class="kv__k">Топ по обнаружению</div>
+            {% for d in top_detectors %}
+              <div class="row row--between row--wrap">
+                <span>{{ d.detected_by__username|default:"—" }}</span>
+                <span class="hint">{{ d.count }}</span>
+              </div>
+            {% empty %}
+              <div class="muted">Нет данных</div>
+            {% endfor %}
           </div>
         </div>
-      {% empty %}
-        <p class="muted">Ошибок не найдено.</p>
-      {% endfor %}
-    </div>
-  </div>
+      </article>
+    </section>
+
+    <section class="card card--glass card--lg">
+      <div class="card__header">
+        <h3 class="h3">Журнал ошибок</h3>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="pe-table">
+          <thead>
+            <tr>
+              <th>Дата/время</th>
+              <th>Заказ</th>
+              <th>Тип ошибки</th>
+              <th>Ожидалось</th>
+              <th>Фактически</th>
+              <th class="is-center">Статус</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for error in errors %}
+              <tr>
+                <td>
+                  <div>{{ error.detected_at|date:"d.m.Y H:i" }}</div>
+                  <div class="hint">Обнаружил: {{ error.detected_by.username }}</div>
+                </td>
+                <td>
+                  <div>{{ error.order_line.order.number }}</div>
+                  <div class="hint">{{ error.order_line.product.internal_sku }}</div>
+                </td>
+                <td>{{ error.get_error_type_display }}</td>
+                <td>
+                  <div>{{ error.expected_product.internal_sku }}</div>
+                  <div class="hint">Кол-во: {{ error.expected_qty|floatformat:0 }}</div>
+                </td>
+                <td>
+                  <div>{{ error.actual_product.internal_sku|default:"—" }}</div>
+                  <div class="hint">Кол-во: {{ error.actual_qty|floatformat:0|default:"—" }}</div>
+                </td>
+                <td class="is-center">
+                  {% if error.resolved %}
+                    <span class="pe-status pe-status--ok">Исправлено</span>
+                  {% else %}
+                    <span class="pe-status pe-status--bad">Не исправлено</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" style="padding:20px;text-align:center;" class="muted">Ошибок не найдено.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% include "partials/pagination.html" with page_obj=page_obj %}
+    </section>
+  </section>
 {% endblock %}

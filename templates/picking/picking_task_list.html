@@ -43,6 +43,10 @@
 
   <div class="card card--glass card--lg" style="margin-top:14px;">
     <form method="get" class="row row--wrap" style="gap:10px;margin-bottom:14px;">
+      <div class="field" style="min-width:220px;">
+        <div class="field__label">Поиск</div>
+        <input type="text" name="q" value="{{ q }}" placeholder="Заказ, клиент, зона, исполнитель" class="form__input">
+      </div>
       <div class="field" style="min-width:180px;">
         <div class="field__label">Статус</div>
         <select name="status" onchange="this.form.submit()" class="form__input">
@@ -60,6 +64,9 @@
           <option value="SHELF" {% if zone_type == "SHELF" %}selected{% endif %}>Полки</option>
           <option value="FLOOR" {% if zone_type == "FLOOR" %}selected{% endif %}>Напольное</option>
         </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button type="submit" class="btn btn--primary">Применить</button>
       </div>
     </form>
 
@@ -81,5 +88,6 @@
         <p class="muted">Задач подбора не найдено.</p>
       {% endfor %}
     </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
   </div>
 {% endblock %}

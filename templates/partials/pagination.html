@@ -1,0 +1,22 @@
+{% if page_obj and page_obj.paginator.num_pages > 1 %}
+  {% with page_key=page_param|default:"page" %}
+  <div class="row row--between row--wrap" style="margin-top:14px;">
+    <div class="hint">
+      Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }} • всего {{ page_obj.paginator.count }}
+    </div>
+    <div class="row row--wrap" style="gap:8px;">
+      {% if page_obj.has_previous %}
+        <a class="btn btn--ghost" href="?{% for k,v in request.GET.items %}{% if k != page_key %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}{{ page_key }}={{ page_obj.previous_page_number }}">← Назад</a>
+      {% else %}
+        <span class="btn btn--ghost btn--disabled">← Назад</span>
+      {% endif %}
+
+      {% if page_obj.has_next %}
+        <a class="btn btn--ghost" href="?{% for k,v in request.GET.items %}{% if k != page_key %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}{{ page_key }}={{ page_obj.next_page_number }}">Вперёд →</a>
+      {% else %}
+        <span class="btn btn--ghost btn--disabled">Вперёд →</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endwith %}
+{% endif %}

@@ -14,6 +14,7 @@
   --stroke:rgba(255,255,255,.18);
   --text:rgba(255,255,255,.92);
   --muted:rgba(226,232,255,.70);
+  --hint:rgba(226,232,255,.72);
   --shadow:0 18px 45px rgba(0,0,0,.55);
   --accent:#7c5cff;
   --accent2:#2dd4bf;
@@ -29,6 +30,7 @@
   --stroke:rgba(148,163,184,.45);
   --text:#111827;
   --muted:#4b5563;
+  --hint:#374151;
   --shadow:0 10px 32px rgba(15,23,42,.18);
   --accent:#6366f1;
   --accent2:#0ea5e9;
@@ -129,6 +131,7 @@ main{padding:18px 0 38px}
   border-radius:var(--radius);
   border:1px solid var(--stroke);
   box-shadow:var(--shadow);
+  color:var(--text);
 }
 .card--glass{
   background:linear-gradient(180deg,var(--glass2),var(--glass));
@@ -139,12 +142,30 @@ main{padding:18px 0 38px}
 .card__header{padding:18px 18px 10px}
 .card__footer{padding:10px 18px 18px}
 
-.h1{font-size:40px;line-height:1.08;margin:0 0 12px}
-.h2{font-size:28px;line-height:1.15;margin:0 0 10px}
-.h3{font-size:18px;line-height:1.2;margin:0 0 8px}
+.h1{font-size:40px;line-height:1.08;margin:0 0 12px;color:var(--text)}
+.h2{font-size:28px;line-height:1.15;margin:0 0 10px;color:var(--text)}
+.h3{font-size:18px;line-height:1.2;margin:0 0 8px;color:var(--text)}
 .lead{font-size:16px;color:var(--muted);margin:0}
 .muted{color:var(--muted);margin:0}
-.hint{color:rgba(234,240,255,.62);font-size:13px}
+.hint{color:var(--hint);font-size:13px}
+
+/* Safety net: prevent pale text in light theme cards/pages */
+:root[data-theme="light"] .card p,
+:root[data-theme="light"] .card li,
+:root[data-theme="light"] .card .kv__v,
+:root[data-theme="light"] .card .h1,
+:root[data-theme="light"] .card .h2,
+:root[data-theme="light"] .card .h3{
+  color:var(--text);
+}
+:root[data-theme="light"] .card .muted,
+:root[data-theme="light"] .card .field__label{
+  color:var(--muted);
+}
+:root[data-theme="light"] .card .hint,
+:root[data-theme="light"] .card .kv__k{
+  color:var(--hint);
+}
 
 .grid{display:grid;gap:14px}
 .grid--2{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -246,7 +267,7 @@ select option{
 .toast__title{font-weight:600}
 
 .kv{padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06)}
-.kv__k{font-size:12px;color:rgba(234,240,255,.70)}
+.kv__k{font-size:12px;color:var(--hint)}
 .kv__v{font-size:15px}
 
 .storage-grid{

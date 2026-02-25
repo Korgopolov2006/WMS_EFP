@@ -91,8 +91,17 @@
           <div class="kv__k">Связанная приёмка</div>
           <div class="kv__v">
             <a href="{% url 'receiving_detail' task.receiving.pk %}">{{ task.receiving.number }}</a>
+            <span class="hint" style="margin-left:8px;">({{ task.receiving.get_status_display }})</span>
           </div>
         </div>
+        {% if task.task_type == "RECEIVING" and task.receiving.status != "COMPLETED" %}
+          <div class="kv">
+            <div class="kv__k">Требуемое действие</div>
+            <div class="kv__v">
+              Завершите документ приёмки, затем вернитесь и закройте задачу.
+            </div>
+          </div>
+        {% endif %}
       {% endif %}
       
       {% if task.inventory %}
@@ -123,18 +132,45 @@
       {% endif %}
     </div>
     
-    {% if task.status != 'COMPLETED' and task.assigned_to == user %}
+    {% if can_start or can_complete %}
       <div class="row row--wrap" style="margin-top:20px;gap:10px;">
-        {% if task.status == 'PENDING' %}
+        {% if can_start %}
           <form method="post" style="display:inline;">
             {% csrf_token %}
             <input type="hidden" name="action" value="start">
-            <button type="submit" class="btn btn--primary">Начать выполнение</button>
+            <button type="submit" class="btn btn--primary">
+              {% if task.assigned_to_id and task.assigned_to_id == user.id %}
+                Начать выполнение
+              {% else %}
+                Взять задачу
+              {% endif %}
+            </button>
           </form>
-        {% elif task.status == 'IN_PROGRESS' %}
-          <form method="post" style="display:inline;">
+        {% endif %}
+        {% if can_complete %}
+          <form method="post" style="display:inline-block;min-width:340px;">
             {% csrf_token %}
             <input type="hidden" name="action" value="complete">
+            {% if task.task_type == "SHIPPING" %}
+              <div class="stack" style="margin-bottom:10px;">
+                <label style="display:flex;align-items:flex-start;gap:8px;">
+                  <input type="checkbox" name="ship_check_package" value="1" required>
+                  <span>Комплектность и упаковка проверены.</span>
+                </label>
+                <label style="display:flex;align-items:flex-start;gap:8px;">
+                  <input type="checkbox" name="ship_check_documents" value="1" required>
+                  <span>Отгрузочные документы передаются клиенту.</span>
+                </label>
+                <div class="field">
+                  <div class="field__label">Номер окна выдачи</div>
+                  <input class="form__input" type="text" name="ship_window_number" placeholder="Например: W-03" required>
+                </div>
+                <div class="field">
+                  <div class="field__label">Введите номер заказа для подтверждения</div>
+                  <input class="form__input" type="text" name="ship_confirm_number" placeholder="{{ task.order.number }}" required>
+                </div>
+              </div>
+            {% endif %}
             <button type="submit" class="btn btn--primary">Завершить задачу</button>
           </form>
         {% endif %}

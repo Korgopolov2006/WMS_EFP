@@ -1,7 +1,14 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Receiving, ReceivingLine, ReceivingSerial, ReceivingStatus
+from .models import Receiving, ReceivingLine, ReceivingSerial, ReceivingStatus, Supplier
+
+
+@admin.register(Supplier)
+class SupplierAdmin(admin.ModelAdmin):
+    list_display = ["code", "name", "is_active"]
+    list_filter = ["is_active"]
+    search_fields = ["code", "name"]
 
 
 @admin.register(Receiving)
@@ -9,6 +16,7 @@ class ReceivingAdmin(admin.ModelAdmin):
     list_display = [
         "number",
         "supplier_name",
+        "warehouse",
         "status",
         "expected_at",
         "completed_at",
@@ -16,13 +24,14 @@ class ReceivingAdmin(admin.ModelAdmin):
         "created_at",
     ]
     list_filter = ["status", "created_at", "expected_at", "completed_at"]
-    search_fields = ["number", "supplier_name", "supplier_doc_no", "created_by__username"]
+    search_fields = ["number", "supplier_name", "supplier_doc_no", "warehouse__code", "warehouse__name", "created_by__username"]
     readonly_fields = ["created_at", "updated_at", "status_display"]
-    autocomplete_fields = ["created_by"]
+    autocomplete_fields = ["created_by", "warehouse"]
     date_hierarchy = "created_at"
     fieldsets = (
         ("Основная информация", {"fields": ("number", "status", "status_display")}),
         ("Поставщик", {"fields": ("supplier_name", "supplier_doc_no")}),
+        ("Склад", {"fields": ("warehouse",)}),
         ("Временные метки", {"fields": ("expected_at", "completed_at")}),
         ("Создатель", {"fields": ("created_by",)}),
         ("Системные", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),

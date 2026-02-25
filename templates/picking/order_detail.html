@@ -101,7 +101,7 @@
       <p class="muted">{{ subtitle }}</p>
     </div>
     <div>
-      <a class="btn btn--ghost" href="{% url 'order_list' %}">← К списку</a>
+      <a class="btn btn--ghost" href="{% url back_url %}">← К списку</a>
     </div>
   </div>
 
@@ -182,12 +182,30 @@
             <button type="submit" class="btn btn--primary btn--block">Подтвердить заказ</button>
           </form>
         {% elif can_ship %}
-          <form method="post">
+          <form method="post" class="stack">
             {% csrf_token %}
             <input type="hidden" name="change_status" value="1">
             <input type="hidden" name="status" value="SHIPPED">
+            <label style="display:flex;align-items:flex-start;gap:8px;">
+              <input type="checkbox" name="ship_check_package" value="1" required>
+              <span>Подтверждаю, что комплектность и упаковка заказа проверены.</span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:8px;">
+              <input type="checkbox" name="ship_check_documents" value="1" required>
+              <span>Подтверждаю, что отгрузочные документы подготовлены и передаются клиенту.</span>
+            </label>
+            <div class="field">
+              <div class="field__label">Номер окна выдачи</div>
+              <input class="form__input" type="text" name="ship_window_number" placeholder="Например: W-03" required>
+            </div>
+            <div class="field">
+              <div class="field__label">Введите номер заказа для подтверждения</div>
+              <input class="form__input" type="text" name="ship_confirm_number" placeholder="{{ order.number }}" required>
+            </div>
             <button type="submit" class="btn btn--primary btn--block">Отгрузить заказ</button>
           </form>
+        {% elif not can_manage_order and not can_ship_order %}
+          <div class="hint">Для вашей роли доступен только просмотр карточки заказа.</div>
         {% else %}
           <div class="hint">
             {% if order.status == 'DRAFT' and total_lines == 0 %}
@@ -301,6 +319,7 @@
         <p class="muted">Строк заказа пока нет.</p>
       {% endfor %}
     </div>
+    {% include "partials/pagination.html" with page_obj=line_page_obj %}
   </div>
 
   {% if can_add_lines %}

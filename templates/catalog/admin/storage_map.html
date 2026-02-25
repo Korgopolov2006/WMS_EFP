@@ -32,7 +32,7 @@
           {% endfor %}
         </select>
       {% endif %}
-      <a class="btn btn--ghost btn--active" href="?view=table{% if current_warehouse %}&warehouse_id={{ current_warehouse.id }}{% endif %}">Таблица</a>
+      <a class="btn btn--ghost btn--active" href="?view=table{% if current_warehouse %}&warehouse_id={{ current_warehouse.id }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">Таблица</a>
       {% if current_warehouse %}
         <a class="btn btn--ghost" href="{% url 'warehouse_3d:view' current_warehouse.id %}">3D</a>
       {% else %}
@@ -43,6 +43,25 @@
   </div>
 
   {% if current_warehouse %}
+    <div class="card card--glass" style="margin-top:14px;padding:14px;">
+      <form method="get" class="row row--wrap" style="gap:10px;">
+        <input type="hidden" name="view" value="table">
+        <input type="hidden" name="warehouse_id" value="{{ current_warehouse.id }}">
+        <div class="field" style="min-width:260px;">
+          <div class="field__label">Поиск по зонам и ячейкам</div>
+          <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="Зона, тип зоны, ячейка">
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button type="submit" class="btn btn--primary">Найти</button>
+        </div>
+        {% if q %}
+          <div style="display:flex;align-items:flex-end;">
+            <a class="btn btn--ghost" href="?view=table&warehouse_id={{ current_warehouse.id }}">Сбросить</a>
+          </div>
+        {% endif %}
+      </form>
+    </div>
+
     <div class="card card--glass" style="margin-top:14px;padding:14px;">
       <div class="row row--between row--wrap" style="gap:10px;">
         <div class="muted">3D-представление и данные объектов открываются в отдельном модуле склада.</div>
@@ -86,6 +105,7 @@
         <p class="muted">Зоны хранения ещё не заведены.</p>
       {% endfor %}
     </section>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
   {% else %}
     <div class="card card--glass" style="margin-top:14px;padding:24px;text-align:center;">
       <p class="muted">Нет доступных складов</p>
@@ -95,7 +115,11 @@
   <script>
     document.getElementById('warehouse-selector')?.addEventListener('change', function() {
       const warehouseId = this.value;
-      window.location.href = `?view=table&warehouse_id=${warehouseId}`;
+      const params = new URLSearchParams(window.location.search);
+      params.set('view', 'table');
+      params.set('warehouse_id', warehouseId);
+      params.delete('page');
+      window.location.search = params.toString();
     });
   </script>
 {% endblock %}

@@ -8,6 +8,7 @@ from .models import (
     Category,
     Product,
     ProductApplicability,
+    ProductChangeLog,
     ProductCrossReference,
     StorageLocation,
     StorageZone,
@@ -163,10 +164,10 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ["internal_sku", "name", "oem_number", "brand", "category", "packaging_type", "created_at"]
     list_filter = ["brand", "category", "packaging_type", "created_at"]
     search_fields = ["internal_sku", "name", "oem_number", "analog_number"]
-    readonly_fields = ["created_at", "updated_at", "photo_preview"]
+    readonly_fields = ["created_at", "updated_at", "photo_preview", "oem_number_normalized", "analog_number_normalized"]
     fieldsets = (
         ("Основная информация", {"fields": ("internal_sku", "name", "brand", "category")}),
-        ("Номера", {"fields": ("oem_number", "analog_number")}),
+        ("Номера", {"fields": ("oem_number", "analog_number", "oem_number_normalized", "analog_number_normalized")}),
         ("Характеристики", {"fields": ("weight_kg", "length_cm", "width_cm", "height_cm", "packaging_type")}),
         ("Фото", {"fields": ("photo", "photo_preview")}),
         ("Системные", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),
@@ -195,6 +196,14 @@ class ProductCrossReferenceAdmin(admin.ModelAdmin):
     search_fields = ["from_product__internal_sku", "to_product__internal_sku", "note"]
     readonly_fields = ["created_at", "updated_at"]
     autocomplete_fields = ["from_product", "to_product"]
+
+
+@admin.register(ProductChangeLog)
+class ProductChangeLogAdmin(admin.ModelAdmin):
+    list_display = ["product", "action", "changed_by", "source", "created_at"]
+    list_filter = ["action", "source", "created_at"]
+    search_fields = ["product__internal_sku", "product__name", "changed_by__username", "note"]
+    readonly_fields = ["product", "changed_by", "action", "source", "changed_fields", "note", "created_at", "updated_at"]
 
 
 @admin.register(Backorder)

@@ -21,7 +21,8 @@
       </ul>
       
       <h3>Отгрузка заказа</h3>
-      <p>Откройте заказ для просмотра деталей. После подтверждения отгрузки:</p>
+      <p>Откройте заказ для просмотра деталей и нажмите «Отгрузить заказ». Также можно завершить задачу типа «Отгрузка» в разделе «Мои задачи».</p>
+      <p>После подтверждения отгрузки:</p>
       <ul>
         <li>Остатки списываются со склада</li>
         <li>Заказ переходит в статус "Отгружен"</li>
@@ -43,7 +44,9 @@
       <p class="muted">{{ subtitle }}</p>
     </div>
     <div class="row row--wrap">
-      <a class="btn btn--primary" href="{% url 'order_create' %}">+ Новый заказ</a>
+      {% if can_create_order %}
+        <a class="btn btn--primary" href="{% url 'order_create' %}">+ Новый заказ</a>
+      {% endif %}
     </div>
   </div>
 
@@ -93,5 +96,6 @@
         <p class="muted">Заказов не найдено.</p>
       {% endfor %}
     </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
   </div>
 {% endblock %}

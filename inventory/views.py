@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db.models import Q, Sum
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -12,6 +15,11 @@ from catalog.models import Product, StorageLocation
 from inventory.forms import InventoryForm
 from inventory.models import Inventory, InventoryLine, Stock
 from inventory.services import InventoryService, find_analog_on_stock
+
+
+def _paginate(request: HttpRequest, items, per_page: int = 5):
+    paginator = Paginator(items, per_page)
+    return paginator.get_page(request.GET.get("page"))
 
 
 @role_required(Roles.ADMIN, Roles.STOREKEEPER)
@@ -35,15 +43,17 @@ def stock_list(request: HttpRequest) -> HttpResponse:
         )
 
     qs = qs.order_by("-qty_available", "product__name")
+    page_obj = _paginate(request, qs, per_page=5)
 
     return render(
         request,
         "inventory/stock_list.html",
         {
-            "items": qs,
+            "items": page_obj.object_list,
             "q": q,
             "product_id": product_id,
             "location_id": location_id,
+            "page_obj": page_obj,
         },
     )
 
@@ -51,42 +61,64 @@ def stock_list(request: HttpRequest) -> HttpResponse:
 @role_required(Roles.ADMIN, Roles.STOREKEEPER)
 def stock_detail(request: HttpRequest, pk: int) -> HttpResponse:
     product = get_object_or_404(Product, pk=pk)
-    stock_items = Stock.objects.filter(product=product).select_related("storage_location").order_by("-qty_available")
+    q = (request.GET.get("q") or "").strip()
+    stock_items_all = Stock.objects.filter(product=product).select_related("storage_location", "storage_location__zone")
+    stock_items = stock_items_all
+    if q:
+        stock_items = stock_items.filter(
+            Q(storage_location__code__icontains=q)
+            | Q(storage_location__zone__name__icontains=q)
+            | Q(batch_no__icontains=q)
+        )
+    stock_items = stock_items.order_by("-qty_available")
 
-    total_available = stock_items.aggregate(Sum("qty_available"))["qty_available__sum"] or 0
-    total_reserved = stock_items.aggregate(Sum("qty_reserved"))["qty_reserved__sum"] or 0
+    total_available = stock_items_all.aggregate(Sum("qty_available"))["qty_available__sum"] or 0
+    total_reserved = stock_items_all.aggregate(Sum("qty_reserved"))["qty_reserved__sum"] or 0
 
     analogs_on_stock = find_analog_on_stock(product, total_available)
+    page_obj = _paginate(request, stock_items, per_page=5)
 
     return render(
         request,
         "inventory/stock_detail.html",
         {
             "product": product,
-            "stock_items": stock_items,
+            "stock_items": page_obj.object_list,
             "total_available": total_available,
             "total_reserved": total_reserved,
             "analogs_on_stock": analogs_on_stock,
+            "q": q,
+            "page_obj": page_obj,
         },
     )
 
 
 @role_required(Roles.ADMIN, Roles.STOREKEEPER)
 def inventory_list(request: HttpRequest) -> HttpResponse:
+    q = (request.GET.get("q") or "").strip()
     status = request.GET.get("status", "").strip()
     qs = Inventory.objects.select_related("zone", "created_by").all()
 
     if status:
         qs = qs.filter(status=status)
+    if q:
+        qs = qs.filter(
+            Q(number__icontains=q)
+            | Q(zone__name__icontains=q)
+            | Q(created_by__username__icontains=q)
+        )
 
     qs = qs.order_by("-id")
+    page_obj = _paginate(request, qs, per_page=5)
 
     return render(
         request,
         "inventory/inventory_list.html",
         {
-            "items": qs,
+            "items": page_obj.object_list,
+            "q": q,
             "status": status,
+            "page_obj": page_obj,
         },
     )
 
@@ -115,18 +147,76 @@ def inventory_create(request: HttpRequest) -> HttpResponse:
 @role_required(Roles.ADMIN, Roles.STOREKEEPER)
 def inventory_detail(request: HttpRequest, pk: int) -> HttpResponse:
     inventory = get_object_or_404(Inventory.objects.select_related("zone", "created_by"), pk=pk)
+    q = (request.GET.get("q") or "").strip()
     lines = InventoryLine.objects.filter(inventory=inventory).select_related("product", "storage_location").order_by("product__name")
 
     if request.method == "POST" and "add_line" in request.POST:
         product_id = request.POST.get("product_id", "").strip()
+        product_query = request.POST.get("product_query", "").strip()
         location_id = request.POST.get("location_id", "").strip()
+        location_code = request.POST.get("location_code", "").strip()
         qty_actual = request.POST.get("qty_actual", "").strip()
 
-        if product_id.isdigit() and location_id.isdigit() and qty_actual:
+        if qty_actual:
             try:
-                product = Product.objects.get(pk=int(product_id))
-                location = StorageLocation.objects.get(pk=int(location_id))
-                qty_actual_val = float(qty_actual)
+                product = None
+                if product_id.isdigit():
+                    product = Product.objects.filter(pk=int(product_id)).first()
+                elif product_query:
+                    exact_product = Product.objects.filter(
+                        Q(internal_sku__iexact=product_query)
+                        | Q(oem_number__iexact=product_query)
+                        | Q(name__iexact=product_query)
+                    ).first()
+                    if exact_product:
+                        product = exact_product
+                    else:
+                        product_qs = Product.objects.filter(
+                            Q(internal_sku__icontains=product_query)
+                            | Q(oem_number__icontains=product_query)
+                            | Q(name__icontains=product_query)
+                        ).order_by("name")
+                        product_matches = list(product_qs[:6])
+                        if not product_matches:
+                            raise ValueError("Товар не найден. Уточните SKU/OEM/название.")
+                        if len(product_matches) > 1:
+                            suggestions = ", ".join(f"{p.internal_sku} — {p.name}" for p in product_matches[:3])
+                            raise ValueError(f"Найдено несколько товаров. Уточните запрос: {suggestions}")
+                        product = product_matches[0]
+
+                if not product:
+                    raise ValueError("Укажите товар (поиск по SKU/OEM/названию).")
+
+                location = None
+                if location_id.isdigit():
+                    location = StorageLocation.objects.filter(pk=int(location_id)).first()
+                elif location_code:
+                    location_qs = StorageLocation.objects.filter(code__iexact=location_code)
+                    if inventory.zone_id:
+                        location_qs = location_qs.filter(zone=inventory.zone)
+                    location = location_qs.select_related("zone").first()
+                    if not location:
+                        fuzzy_locations = StorageLocation.objects.filter(code__icontains=location_code)
+                        if inventory.zone_id:
+                            fuzzy_locations = fuzzy_locations.filter(zone=inventory.zone)
+                        location_matches = list(fuzzy_locations.select_related("zone")[:6])
+                        if not location_matches:
+                            raise ValueError("Место хранения не найдено. Укажите код места (например A01).")
+                        if len(location_matches) > 1:
+                            suggestions = ", ".join(loc.code for loc in location_matches[:4])
+                            raise ValueError(f"Найдено несколько мест. Уточните код: {suggestions}")
+                        location = location_matches[0]
+
+                if not location:
+                    raise ValueError("Укажите место хранения (по коду).")
+                if inventory.zone_id and location.zone_id != inventory.zone_id:
+                    raise ValueError("Место хранения должно относиться к зоне инвентаризации.")
+
+                qty_actual_val = Decimal(qty_actual)
+                if qty_actual_val != qty_actual_val.to_integral_value():
+                    raise ValueError("Фактическое количество должно быть целым числом (шт).")
+                if qty_actual_val < 0:
+                    raise ValueError("Фактическое количество не может быть отрицательным.")
 
                 stock = Stock.objects.filter(product=product, storage_location=location).first()
                 qty_book = stock.qty_available if stock else 0
@@ -137,16 +227,26 @@ def inventory_detail(request: HttpRequest, pk: int) -> HttpResponse:
                     storage_location=location,
                     defaults={"qty_book": qty_book, "qty_actual": qty_actual_val},
                 )
-                messages.success(request, "Строка добавлена")
+                messages.success(request, "Строка инвентаризации сохранена.")
                 return redirect("inventory_detail", pk=pk)
-            except (Product.DoesNotExist, StorageLocation.DoesNotExist, ValueError):
-                messages.error(request, "Ошибка при добавлении строки")
+            except (InvalidOperation, ValueError) as exc:
+                messages.error(request, str(exc))
+
+    if q:
+        lines = lines.filter(
+            Q(product__internal_sku__icontains=q)
+            | Q(product__name__icontains=q)
+            | Q(storage_location__code__icontains=q)
+        )
+    page_obj = _paginate(request, lines, per_page=5)
 
     return render(
         request,
         "inventory/inventory_detail.html",
         {
             "inventory": inventory,
-            "lines": lines,
+            "lines": page_obj.object_list,
+            "q": q,
+            "page_obj": page_obj,
         },
     )

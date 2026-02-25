@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
-from django.core.management import BaseCommand
+from django.core.management import BaseCommand, CommandError
+from django.db import connection
 
 
 class Command(BaseCommand):
-    help = "Полностью пересоздаёт db/schema.sql на основе миграций (sqlmigrate) без подключения к БД."
+    help = "Пересоздаёт db/schema.sql из актуальной PostgreSQL схемы public."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -14,354 +16,177 @@ class Command(BaseCommand):
             default="db/schema.sql",
             help="Путь к выходному файлу (по умолчанию db/schema.sql)",
         )
-        parser.add_argument(
-            "--apps",
-            default="accounts,catalog",
-            help="Список приложений через запятую, для которых собирается DDL (по умолчанию accounts,catalog)",
-        )
 
     def handle(self, *args, **options):
+        if connection.vendor != "postgresql":
+            raise CommandError("Команда поддерживает только PostgreSQL.")
+
         output_path = Path(options["output"])
-
-        # В дипломе требование — единый PostgreSQL DDL-файл.
-        # Генерацию делаем оффлайн (без подключения к БД), но в PostgreSQL-диалекте.
-        # На старте проекта это намеренно “source of truth” и пересоздаётся целиком.
-        ddl = """-- WMS автозапчастей — PostgreSQL schema (DDL)
--- Этот файл генерируется командой:
---   python manage.py rebuild_schema_sql
--- При изменении структуры БД пересоздавайте файл полностью.
-
-BEGIN;
-
--- =========================
--- Django system tables (минимальный набор)
--- =========================
-
-CREATE TABLE IF NOT EXISTS django_migrations (
-    id BIGSERIAL PRIMARY KEY,
-    app VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    applied TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS django_content_type (
-    id BIGSERIAL PRIMARY KEY,
-    app_label VARCHAR(100) NOT NULL,
-    model VARCHAR(100) NOT NULL,
-    CONSTRAINT django_content_type_app_label_model_uniq UNIQUE (app_label, model)
-);
-
-CREATE TABLE IF NOT EXISTS auth_permission (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    content_type_id BIGINT NOT NULL REFERENCES django_content_type (id) ON DELETE CASCADE,
-    codename VARCHAR(100) NOT NULL,
-    CONSTRAINT auth_permission_content_type_codename_uniq UNIQUE (content_type_id, codename)
-);
-
-CREATE INDEX IF NOT EXISTS auth_permission_content_type_idx ON auth_permission (content_type_id);
-
-CREATE TABLE IF NOT EXISTS auth_group (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(150) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS auth_group_permissions (
-    id BIGSERIAL PRIMARY KEY,
-    group_id BIGINT NOT NULL REFERENCES auth_group (id) ON DELETE CASCADE,
-    permission_id BIGINT NOT NULL REFERENCES auth_permission (id) ON DELETE CASCADE,
-    CONSTRAINT auth_group_permissions_group_permission_uniq UNIQUE (group_id, permission_id)
-);
-
-CREATE INDEX IF NOT EXISTS auth_group_permissions_group_idx ON auth_group_permissions (group_id);
-CREATE INDEX IF NOT EXISTS auth_group_permissions_permission_idx ON auth_group_permissions (permission_id);
-
--- =========================
--- accounts_user (AUTH_USER_MODEL)
--- =========================
-
-CREATE TABLE IF NOT EXISTS accounts_user (
-    id BIGSERIAL PRIMARY KEY,
-
-    password VARCHAR(128) NOT NULL,
-    last_login TIMESTAMPTZ NULL,
-
-    is_superuser BOOLEAN NOT NULL DEFAULT FALSE,
-    username VARCHAR(150) NOT NULL UNIQUE,
-    first_name VARCHAR(150) NOT NULL DEFAULT '',
-    last_name VARCHAR(150) NOT NULL DEFAULT '',
-    email VARCHAR(254) NOT NULL DEFAULT '',
-
-    is_staff BOOLEAN NOT NULL DEFAULT FALSE,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    date_joined TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    role VARCHAR(32) NOT NULL DEFAULT 'STOREKEEPER'
-);
-
-CREATE INDEX IF NOT EXISTS accounts_user_role_idx ON accounts_user (role);
-
-ALTER TABLE accounts_user
-    ADD CONSTRAINT IF NOT EXISTS accounts_user_role_check
-    CHECK (role IN (
-        'ADMIN',
-        'STOREKEEPER',
-        'SMALL_PARTS_PICKER',
-        'LOADER',
-        'SALES_MANAGER',
-        'ANALYST',
-        'INTEGRATION'
-    ));
-
--- M2M таблицы пользователя (Groups / Permissions)
-CREATE TABLE IF NOT EXISTS accounts_user_groups (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES accounts_user (id) ON DELETE CASCADE,
-    group_id BIGINT NOT NULL REFERENCES auth_group (id) ON DELETE CASCADE,
-    CONSTRAINT accounts_user_groups_user_group_uniq UNIQUE (user_id, group_id)
-);
-
-CREATE INDEX IF NOT EXISTS accounts_user_groups_user_idx ON accounts_user_groups (user_id);
-CREATE INDEX IF NOT EXISTS accounts_user_groups_group_idx ON accounts_user_groups (group_id);
-
-CREATE TABLE IF NOT EXISTS accounts_user_user_permissions (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES accounts_user (id) ON DELETE CASCADE,
-    permission_id BIGINT NOT NULL REFERENCES auth_permission (id) ON DELETE CASCADE,
-    CONSTRAINT accounts_user_user_permissions_user_perm_uniq UNIQUE (user_id, permission_id)
-);
-
-CREATE INDEX IF NOT EXISTS accounts_user_user_permissions_user_idx ON accounts_user_user_permissions (user_id);
-CREATE INDEX IF NOT EXISTS accounts_user_user_permissions_perm_idx ON accounts_user_user_permissions (permission_id);
-
--- =========================
--- catalog справочники
--- =========================
-
-CREATE TABLE IF NOT EXISTS catalog_brand (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    name VARCHAR(120) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS catalog_category (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    name VARCHAR(120) NOT NULL UNIQUE,
-    parent_id BIGINT NULL REFERENCES catalog_category (id) ON DELETE RESTRICT
-);
-
-CREATE INDEX IF NOT EXISTS catalog_category_parent_idx ON catalog_category (parent_id);
-
-CREATE TABLE IF NOT EXISTS catalog_vehiclemake (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    name VARCHAR(120) NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS catalog_vehiclemodel (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    make_id BIGINT NOT NULL REFERENCES catalog_vehiclemake (id) ON DELETE RESTRICT,
-    name VARCHAR(120) NOT NULL,
-    CONSTRAINT uniq_vehicle_model_make_name UNIQUE (make_id, name)
-);
-
-CREATE INDEX IF NOT EXISTS catalog_vehiclemodel_make_idx ON catalog_vehiclemodel (make_id);
-
-CREATE TABLE IF NOT EXISTS catalog_storagezonetype (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    code VARCHAR(32) NOT NULL UNIQUE,
-    name VARCHAR(120) NOT NULL,
-    description TEXT NOT NULL DEFAULT '',
-    sort_order INTEGER NOT NULL DEFAULT 100
-);
-
-CREATE TABLE IF NOT EXISTS catalog_storagezone (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    code VARCHAR(32) NOT NULL UNIQUE,
-    name VARCHAR(120) NOT NULL,
-    zone_type_id BIGINT NOT NULL REFERENCES catalog_storagezonetype (id) ON DELETE RESTRICT,
-    description TEXT NOT NULL DEFAULT ''
-);
-
-CREATE INDEX IF NOT EXISTS catalog_storagezone_zone_type_idx ON catalog_storagezone (zone_type_id);
-
-CREATE TABLE IF NOT EXISTS catalog_storagelocation (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    zone_id BIGINT NOT NULL REFERENCES catalog_storagezone (id) ON DELETE RESTRICT,
-    code VARCHAR(32) NOT NULL,
-    name VARCHAR(120) NOT NULL DEFAULT '',
-    aisle VARCHAR(16) NOT NULL DEFAULT '',
-    rack VARCHAR(16) NOT NULL DEFAULT '',
-    shelf VARCHAR(16) NOT NULL DEFAULT '',
-    level VARCHAR(16) NOT NULL DEFAULT '',
-    max_weight_kg NUMERIC(10,3) NULL,
-    CONSTRAINT uniq_location_zone_code UNIQUE (zone_id, code)
-);
-
-CREATE INDEX IF NOT EXISTS catalog_storagelocation_zone_idx ON catalog_storagelocation (zone_id);
-
-CREATE TABLE IF NOT EXISTS catalog_product (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    internal_sku VARCHAR(64) NOT NULL UNIQUE,
-    name VARCHAR(255) NOT NULL,
-
-    oem_number VARCHAR(64) NOT NULL,
-    analog_number VARCHAR(64) NOT NULL DEFAULT '',
-
-    brand_id BIGINT NOT NULL REFERENCES catalog_brand (id) ON DELETE RESTRICT,
-    category_id BIGINT NOT NULL REFERENCES catalog_category (id) ON DELETE RESTRICT,
-
-    weight_kg NUMERIC(10,3) NULL,
-    length_cm NUMERIC(10,2) NULL,
-    width_cm NUMERIC(10,2) NULL,
-    height_cm NUMERIC(10,2) NULL,
-
-    packaging_type VARCHAR(16) NOT NULL DEFAULT 'SMALL',
-    photo VARCHAR(100) NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_product_oem ON catalog_product (oem_number);
-CREATE INDEX IF NOT EXISTS idx_product_analog ON catalog_product (analog_number);
-CREATE INDEX IF NOT EXISTS idx_product_brand_cat ON catalog_product (brand_id, category_id);
-
-ALTER TABLE catalog_product
-    ADD CONSTRAINT IF NOT EXISTS catalog_product_packaging_type_check
-    CHECK (packaging_type IN ('SMALL','LARGE','PALLET'));
-
-ALTER TABLE catalog_product
-    ADD CONSTRAINT IF NOT EXISTS catalog_product_weight_nonneg CHECK (weight_kg IS NULL OR weight_kg >= 0);
-ALTER TABLE catalog_product
-    ADD CONSTRAINT IF NOT EXISTS catalog_product_length_nonneg CHECK (length_cm IS NULL OR length_cm >= 0);
-ALTER TABLE catalog_product
-    ADD CONSTRAINT IF NOT EXISTS catalog_product_width_nonneg CHECK (width_cm IS NULL OR width_cm >= 0);
-ALTER TABLE catalog_product
-    ADD CONSTRAINT IF NOT EXISTS catalog_product_height_nonneg CHECK (height_cm IS NULL OR height_cm >= 0);
-
-CREATE TABLE IF NOT EXISTS catalog_productapplicability (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    product_id BIGINT NOT NULL REFERENCES catalog_product (id) ON DELETE CASCADE,
-    vehicle_model_id BIGINT NOT NULL REFERENCES catalog_vehiclemodel (id) ON DELETE RESTRICT,
-
-    CONSTRAINT uniq_product_vehicle_model UNIQUE (product_id, vehicle_model_id)
-);
-
-CREATE INDEX IF NOT EXISTS catalog_productapplicability_product_idx ON catalog_productapplicability (product_id);
-CREATE INDEX IF NOT EXISTS catalog_productapplicability_vehicle_idx ON catalog_productapplicability (vehicle_model_id);
-
-CREATE TABLE IF NOT EXISTS catalog_productcrossreference (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    from_product_id BIGINT NOT NULL REFERENCES catalog_product (id) ON DELETE CASCADE,
-    to_product_id BIGINT NOT NULL REFERENCES catalog_product (id) ON DELETE CASCADE,
-    relation_type VARCHAR(16) NOT NULL,
-    note VARCHAR(255) NOT NULL DEFAULT '',
-
-    CONSTRAINT chk_xref_not_self CHECK (from_product_id <> to_product_id),
-    CONSTRAINT uniq_xref_from_to_type UNIQUE (from_product_id, to_product_id, relation_type)
-);
-
-CREATE INDEX IF NOT EXISTS idx_xref_from_type ON catalog_productcrossreference (from_product_id, relation_type);
-
-ALTER TABLE catalog_productcrossreference
-    ADD CONSTRAINT IF NOT EXISTS catalog_productcrossreference_relation_type_check
-    CHECK (relation_type IN ('ANALOG','OEM','REPLACED_BY'));
-
--- =========================
--- api (integration tokens)
--- =========================
-
-CREATE TABLE IF NOT EXISTS api_apitoken (
-    id BIGSERIAL PRIMARY KEY,
-    name VARCHAR(120) NOT NULL,
-    token VARCHAR(64) NOT NULL UNIQUE,
-    user_id BIGINT NOT NULL REFERENCES accounts_user (id) ON DELETE CASCADE,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_used_at TIMESTAMPTZ NULL
-);
-
-CREATE INDEX IF NOT EXISTS api_apitoken_token_idx ON api_apitoken (token);
-CREATE INDEX IF NOT EXISTS api_apitoken_user_idx ON api_apitoken (user_id);
-CREATE INDEX IF NOT EXISTS api_apitoken_is_active_idx ON api_apitoken (is_active);
-
--- =========================
--- receiving (приёмка)
--- =========================
-
-CREATE TABLE IF NOT EXISTS receiving_receiving (
-    id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    number VARCHAR(32) NOT NULL UNIQUE,
-    supplier_name VARCHAR(255) NOT NULL,
-    supplier_doc_no VARCHAR(64) NOT NULL DEFAULT '',
-    status VARCHAR(16) NOT NULL DEFAULT 'DRAFT',
-    expected_at TIMESTAMPTZ NULL,
-    completed_at TIMESTAMPTZ NULL,
-    created_by_id BIGINT NOT NULL REFERENCES accounts_user (id) ON DELETE RESTRICT
-);
-
-CREATE INDEX IF NOT EXISTS receiving_receiving_status_idx ON receiving_receiving (status);
-
-CREATE TABLE IF NOT EXISTS receiving_receivingline (
-    id BIGSERIAL PRIMARY KEY,
-    receiving_id BIGINT NOT NULL REFERENCES receiving_receiving (id) ON DELETE CASCADE,
-    product_id BIGINT NOT NULL REFERENCES catalog_product (id) ON DELETE RESTRICT,
-    supplier_sku VARCHAR(64) NOT NULL DEFAULT '',
-    qty_expected NUMERIC(10,2) NOT NULL DEFAULT 0,
-    qty_received NUMERIC(10,2) NOT NULL DEFAULT 0,
-    storage_location_id BIGINT NULL REFERENCES catalog_storagelocation (id) ON DELETE RESTRICT,
-    has_serial_numbers BOOLEAN NOT NULL DEFAULT FALSE
-);
-
-CREATE INDEX IF NOT EXISTS receiving_line_receiving_idx ON receiving_receivingline (receiving_id);
-CREATE INDEX IF NOT EXISTS receiving_line_product_idx ON receiving_receivingline (product_id);
-
-CREATE TABLE IF NOT EXISTS receiving_receivingserial (
-    id BIGSERIAL PRIMARY KEY,
-    line_id BIGINT NOT NULL REFERENCES receiving_receivingline (id) ON DELETE CASCADE,
-    serial_number VARCHAR(128) NOT NULL,
-    CONSTRAINT uniq_receivingserial_line_serial UNIQUE (line_id, serial_number)
-);
-
-CREATE INDEX IF NOT EXISTS receiving_serial_line_idx ON receiving_receivingserial (line_id);
-
--- =========================
--- sessions
--- =========================
-
-CREATE TABLE IF NOT EXISTS django_session (
-    session_key VARCHAR(40) PRIMARY KEY,
-    session_data TEXT NOT NULL,
-    expire_date TIMESTAMPTZ NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS django_session_expire_date_idx ON django_session (expire_date);
-
-COMMIT;
-"""
-
+        ddl = self._build_schema_ddl()
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(ddl, encoding="utf-8")
         self.stdout.write(self.style.SUCCESS(f"Готово: {output_path.as_posix()}"))
 
+    def _build_schema_ddl(self) -> str:
+        lines: list[str] = [
+            "-- WMS автозапчастей — PostgreSQL schema (DDL)",
+            "-- Этот файл генерируется командой:",
+            "--   python manage.py rebuild_schema_sql",
+            "-- Источник: фактическая схема БД (schema=public).",
+            "",
+            "BEGIN;",
+            "",
+        ]
+        fk_constraints: list[tuple[str, str, str]] = []
+
+        for table in self._get_tables():
+            lines.extend(self._render_table_block(table, fk_constraints))
+
+        if fk_constraints:
+            lines.append("-- =========================")
+            lines.append("-- Foreign Keys")
+            lines.append("-- =========================")
+            lines.append("")
+            for table, conname, definition in fk_constraints:
+                lines.extend(self._render_fk_do_block(table, conname, definition))
+
+        lines.append("COMMIT;")
+        lines.append("")
+        return "\n".join(lines)
+
+    def _get_tables(self) -> list[str]:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_type = 'BASE TABLE'
+                ORDER BY table_name
+                """
+            )
+            return [row[0] for row in cursor.fetchall()]
+
+    def _render_table_block(self, table: str, fk_constraints: list[tuple[str, str, str]]) -> list[str]:
+        out: list[str] = [f"-- {table}"]
+
+        columns = self._get_columns(table)
+        constraints = self._get_constraints(table)
+
+        constraint_names = {name for name, _ctype, _def in constraints}
+        create_lines: list[str] = []
+
+        for column in columns:
+            line = f'    {column["name"]} {column["type"]}'
+            if column["identity"] == "a":
+                line += " GENERATED ALWAYS AS IDENTITY"
+            elif column["identity"] == "d":
+                line += " GENERATED BY DEFAULT AS IDENTITY"
+            elif column["default"] is not None:
+                line += f' DEFAULT {column["default"]}'
+            if column["not_null"]:
+                line += " NOT NULL"
+            create_lines.append(line)
+
+        for conname, contype, definition in constraints:
+            if contype == "f":
+                fk_constraints.append((table, conname, definition))
+                continue
+            create_lines.append(f"    CONSTRAINT {conname} {definition}")
+
+        out.append(f"CREATE TABLE IF NOT EXISTS {table} (")
+        out.append(",\n".join(create_lines))
+        out.append(");")
+        out.append("")
+
+        for index_name, index_def in self._get_indexes(table):
+            if index_name in constraint_names:
+                continue
+            out.append(f"{self._inject_if_not_exists(index_def)};")
+
+        if out[-1] != "":
+            out.append("")
+
+        return out
+
+    def _get_columns(self, table: str) -> list[dict[str, str | bool | None]]:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    a.attname AS column_name,
+                    pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type,
+                    a.attnotnull AS not_null,
+                    a.attidentity AS identity_mode,
+                    pg_get_expr(ad.adbin, ad.adrelid) AS default_value
+                FROM pg_attribute a
+                JOIN pg_class cls ON cls.oid = a.attrelid
+                JOIN pg_namespace ns ON ns.oid = cls.relnamespace
+                LEFT JOIN pg_attrdef ad ON ad.adrelid = a.attrelid AND ad.adnum = a.attnum
+                WHERE ns.nspname = 'public'
+                  AND cls.relname = %s
+                  AND a.attnum > 0
+                  AND NOT a.attisdropped
+                ORDER BY a.attnum
+                """,
+                [table],
+            )
+            rows = cursor.fetchall()
+        return [
+            {
+                "name": row[0],
+                "type": row[1],
+                "not_null": bool(row[2]),
+                "identity": row[3],
+                "default": row[4],
+            }
+            for row in rows
+        ]
+
+    def _get_constraints(self, table: str) -> list[tuple[str, str, str]]:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT conname, contype, pg_get_constraintdef(oid)
+                FROM pg_constraint
+                WHERE conrelid = %s::regclass
+                ORDER BY conname
+                """,
+                [table],
+            )
+            return [(row[0], row[1], row[2]) for row in cursor.fetchall()]
+
+    def _get_indexes(self, table: str) -> list[tuple[str, str]]:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT indexname, indexdef
+                FROM pg_indexes
+                WHERE schemaname = 'public'
+                  AND tablename = %s
+                ORDER BY indexname
+                """,
+                [table],
+            )
+            return [(row[0], row[1]) for row in cursor.fetchall()]
+
+    def _inject_if_not_exists(self, index_def: str) -> str:
+        return re.sub(r"^CREATE( UNIQUE)? INDEX ", r"CREATE\1 INDEX IF NOT EXISTS ", index_def, count=1)
+
+    def _render_fk_do_block(self, table: str, conname: str, definition: str) -> list[str]:
+        safe_table = table.replace("'", "''")
+        safe_conname = conname.replace("'", "''")
+        return [
+            "DO $$",
+            "BEGIN",
+            "    IF NOT EXISTS (",
+            "        SELECT 1",
+            "        FROM pg_constraint",
+            f"        WHERE conname = '{safe_conname}'",
+            f"          AND conrelid = '{safe_table}'::regclass",
+            "    ) THEN",
+            f"        ALTER TABLE {table} ADD CONSTRAINT {conname} {definition};",
+            "    END IF;",
+            "END $$;",
+            "",
+        ]

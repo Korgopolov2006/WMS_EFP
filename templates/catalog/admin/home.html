@@ -41,8 +41,9 @@
         <h3 class="h3">Номенклатура</h3>
         <p class="muted">Карточки товаров: OEM/аналоги, бренд, категория, размеры, упаковка, фото.</p>
       </div>
-      <div class="card__footer">
+      <div class="card__footer stack stack--sm">
         <a class="btn btn--primary btn--block" href="{% url 'catalog_product_list' %}">Открыть</a>
+        <a class="btn btn--ghost btn--block" href="{% url 'catalog_product_audit_list' %}">Аудит изменений</a>
       </div>
     </div>
 
@@ -71,4 +72,3 @@
     </div>
   </section>
 {% endblock %}
-

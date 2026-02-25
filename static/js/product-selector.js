@@ -54,6 +54,7 @@
         searchProducts(query, resultsContainer, productField, function(product) {
           selectedProduct = product;
           productField.value = product.id;
+          productField.dispatchEvent(new Event('change', { bubbles: true }));
           searchInput.value = `${product.internal_sku} - ${product.name}`;
           resultsContainer.style.display = 'none';
           
