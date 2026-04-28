@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Отчёты и аналитика · WMS{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'dashboard' %}">Дашборд</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Аналитика</span>
+      </div>
+      <h1 class="page__title">Отчёты и аналитика</h1>
+      <p class="page__subtitle">Аналитические отчёты для управления складом (только просмотр)</p>
+    </div>
+  </header>
+
+  <div class="grid grid--3">
+
+    <a href="{% url 'report_abc_xyz' %}" class="card"
+       style="text-decoration:none;color:inherit;transition:border-color var(--t-fast),box-shadow var(--t-fast);"
+       onmouseover="this.style.borderColor='var(--brand)';this.style.boxShadow='var(--shadow-sm)';"
+       onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='var(--shadow-xs)';">
+      <div class="card__header">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--brand)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6"  y1="20" x2="6"  y2="14"/>
+          </svg>
+          <h3 class="h3" style="margin:0;">ABC-XYZ анализ</h3>
+        </div>
+        <p class="muted" style="font-size:13px;">Классификация товаров по объёму продаж и стабильности спроса.</p>
+      </div>
+    </a>
+
+    <a href="{% url 'report_dead_stock' %}" class="card"
+       style="text-decoration:none;color:inherit;transition:border-color var(--t-fast),box-shadow var(--t-fast);"
+       onmouseover="this.style.borderColor='var(--brand)';this.style.boxShadow='var(--shadow-sm)';"
+       onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='var(--shadow-xs)';">
+      <div class="card__header">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--warning)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <h3 class="h3" style="margin:0;">Мёртвые остатки</h3>
+        </div>
+        <p class="muted" style="font-size:13px;">Товары без движения за указанный период.</p>
+      </div>
+    </a>
+
+    <a href="{% url 'report_analogs_vs_originals' %}" class="card"
+       style="text-decoration:none;color:inherit;transition:border-color var(--t-fast),box-shadow var(--t-fast);"
+       onmouseover="this.style.borderColor='var(--brand)';this.style.boxShadow='var(--shadow-sm)';"
+       onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='var(--shadow-xs)';">
+      <div class="card__header">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--info)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+            <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+          </svg>
+          <h3 class="h3" style="margin:0;">Аналоги vs Оригиналы</h3>
+        </div>
+        <p class="muted" style="font-size:13px;">Анализ замещения оригинальных товаров аналогами.</p>
+      </div>
+    </a>
+
+    <a href="{% url 'report_picking_errors' %}" class="card"
+       style="text-decoration:none;color:inherit;transition:border-color var(--t-fast),box-shadow var(--t-fast);"
+       onmouseover="this.style.borderColor='var(--brand)';this.style.boxShadow='var(--shadow-sm)';"
+       onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='var(--shadow-xs)';">
+      <div class="card__header">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--danger)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <h3 class="h3" style="margin:0;">Ошибки подбора</h3>
+        </div>
+        <p class="muted" style="font-size:13px;">Статистика ошибок при комплектации заказов.</p>
+      </div>
+    </a>
+
+    <a href="{% url 'report_demand_forecast' %}" class="card"
+       style="text-decoration:none;color:inherit;transition:border-color var(--t-fast),box-shadow var(--t-fast);"
+       onmouseover="this.style.borderColor='var(--brand)';this.style.boxShadow='var(--shadow-sm)';"
+       onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='var(--shadow-xs)';">
+      <div class="card__header">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--success)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          <h3 class="h3" style="margin:0;">Прогноз спроса</h3>
+        </div>
+        <p class="muted" style="font-size:13px;">Прогнозирование спроса с учётом сезонности.</p>
+      </div>
+    </a>
+
+    <a href="{% url 'report_staff_efficiency' %}" class="card"
+       style="text-decoration:none;color:inherit;transition:border-color var(--t-fast),box-shadow var(--t-fast);"
+       onmouseover="this.style.borderColor='var(--brand)';this.style.boxShadow='var(--shadow-sm)';"
+       onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='var(--shadow-xs)';">
+      <div class="card__header">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--text-3)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+          </svg>
+          <h3 class="h3" style="margin:0;">Эффективность сотрудников</h3>
+        </div>
+        <p class="muted" style="font-size:13px;">Метрики выполнения задач и операций по ролям и сотрудникам.</p>
+      </div>
+    </a>
+
+  </div>
+</div>
+{% endblock %}

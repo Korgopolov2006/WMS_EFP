@@ -1,0 +1,29 @@
+{% extends "catalog/admin/_list_base.html" %}
+
+{% block list_guide %}
+  <div class="admin-list-guide">
+    <p class="muted">Типы зон определяют логику размещения и подбора (ячейка, полка, напольное хранение). Поддерживайте коды короткими и однозначными.</p>
+  </div>
+{% endblock %}
+
+{% block table %}
+  <div class="admin-list">
+    {% for item in items %}
+      <article class="admin-row">
+        <div>
+          <h3 class="admin-row__title">{{ item.name }}</h3>
+          <p class="admin-row__meta">Код: {{ item.code }}{% if item.description %} | {{ item.description }}{% endif %}</p>
+        </div>
+        <div class="admin-row__actions">
+          <a class="btn btn--primary" href="{% url 'catalog_zone_type_update' item.pk %}">Редактировать</a>
+          <a class="btn btn--ghost" href="{% url 'catalog_storage_map' %}">К карте склада</a>
+        </div>
+      </article>
+    {% empty %}
+      <div class="admin-empty">
+        <div class="kv__v">Типы зон не найдены</div>
+        <p class="muted">Добавьте хотя бы один тип зоны для корректной работы размещения.</p>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

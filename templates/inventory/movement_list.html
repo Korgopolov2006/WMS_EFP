@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}История движений · WMS{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'dashboard' %}">Дашборд</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">История движений</span>
+      </div>
+      <h1 class="page__title">История движений товара</h1>
+      <p class="page__subtitle">
+        Журнал операций · всего {{ page_obj.paginator.count|default:0 }} записей
+      </p>
+    </div>
+  </header>
+
+  <div class="data-table" data-density="normal">
+    <form class="data-table__toolbar" method="get">
+      <label class="field flex-1" style="max-width:320px;">
+        <input type="search" name="q" value="{{ q|default:'' }}"
+               placeholder="SKU, название, OEM, причина, документ" class="input">
+      </label>
+
+      <label class="field">
+        <select name="type" class="input" style="max-width:180px;">
+          <option value="">Все типы</option>
+          {% for value, label in movement_types %}
+            <option value="{{ value }}" {% if value == type %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="field">
+        <input type="date" name="date_from" value="{{ date_from|default:'' }}" class="input" title="Дата с">
+      </label>
+      <label class="field">
+        <input type="date" name="date_to" value="{{ date_to|default:'' }}" class="input" title="Дата по">
+      </label>
+
+      <label class="field">
+        <input type="number" name="location_id" value="{{ location_id|default:'' }}"
+               placeholder="ID места" class="input" style="max-width:120px;">
+      </label>
+
+      <button type="submit" class="btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Найти
+      </button>
+
+      {% if q or type or date_from or date_to or location_id or user_id %}
+        <a class="btn btn--ghost" href="{% url 'movement_list' %}">Сбросить</a>
+      {% endif %}
+
+      <div class="data-table__toolbar-spacer"></div>
+
+      {% include "partials/export_menu.html" %}
+    </form>
+
+    <div class="data-table__scroll">
+      {% if page_obj.object_list %}
+        <table class="data-table__table">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Тип</th>
+              <th>SKU</th>
+              <th>Товар</th>
+              <th class="data-table__num">Кол-во</th>
+              <th>Откуда</th>
+              <th>Куда</th>
+              <th>Документ</th>
+              <th>Пользователь</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in items %}
+              <tr>
+                <td class="muted">{{ m.created_at|date:"d.m.Y H:i" }}</td>
+                <td>{{ m.get_movement_type_display }}</td>
+                <td><strong>{{ m.product.internal_sku }}</strong></td>
+                <td>{{ m.product.name }}</td>
+                <td class="data-table__num num">
+                  {% if m.signed_quantity < 0 %}
+                    <span class="text-danger"><strong>{{ m.signed_quantity }}</strong></span>
+                  {% else %}
+                    <span class="text-success"><strong>+{{ m.signed_quantity }}</strong></span>
+                  {% endif %}
+                </td>
+                <td class="muted">{% if m.from_location %}<code>{{ m.from_location.code }}</code>{% else %}—{% endif %}</td>
+                <td class="muted">{% if m.to_location %}<code>{{ m.to_location.code }}</code>{% else %}—{% endif %}</td>
+                <td class="muted">
+                  {% if m.ref_type or m.ref_id %}{{ m.ref_type }}:{{ m.ref_id }}{% else %}—{% endif %}
+                </td>
+                <td class="muted">{{ m.user.username|default:"—" }}</td>
+                <td>
+                  {% include "partials/status_badge.html" with code=m.status label=m.get_status_display %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="data-table__empty">
+          <p class="muted mb-2">Записей не найдено</p>
+          {% if q or type or date_from or date_to or location_id %}
+            <a class="btn btn--ghost btn--sm" href="{% url 'movement_list' %}">Очистить фильтры</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="data-table__footer">
+      <div>
+        {% if page_obj %}
+          Показано <strong>{{ page_obj.start_index }}</strong>–<strong>{{ page_obj.end_index }}</strong>
+          из <strong>{{ page_obj.paginator.count }}</strong>
+        {% endif %}
+      </div>
+      <div>
+        {% include "partials/pagination.html" with page_obj=page_obj %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

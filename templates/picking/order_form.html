@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} · WMS{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'dashboard' %}">Дашборд</a>
+        <span class="breadcrumbs__sep">/</span>
+        <a href="{% url 'order_list' %}">Заказы</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">{{ title }}</span>
+      </div>
+      <h1 class="page__title">{{ title }}</h1>
+      <p class="page__subtitle">Создание нового заказа на отгрузку</p>
+    </div>
+  </header>
+
+  <form method="post" class="card">
+    {% csrf_token %}
+
+    <div class="card__body form">
+      {% if form.non_field_errors %}
+        <div class="toast toast--danger">
+          <div class="toast__title">{{ form.non_field_errors }}</div>
+        </div>
+      {% endif %}
+
+      <div class="grid grid--2">
+        {% for field in form %}
+          <label class="field">
+            <span class="field__label">
+              {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+            </span>
+            {{ field }}
+            {% if field.help_text %}
+              <span class="field__hint">{{ field.help_text }}</span>
+            {% endif %}
+            {% if field.errors %}
+              <span class="field__error">{{ field.errors|join:"; " }}</span>
+            {% endif %}
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <a class="btn btn--ghost" href="{% url 'order_list' %}">Отмена</a>
+      <button class="btn btn--primary" type="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Создать заказ
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

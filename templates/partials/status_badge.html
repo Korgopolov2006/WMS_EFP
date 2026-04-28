@@ -1,0 +1,32 @@
+{% comment %}
+============================================================
+Бэйдж статуса.
+
+Использование:
+  {% include "partials/status_badge.html" with code=order.status label=order.get_status_display %}
+  {% include "partials/status_badge.html" with tone="success" label="Готово" %}
+
+Параметры:
+  code  — код статуса WMS (DRAFT, IN_PROGRESS, …). Если задан — определяет тон.
+  tone  — явный тон: success | warning | danger | info | neutral. Используется,
+          если не задан code или код не распознан.
+  label — текст бэйджа (обычно order.get_status_display). Если не задан — code.
+============================================================
+{% endcomment %}
+{% spaceless %}
+{% with c=code|default:"" t=tone|default:"" %}
+  {% if c == "DRAFT" or c == "PENDING" or c == "NEW" %}
+    <span class="badge badge--info">{{ label|default:c }}</span>
+  {% elif c == "IN_PROGRESS" or c == "CONFIRMED" or c == "IN_PICKING" or c == "PICKING" or c == "ASSIGNED" %}
+    <span class="badge badge--warning">{{ label|default:c }}</span>
+  {% elif c == "COMPLETED" or c == "DONE" or c == "PICKED" or c == "RESERVED" or c == "RECEIVED" or c == "SHIPPED" %}
+    <span class="badge badge--success">{{ label|default:c }}</span>
+  {% elif c == "CANCELLED" or c == "ERROR" or c == "FAILED" or c == "REJECTED" %}
+    <span class="badge badge--danger">{{ label|default:c }}</span>
+  {% elif t %}
+    <span class="badge badge--{{ t }}">{{ label|default:c }}</span>
+  {% else %}
+    <span class="badge badge--neutral">{{ label|default:c }}</span>
+  {% endif %}
+{% endwith %}
+{% endspaceless %}

@@ -1,0 +1,70 @@
+{% extends "catalog/admin/form.html" %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">{{ title }}</h1>
+      <p class="muted">Карточка товара (OEM/аналоги/适用/размеры/упаковка)</p>
+    </div>
+    <div class="row row--wrap">
+      <a class="btn btn--ghost" href="{% url 'catalog_product_list' %}">К списку</a>
+      <a class="btn btn--ghost" href="{% url 'catalog_product_audit_list' %}?q={{ product.internal_sku|urlencode }}">Полный аудит</a>
+      <a class="btn btn--ghost" href="{% url 'catalog_product_xref' product.pk %}">OEM ↔ аналоги</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top: 14px;">
+    <form class="form stack" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="toast toast--danger">
+          <div class="toast__title">{{ form.non_field_errors }}</div>
+        </div>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="field">
+          <div class="field__label">{{ field.label }}</div>
+          {{ field }}
+          {% if field.errors %}
+            <div class="hint" style="color: rgba(255,80,120,.9)">{{ field.errors }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="row row--between row--wrap">
+        <button class="btn btn--primary" type="submit">Сохранить</button>
+        <a class="btn btn--ghost" href="{% url 'catalog_product_list' %}">Отмена</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top: 14px;">
+    <div class="card__header">
+      <h3 class="h3">История изменений</h3>
+      <p class="muted">Кто и когда менял карточку товара.</p>
+    </div>
+    <div class="stack">
+      {% for entry in logs %}
+        <div class="field" style="padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.08);">
+          <div class="field__label">
+            {{ entry.get_action_display }} · {{ entry.created_at|date:"d.m.Y H:i" }} ·
+            {% if entry.changed_by %}{{ entry.changed_by.username }}{% else %}Система{% endif %}
+            {% if entry.source %} · {{ entry.source }}{% endif %}
+          </div>
+          {% if entry.note %}
+            <div class="hint">{{ entry.note }}</div>
+          {% endif %}
+          {% for key, change in entry.changed_fields.items %}
+            <div class="hint">{{ change.label }}: {{ change.old }} → {{ change.new }}</div>
+          {% empty %}
+            <div class="hint">Без детализации полей.</div>
+          {% endfor %}
+        </div>
+      {% empty %}
+        <div class="hint">Изменений пока нет.</div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

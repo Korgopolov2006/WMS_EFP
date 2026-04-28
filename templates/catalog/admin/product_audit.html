@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Аудит карточек товара — Справочники{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">Аудит карточек товара</h1>
+      <p class="muted">История изменений: кто, когда и какие поля менял.</p>
+    </div>
+    <div class="row row--wrap">
+      <a class="btn btn--ghost" href="{% url 'catalog_product_list' %}">К номенклатуре</a>
+      <a class="btn btn--ghost" href="{% url 'catalog_admin_home' %}">Справочники</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <form method="get" class="form stack">
+      <div class="row row--wrap" style="gap:10px;">
+        <div class="field" style="min-width:260px;flex:1;">
+          <div class="field__label">Поиск</div>
+          <input class="form__input" name="q" value="{{ q }}" placeholder="SKU, товар, пользователь, комментарий">
+        </div>
+        <div class="field" style="min-width:180px;">
+          <div class="field__label">Действие</div>
+          <select class="form__input" name="action">
+            <option value="">Все</option>
+            {% for value, label in action_choices %}
+              <option value="{{ value }}" {% if action == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field" style="min-width:180px;">
+          <div class="field__label">Источник</div>
+          <select class="form__input" name="source">
+            <option value="">Все</option>
+            {% for src in sources %}
+              <option value="{{ src }}" {% if source == src %}selected{% endif %}>{{ src }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="row row--wrap" style="gap:10px;">
+        <div class="field" style="min-width:220px;">
+          <div class="field__label">Пользователь</div>
+          <select class="form__input" name="user_id">
+            <option value="">Все</option>
+            {% for u in users %}
+              <option value="{{ u.id }}" {% if user_id == u.id|stringformat:"s" %}selected{% endif %}>{{ u.username }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field" style="min-width:180px;">
+          <div class="field__label">Дата с</div>
+          <input class="form__input" type="date" name="date_from" value="{{ date_from }}">
+        </div>
+        <div class="field" style="min-width:180px;">
+          <div class="field__label">Дата по</div>
+          <input class="form__input" type="date" name="date_to" value="{{ date_to }}">
+        </div>
+        <div class="row row--wrap" style="align-self:flex-end;gap:8px;">
+          <button class="btn btn--primary" type="submit">Применить</button>
+          <a class="btn btn--ghost" href="{% url 'catalog_product_audit_list' %}">Сбросить</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="hint" style="margin-bottom:10px;">Найдено записей: {% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ items|length }}{% endif %}</div>
+    <div class="stack">
+      {% for item in items %}
+        <div class="field" style="padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.08);">
+          <div class="field__label">
+            {{ item.created_at|date:"d.m.Y H:i" }} ·
+            {{ item.product.internal_sku }} — {{ item.product.name }} ·
+            {{ item.get_action_display }} ·
+            {% if item.changed_by %}{{ item.changed_by.username }}{% else %}Система{% endif %} ·
+            {{ item.source }}
+          </div>
+          {% if item.note %}
+            <div class="hint">{{ item.note }}</div>
+          {% endif %}
+          {% for field, change in item.changed_fields.items %}
+            <div class="hint">{{ change.label }}: {{ change.old }} → {{ change.new }}</div>
+          {% empty %}
+            <div class="hint">Без детализации изменений.</div>
+          {% endfor %}
+          <div style="margin-top:8px;">
+            <a class="btn btn--ghost" href="{% url 'catalog_product_update' item.product_id %}">Открыть товар</a>
+          </div>
+        </div>
+      {% empty %}
+        <div class="hint">По выбранным фильтрам изменений не найдено.</div>
+      {% endfor %}
+    </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
+  </div>
+{% endblock %}

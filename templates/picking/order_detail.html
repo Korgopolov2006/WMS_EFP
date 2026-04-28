@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — WMS{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    .status-pill {
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      font-size:12px;
+      font-weight:600;
+    }
+    .status-pill--draft { background:rgba(148,163,184,.18); border-color:rgba(148,163,184,.45); }
+    .status-pill--confirmed { background:rgba(59,130,246,.18); border-color:rgba(59,130,246,.45); }
+    .status-pill--picking { background:rgba(251,191,36,.18); border-color:rgba(251,191,36,.45); }
+    .status-pill--picked { background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.45); }
+    .status-pill--shipped { background:rgba(45,212,191,.18); border-color:rgba(45,212,191,.45); }
+    .status-pill--cancelled { background:rgba(244,63,94,.18); border-color:rgba(244,63,94,.45); }
+
+    .flow {
+      display:grid;
+      grid-template-columns:repeat(5,minmax(0,1fr));
+      gap:10px;
+      margin-top:14px;
+    }
+    .flow-step {
+      padding:10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.04);
+      text-align:center;
+    }
+    .flow-step.is-done {
+      border-color:rgba(34,197,94,.4);
+      background:rgba(34,197,94,.14);
+    }
+    .flow-step.is-current {
+      border-color:rgba(124,92,255,.55);
+      background:rgba(124,92,255,.2);
+      box-shadow:0 0 0 1px rgba(124,92,255,.25) inset;
+    }
+    .flow-step__title { font-size:12px; color:var(--muted); }
+    .flow-step.is-done .flow-step__title,
+    .flow-step.is-current .flow-step__title { color:var(--text); font-weight:600; }
+
+    .kpi {
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      padding:12px 14px;
+    }
+    .kpi__label { font-size:12px; color:var(--muted); }
+    .kpi__value { font-size:22px; font-weight:700; line-height:1.1; margin-top:4px; }
+    .kpi__meta { font-size:12px; color:var(--muted); margin-top:4px; }
+
+    .progress {
+      height:8px;
+      border-radius:999px;
+      background:rgba(148,163,184,.22);
+      overflow:hidden;
+    }
+    .progress__bar {
+      height:100%;
+      background:linear-gradient(90deg, rgba(124,92,255,.9), rgba(45,212,191,.9));
+    }
+    .progress__bar--ok {
+      background:linear-gradient(90deg, rgba(34,197,94,.9), rgba(16,185,129,.9));
+    }
+
+    .line-row {
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      padding:12px;
+    }
+    .line-state {
+      font-size:11px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      padding:4px 8px;
+    }
+    .line-state--ok { background:rgba(34,197,94,.18); border-color:rgba(34,197,94,.45); }
+    .line-state--warn { background:rgba(251,191,36,.18); border-color:rgba(251,191,36,.45); }
+    .line-state--muted { background:rgba(148,163,184,.18); border-color:rgba(148,163,184,.45); }
+
+    @media (max-width:980px){
+      .flow{ grid-template-columns:1fr; }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">{{ title }}</h1>
+      <p class="muted">{{ subtitle }}</p>
+    </div>
+    <div>
+      <a class="btn btn--ghost" href="{% url back_url %}">← К списку</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="row row--between row--wrap" style="gap:10px;">
+      <div>
+        <div class="hint">Текущее состояние заказа</div>
+        <h3 class="h3" style="margin:4px 0 0;">{{ order.get_status_display }}</h3>
+      </div>
+      <div>
+        {% if order.status == 'DRAFT' %}
+          <span class="status-pill status-pill--draft">Черновик</span>
+        {% elif order.status == 'CONFIRMED' %}
+          <span class="status-pill status-pill--confirmed">Подтверждён</span>
+        {% elif order.status == 'IN_PICKING' %}
+          <span class="status-pill status-pill--picking">В подборе</span>
+        {% elif order.status == 'PICKED' or order.status == 'RESERVED' %}
+          <span class="status-pill status-pill--picked">Подобран</span>
+        {% elif order.status == 'SHIPPED' %}
+          <span class="status-pill status-pill--shipped">Отгружен</span>
+        {% else %}
+          <span class="status-pill status-pill--cancelled">{{ order.get_status_display }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="flow">
+      {% for step in status_steps %}
+        <div class="flow-step {% if step.is_done %}is-done{% endif %} {% if step.is_current %}is-current{% endif %}">
+          <div class="flow-step__title">{{ step.label }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="grid grid--4" style="margin-top:14px;">
+    <div class="kpi">
+      <div class="kpi__label">Строк заказа</div>
+      <div class="kpi__value">{{ total_lines }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi__label">Заказано (шт)</div>
+      <div class="kpi__value">{{ total_qty_ordered|floatformat:2 }}</div>
+      <div class="kpi__meta">Осталось: {{ remaining_qty|floatformat:2 }}</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi__label">Подбор выполнен</div>
+      <div class="kpi__value">{{ pick_percent }}%</div>
+      <div class="progress" style="margin-top:8px;"><div class="progress__bar {% if pick_percent == 100 %}progress__bar--ok{% endif %}" style="width:{{ pick_percent }}%;"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi__label">Задачи подбора</div>
+      <div class="kpi__value">{{ completed_tasks }}/{{ total_tasks }}</div>
+      <div class="kpi__meta">В работе: {{ in_progress_tasks }} · Ожидают: {{ pending_tasks }}</div>
+      <div class="progress" style="margin-top:8px;"><div class="progress__bar {% if tasks_percent == 100 %}progress__bar--ok{% endif %}" style="width:{{ tasks_percent }}%;"></div></div>
+    </div>
+  </div>
+
+  <div class="grid grid--2" style="margin-top:14px;gap:14px;">
+    <div class="card card--glass card--lg">
+      <div class="card__header">
+        <h3 class="h3">Операции по заказу</h3>
+      </div>
+      <div class="stack">
+        <div class="kv">
+          <div class="kv__k">Клиент</div>
+          <div class="kv__v">{{ order.customer_name }}</div>
+          {% if order.customer_phone %}<div class="hint">Телефон: {{ order.customer_phone }}</div>{% endif %}
+          {% if order.customer_email %}<div class="hint">Email: {{ order.customer_email }}</div>{% endif %}
+          {% if order.window_number %}<div class="hint">Окно выдачи: {{ order.window_number }}</div>{% endif %}
+        </div>
+
+        {% if can_confirm %}
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="change_status" value="1">
+            <input type="hidden" name="status" value="CONFIRMED">
+            <button type="submit" class="btn btn--primary btn--block">Подтвердить заказ</button>
+          </form>
+        {% elif can_ship %}
+          <form method="post" class="stack">
+            {% csrf_token %}
+            <input type="hidden" name="change_status" value="1">
+            <input type="hidden" name="status" value="SHIPPED">
+            <label style="display:flex;align-items:flex-start;gap:8px;">
+              <input type="checkbox" name="ship_check_package" value="1" required>
+              <span>Подтверждаю, что комплектность и упаковка заказа проверены.</span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:8px;">
+              <input type="checkbox" name="ship_check_documents" value="1" required>
+              <span>Подтверждаю, что отгрузочные документы подготовлены и передаются клиенту.</span>
+            </label>
+            <div class="field">
+              <div class="field__label">Номер окна выдачи</div>
+              <input class="form__input" type="text" name="ship_window_number" placeholder="Например: W-03" required>
+            </div>
+            <div class="field">
+              <div class="field__label">Введите номер заказа для подтверждения</div>
+              <input class="form__input" type="text" name="ship_confirm_number" placeholder="{{ order.number }}" required>
+            </div>
+            <button type="submit" class="btn btn--primary btn--block">Отгрузить заказ</button>
+          </form>
+        {% elif not can_manage_order and not can_ship_order %}
+          <div class="hint">Для вашей роли доступен только просмотр карточки заказа.</div>
+        {% else %}
+          <div class="hint">
+            {% if order.status == 'DRAFT' and total_lines == 0 %}
+              Добавьте хотя бы одну строку, чтобы подтвердить заказ.
+            {% elif order.status == 'CONFIRMED' or order.status == 'IN_PICKING' %}
+              Дождитесь завершения всех задач подбора, затем заказ станет готов к отгрузке.
+            {% elif order.status == 'SHIPPED' %}
+              Заказ уже отгружен.
+            {% else %}
+              Для этого статуса ручная операция недоступна.
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card card--glass card--lg">
+      <div class="card__header">
+        <h3 class="h3">Задачи подбора</h3>
+      </div>
+      <div class="stack">
+        {% for task in picking_tasks %}
+          <div class="kv">
+            <div class="row row--between row--wrap">
+              <div>
+                <div class="kv__v">
+                  {% if task.zone_type_code == 'CELL' %}Зона: Ячейки{% elif task.zone_type_code == 'SHELF' %}Зона: Полки{% elif task.zone_type_code == 'FLOOR' %}Зона: Напольное{% else %}{{ task.zone_type_code }}{% endif %}
+                </div>
+                <div class="hint">Статус: {{ task.get_status_display }}</div>
+                {% if task.assigned_to %}
+                  <div class="hint">Исполнитель: {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</div>
+                {% endif %}
+              </div>
+              <div>
+                <a class="btn btn--ghost" href="{% url 'picking_task_detail' task.pk %}">Открыть</a>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <p class="muted">Задач подбора пока нет.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if can_add_lines %}
+    <div class="card card--glass card--lg" style="margin-top:14px;">
+      <div class="card__header">
+        <h3 class="h3">Добавить товар</h3>
+      </div>
+      <form method="post" class="form stack">
+        {% csrf_token %}
+        <input type="hidden" name="add_line" value="1">
+        <div class="field">
+          <div class="field__label">{{ line_form.product_search.label }}</div>
+          {{ line_form.product_search }}
+          <div id="product-search-results" style="margin-top:8px;"></div>
+        </div>
+        {{ line_form.product }}
+        <div class="row row--wrap" style="gap:10px;">
+          <div class="field" style="flex:1;min-width:150px;">
+            <div class="field__label">{{ line_form.qty_ordered.label }}</div>
+            {{ line_form.qty_ordered }}
+          </div>
+          <div class="field" style="flex:1;min-width:150px;">
+            <div class="field__label">{{ line_form.price.label }}</div>
+            {{ line_form.price }}
+          </div>
+        </div>
+        <button type="submit" class="btn btn--primary">Добавить</button>
+      </form>
+    </div>
+  {% endif %}
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Строки заказа</h3>
+    </div>
+    <div class="stack">
+      {% for item in line_rows %}
+        <div class="line-row">
+          <div class="row row--between row--wrap">
+            <div>
+              <div class="kv__v">{{ item.line.product.internal_sku }} — {{ item.line.product.name }}</div>
+              <div class="hint">OEM: {{ item.line.product.oem_number }}</div>
+            </div>
+            <div>
+              <span class="line-state line-state--{{ item.state_tone }}">{{ item.state }}</span>
+            </div>
+          </div>
+
+          <div class="row row--wrap" style="margin-top:8px;gap:14px;">
+            <div class="hint">Заказано: {{ item.line.qty_ordered|floatformat:2 }} шт</div>
+            <div class="hint">Подобрано: {{ item.line.qty_picked|floatformat:2 }} шт</div>
+            <div class="hint">Осталось: {{ item.remaining|floatformat:2 }} шт</div>
+            {% if item.line.price %}
+              <div class="hint">Цена: {{ item.line.price }} ₽</div>
+            {% endif %}
+          </div>
+          <div class="progress" style="margin-top:10px;">
+            <div class="progress__bar {% if item.percent == 100 %}progress__bar--ok{% endif %}" style="width:{{ item.percent }}%;"></div>
+          </div>
+          <div class="row row--between row--wrap" style="margin-top:8px;">
+            <div class="hint">Готовность строки: {{ item.percent }}%</div>
+            {% if can_add_lines %}
+              <a class="btn btn--ghost" href="{% url 'order_line_delete' order.pk item.line.pk %}" onclick="return confirm('Удалить строку?')">Удалить</a>
+            {% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Строк заказа пока нет.</p>
+      {% endfor %}
+    </div>
+    {% include "partials/pagination.html" with page_obj=line_page_obj %}
+  </div>
+
+  {% if can_add_lines %}
+    <script>
+      (function() {
+        var searchInput = document.querySelector('input[name="product_search"]');
+        var productInput = document.querySelector('input[name="product"]');
+        var resultsDiv = document.getElementById('product-search-results');
+        var timeout;
+
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', function() {
+          clearTimeout(timeout);
+          var q = this.value.trim();
+          if (q.length < 2) {
+            resultsDiv.innerHTML = '';
+            return;
+          }
+          timeout = setTimeout(function() {
+            fetch('{% url "picking_product_search_ajax" %}?q=' + encodeURIComponent(q))
+              .then(function(r) { return r.json(); })
+              .then(function(data) {
+                resultsDiv.innerHTML = '';
+                if (data.results.length === 0) {
+                  resultsDiv.innerHTML = '<div class="hint">Товары не найдены</div>';
+                  return;
+                }
+                data.results.forEach(function(item) {
+                  var btn = document.createElement('button');
+                  btn.type = 'button';
+                  btn.className = 'btn btn--ghost';
+                  btn.style.marginRight = '8px';
+                  btn.style.marginBottom = '8px';
+                  btn.textContent = item.text + ' (OEM: ' + item.oem + ')';
+                  btn.onclick = function() {
+                    productInput.value = item.id;
+                    searchInput.value = item.text;
+                    resultsDiv.innerHTML = '';
+                  };
+                  resultsDiv.appendChild(btn);
+                });
+              });
+          }, 300);
+        });
+      })();
+    </script>
+  {% endif %}
+{% endblock %}

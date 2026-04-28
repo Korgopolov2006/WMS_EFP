@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — Справочники{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    .admin-list-head {
+      margin-bottom: 14px;
+    }
+
+    .admin-list-head__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .admin-list-shell {
+      margin-top: 14px;
+    }
+
+    .admin-list-search {
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .admin-list-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .admin-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .06);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .admin-list-guide {
+      margin-bottom: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      background: rgba(255, 255, 255, .04);
+    }
+
+    .admin-list-guide p {
+      margin: 0;
+    }
+
+    .admin-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .admin-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, .16);
+      background: rgba(255, 255, 255, .05);
+    }
+
+    .admin-row__title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .admin-row__meta {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .admin-row__actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .admin-row__actions .btn {
+      min-height: 40px;
+    }
+
+    .admin-empty {
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255, 255, 255, .24);
+      background: rgba(255, 255, 255, .03);
+    }
+
+    @media (max-width: 980px) {
+      .admin-row {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-row__actions {
+        justify-content: stretch;
+      }
+
+      .admin-row__actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap admin-list-head">
+    <div>
+      <h1 class="h2">{{ title }}</h1>
+      <p class="muted">{{ subtitle }}</p>
+    </div>
+    <div class="admin-list-head__actions">
+      <a class="btn btn--ghost" href="{% url 'catalog_admin_home' %}">Справочники</a>
+      {% if secondary_url and secondary_label %}
+        <a class="btn btn--ghost" href="{% url secondary_url %}">{{ secondary_label }}</a>
+      {% endif %}
+      <a class="btn btn--primary" href="{% url create_url %}">+ Добавить</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg admin-list-shell">
+    <form class="row row--between row--wrap admin-list-search" method="get">
+      <div style="flex:1;min-width:260px" class="field">
+        <div class="field__label">Поиск</div>
+        <input name="q" value="{{ q }}" placeholder="Введите текст..." />
+      </div>
+      <div style="align-self:flex-end">
+        <button class="btn" type="submit">Искать</button>
+      </div>
+    </form>
+    <div class="admin-list-toolbar">
+      <span class="admin-pill">Найдено: {% if page_obj %}{{ page_obj.paginator.count }}{% else %}{{ items|length }}{% endif %}</span>
+      {% if q %}
+        <span class="admin-pill">Запрос: "{{ q }}"</span>
+      {% else %}
+        <span class="admin-pill">Показаны все записи</span>
+      {% endif %}
+    </div>
+    {% block list_guide %}{% endblock %}
+    <div style="margin-top:14px">
+      {% block table %}{% endblock %}
+    </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
+  </div>
+{% endblock %}

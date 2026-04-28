@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wms-efp"
+version = "0.1.0"
+description = "WMS ЕФП-ПАРТС — система управления складом"
+requires-python = ">=3.11"
+
+# ─────────────────────────── Ruff ───────────────────────────
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = [
+    "*/migrations/*",
+    "*/__pycache__/*",
+    ".venv",
+    "static/js/vendor",
+    "_export_smoke",
+    "2Диплом",
+]
+
+[tool.ruff.lint]
+# Минимальный, прагматичный набор для существующего проекта.
+# Не форсим стиль/импорты, ловим только реальные баги и мёртвый код.
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "B",   # flake8-bugbear (баги)
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "DJ",  # flake8-django
+    "PIE", # flake8-pie
+    "PL",  # pylint (только error+warn ниже)
+    "RUF", # ruff-specific
+]
+ignore = [
+    "E501",     # длина строки (есть длинные SVG-блоки в шаблонах форм)
+    "W293",     # пробелы в пустых строках (косметика)
+    "PLR0913",  # too many arguments (Django views и сервисы — норм)
+    "PLR2004",  # magic numbers (тесты + UI пороги)
+    "PLR0912", "PLR0915", "PLR0911",
+    "PLW2901",  # for-loop var overwrite
+    "PLW1510",  # subprocess.run без check=True (намеренно — обрабатываем returncode)
+    "PLC0415",  # imports внутри функций (lazy imports — стандартная Django-практика)
+    "PLW0603",  # global statement (использование global для тестового мока)
+    "PLC0206",  # dict-index-missing-items (стилистика)
+    "DJ001",    # CharField null=True — историческое
+    "DJ008",    # __str__ в моделях (есть, ruff не всегда видит)
+    "DJ012",    # порядок секций в моделях
+    "RUF001", "RUF002", "RUF003",  # русские кириллицы намеренно
+    "RUF005",   # list concat (стилистика)
+    "RUF012",   # mutable class attrs (Django Meta-классы)
+    "RUF013",   # implicit Optional (legacy)
+    "RUF046",   # unnecessary cast (стилистика)
+    "RUF059",   # unused unpacked var (читаемость)
+    "B007",     # неиспользуемая переменная цикла
+    "B018",     # useless expression (есть в legacy тестах)
+    "B904",     # raise from (избирательно — не критично)
+    "UP032",    # f-string vs .format (не приоритет)
+    "C408",     # dict() без kwargs
+    "F841",     # unused locals (есть в legacy)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"*/tests.py" = ["F811", "PLR0915"]
+"*/test_*.py" = ["F811", "PLR0915"]
+"conftest.py" = ["F401", "F811"]
+"*/settings*.py" = ["F405", "F403", "E402"]
+"*/management/commands/*.py" = ["PLR0915", "PLR0912"]
+
+# ─────────────────────────── Coverage ───────────────────────
+
+[tool.coverage.run]
+source = ["accounts", "admin_panel", "catalog", "core", "inventory",
+          "notifications", "picking", "receiving", "tasks", "warehouse_3d"]
+omit = [
+    "*/migrations/*",
+    "*/tests.py",
+    "*/test_*.py",
+    "conftest.py",
+    "manage.py",
+    "*/wsgi.py",
+    "*/asgi.py",
+    "*/settings*.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+precision = 1
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "def __repr__",
+    "def __str__",
+]
+
+# pytest конфиг — в pytest.ini (исторически).

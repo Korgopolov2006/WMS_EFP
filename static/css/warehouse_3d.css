@@ -1,0 +1,216 @@
+/*
+  Стилистика 3D-склада в палитре проекта.
+  Использует CSS-переменные из app.css (--surface, --border, --text, --brand …).
+  Подключается через {% block extra_css %} в templates/warehouse_3d/view.html.
+*/
+
+/* ── Контейнер и сетка ─────────────────────────────────────── */
+.warehouse-3d-container { display: block; }
+
+.warehouse-3d-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 14px;
+  align-items: start;
+  margin-top: 14px;
+}
+
+@media (max-width: 1024px) {
+  .warehouse-3d-main {
+    grid-template-columns: 1fr;
+  }
+  .warehouse-3d-sidebar { width: 100% !important; }
+}
+
+.warehouse-3d-canvas {
+  min-height: 68vh;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.warehouse-3d-sidebar {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.warehouse-3d-sidebar--view-only .panel-glass:has(.tool-buttons) { display: none; }
+
+/* ── Карточки-панели (alias к .card-стилю проекта) ────────── */
+.panel-glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.panel-glass__header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-2);
+}
+
+.panel-glass__title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.panel-glass__body {
+  padding: 12px 14px;
+  color: var(--text);
+}
+
+/* ── Секции инструментов ──────────────────────────────────── */
+.tool-section + .tool-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.tool-section__title {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: var(--text);
+}
+
+.tool-section__desc {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.4;
+}
+
+/* ── Кнопки выбора инструмента (R / S / C / F) ────────────── */
+.tool-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text);
+  transition: all .15s ease;
+  font-family: inherit;
+  position: relative;
+}
+
+.tool-btn:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.tool-btn.is-active,
+.tool-btn[aria-pressed="true"] {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+
+.tool-btn__icon { font-size: 22px; line-height: 1; }
+.tool-btn__label { font-size: 12px; font-weight: 500; }
+.tool-btn__key {
+  position: absolute;
+  top: 4px; right: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+
+.tool-btn.is-active .tool-btn__key { background: rgba(255,255,255,.2); color: #fff; }
+
+/* ── Формы внутри панелей ─────────────────────────────────── */
+.form-group + .form-group { margin-top: 10px; }
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 4px;
+}
+.form-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.form-actions {
+  display: flex; gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.input-glass,
+.select-glass {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+}
+.input-glass:focus,
+.select-glass:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-ring);
+}
+
+/* ── Селектор склада в шапке ──────────────────────────────── */
+.warehouse-switcher {
+  min-width: 280px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-family: inherit;
+  font-size: 13px;
+}
+.warehouse-switcher:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-ring);
+}
+
+/* ── Кнопка .btn--block ───────────────────────────────────── */
+.btn--block { display: flex; width: 100%; justify-content: center; }
+
+/* ── Уведомление об отсутствии прав ───────────────────────── */
+.access-notice {
+  background: var(--brand-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.access-notice__text { margin: 0; font-size: 12px; color: var(--text-2); line-height: 1.45; }
+
+/* ── Индикатор режима камеры (в шапке) ────────────────────── */
+.control-mode-indicator { white-space: nowrap; }
+
+/* ── Полноэкранный режим ──────────────────────────────────── */
+.warehouse-3d-canvas:fullscreen { background: #0b1220; border: none; border-radius: 0; }
+.warehouse-3d-canvas:fullscreen .warehouse-3d-overlay { display: none !important; }

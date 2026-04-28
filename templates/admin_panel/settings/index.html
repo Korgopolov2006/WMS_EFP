@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки системы · Панель управления{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'admin_panel:dashboard' %}">Панель управления</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Настройки системы</span>
+      </div>
+      <h1 class="page__title">Настройки системы</h1>
+      <p class="page__subtitle">Информация о конфигурации WMS (только для чтения)</p>
+    </div>
+  </header>
+
+  {% if debug %}
+    <div class="toast toast--warning" style="margin-bottom:20px;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;" aria-hidden="true">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <div>
+        <div class="toast__title">DEBUG режим включён</div>
+        <div class="toast__body">
+          Перед развёртыванием на production установите <code>DJANGO_DEBUG=0</code> в файле <code>.env</code>.
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="grid grid--2" style="align-items:start;">
+
+    {# ── Django ── #}
+    <article class="card">
+      <div class="card__header"><h2 class="h3">Django</h2></div>
+      <div class="card__body">
+        <div class="stack stack--sm">
+          <div class="kv">
+            <div class="kv__k">Версия Django</div>
+            <div class="kv__v"><code>{{ django_version }}</code></div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Режим DEBUG</div>
+            <div class="kv__v">
+              {% if debug %}
+                <span class="badge badge--warning">Включён</span>
+              {% else %}
+                <span class="badge badge--success">Выключен</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Язык</div>
+            <div class="kv__v"><code>{{ language }}</code></div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Часовой пояс</div>
+            <div class="kv__v"><code>{{ timezone }}</code></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    {# ── База данных ── #}
+    <article class="card">
+      <div class="card__header"><h2 class="h3">База данных</h2></div>
+      <div class="card__body">
+        <div class="stack stack--sm">
+          <div class="kv">
+            <div class="kv__k">Движок</div>
+            <div class="kv__v muted" style="font-size:12px;">{{ db_info.ENGINE }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Имя БД</div>
+            <div class="kv__v"><code>{{ db_info.NAME }}</code></div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Хост</div>
+            <div class="kv__v"><code>{{ db_info.HOST }}:{{ db_info.PORT }}</code></div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Пользователь</div>
+            <div class="kv__v"><code>{{ db_info.USER }}</code></div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    {# ── Email ── #}
+    <article class="card">
+      <div class="card__header"><h2 class="h3">Email</h2></div>
+      <div class="card__body">
+        <div class="stack stack--sm">
+          <div class="kv">
+            <div class="kv__k">Email backend</div>
+            <div class="kv__v muted" style="font-size:11px;word-break:break-all;">{{ email_backend }}</div>
+          </div>
+        </div>
+        {% if "console" in email_backend %}
+          <div class="hint mt-2" style="color:var(--warning);">
+            Используется консольный backend — письма выводятся в терминал.
+            Для production настройте SMTP в <code>.env</code>.
+          </div>
+        {% endif %}
+      </div>
+    </article>
+
+    {# ── Пути ── #}
+    <article class="card">
+      <div class="card__header"><h2 class="h3">Файловая система</h2></div>
+      <div class="card__body">
+        <div class="stack stack--sm">
+          <div class="kv">
+            <div class="kv__k">Статические файлы</div>
+            <div class="kv__v muted" style="font-size:12px;word-break:break-all;">{{ static_root }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Медиа-файлы</div>
+            <div class="kv__v muted" style="font-size:12px;word-break:break-all;">{{ media_root }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Резервные копии</div>
+            <div class="kv__v muted" style="font-size:12px;word-break:break-all;">{{ backup_dir }}</div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    {# ── Установленные приложения ── #}
+    <article class="card" style="grid-column:1/-1;">
+      <div class="card__header"><h2 class="h3">Приложения (INSTALLED_APPS)</h2></div>
+      <div class="card__body">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          {% for app in installed_apps %}
+            <span class="badge badge--neutral">{{ app }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </article>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — WMS{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    .dead-shell {
+      display: grid;
+      gap: 14px;
+    }
+
+    .dead-intro {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+    }
+
+    .dead-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .dead-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .dead-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .dead-table th,
+    .dead-table td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, .1);
+      vertical-align: top;
+    }
+
+    .dead-table th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .dead-table th.is-right,
+    .dead-table td.is-right {
+      text-align: right;
+    }
+
+    .risk {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 88px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--stroke);
+    }
+
+    .risk--critical {
+      border-color: rgba(244, 63, 94, .55);
+      background: rgba(244, 63, 94, .2);
+    }
+
+    .risk--high {
+      border-color: rgba(251, 191, 36, .55);
+      background: rgba(251, 191, 36, .18);
+    }
+
+    .risk--medium {
+      border-color: rgba(59, 130, 246, .5);
+      background: rgba(59, 130, 246, .15);
+    }
+
+    .dead-chart-grid {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 12px;
+    }
+
+    .dead-donut-wrap {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    .dead-donut {
+      width: 180px;
+      height: 180px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      position: relative;
+    }
+
+    .dead-donut::after {
+      content: "";
+      position: absolute;
+      inset: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--glass2), var(--glass));
+      z-index: 1;
+    }
+
+    .dead-donut__center {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      z-index: 2;
+      text-align: center;
+    }
+
+    .dead-donut__center strong {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .dead-legend {
+      width: 100%;
+      display: grid;
+      gap: 6px;
+    }
+
+    .dead-legend__item {
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      background: rgba(148, 163, 184, .08);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+
+    .dead-bars {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dead-bar {
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      background: rgba(148, 163, 184, .08);
+      padding: 8px 10px;
+    }
+
+    .dead-bar__head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .dead-bar__track {
+      height: 7px;
+      width: 100%;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, .25);
+      overflow: hidden;
+    }
+
+    .dead-bar__fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(244, 63, 94, .9), rgba(251, 191, 36, .8));
+    }
+
+    @media (max-width: 980px) {
+      .dead-intro,
+      .dead-grid,
+      .dead-chart-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <section class="dead-shell">
+    <div class="row row--between row--wrap">
+      <div>
+        <h1 class="h2">{{ title }}</h1>
+        <p class="muted">Товары без движения более {{ days_threshold }} дней.</p>
+      </div>
+      <div class="row row--wrap">
+        <form method="get" class="row row--wrap" style="gap:10px;">
+          <input type="text" name="q" value="{{ q }}" class="form__input" style="min-width:220px;" placeholder="SKU, название, место">
+          <input type="number" name="days" value="{{ days_threshold }}" min="1" class="form__input" style="width:110px;" placeholder="Дней">
+          <button type="submit" class="btn btn--primary">Применить</button>
+        </form>
+        <a class="btn btn--ghost" href="{% url 'reports_home' %}">← К отчётам</a>
+      </div>
+    </div>
+
+    <section class="dead-intro">
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Что показывает отчёт</h3>
+        <p class="muted">
+          Отчёт показывает позиции, которые лежат на складе и не участвовали в движении
+          (отгрузка/приёмка) дольше заданного порога.
+        </p>
+        <ul class="dead-list">
+          <li>Чем больше дней без движения, тем выше риск замороженных денег.</li>
+          <li>Основной фокус: позиции с высокой стоимостью и большим возрастом.</li>
+          <li>Результат помогает принять решения: распродажа, перевод под заказ, сокращение закупок.</li>
+        </ul>
+      </article>
+
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Как действовать</h3>
+        <ul class="dead-list">
+          <li><strong>Сначала</strong> проверьте позиции с риском “Критический”.</li>
+          <li><strong>Далее</strong> отсортируйте по стоимости и начните с самых дорогих.</li>
+          <li><strong>Потом</strong> подготовьте перечень на уценку/акцию или вывод из ассортимента.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="dead-grid">
+      <article class="kv">
+        <div class="kv__k">Позиции в отчёте</div>
+        <div class="kv__v">{{ items_count }}</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Общий объём</div>
+        <div class="kv__v">{{ total_qty|floatformat:0 }} шт</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Замороженная стоимость</div>
+        <div class="kv__v">{{ total_value|floatformat:2 }} ₽</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Критичные (180+ дней)</div>
+        <div class="kv__v">{{ critical_count }} ({{ critical_share }}%)</div>
+      </article>
+    </section>
+
+    <section class="grid grid--2">
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Самая дорогая позиция</h3>
+        {% if top_value_item %}
+          <div class="kv">
+            <div class="kv__v">{{ top_value_item.product.internal_sku }} — {{ top_value_item.product.name }}</div>
+            <div class="hint">Место: {{ top_value_item.stock.storage_location.code }}</div>
+            <div class="hint">Стоимость: {{ top_value_item.estimated_value|floatformat:2 }} ₽</div>
+          </div>
+        {% else %}
+          <p class="muted">Нет данных.</p>
+        {% endif %}
+      </article>
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Самая “старая” позиция</h3>
+        {% if top_age_item %}
+          <div class="kv">
+            <div class="kv__v">{{ top_age_item.product.internal_sku }} — {{ top_age_item.product.name }}</div>
+            <div class="hint">Дней без движения: {{ top_age_item.days_without_movement }}</div>
+            <div class="hint">Последнее движение: {{ top_age_item.last_movement_date|date:"d.m.Y"|default:"не зафиксировано" }}</div>
+          </div>
+        {% else %}
+          <p class="muted">Нет данных.</p>
+        {% endif %}
+      </article>
+    </section>
+
+    <section class="dead-chart-grid">
+      <article class="card card--glass card--lg dead-donut-wrap">
+        <h3 class="h3">Структура риска</h3>
+        <div
+          class="dead-donut"
+          style="background:conic-gradient(
+            rgba(244, 63, 94, .85) 0 {{ risk_distribution.0.end }}%,
+            rgba(251, 191, 36, .85) {{ risk_distribution.0.end }}% {{ risk_distribution.1.end }}%,
+            rgba(59, 130, 246, .85) {{ risk_distribution.1.end }}% 100%
+          );"
+        >
+          <div class="dead-donut__center">
+            <strong>{{ items_count }}</strong>
+            <span class="hint">позиций</span>
+          </div>
+        </div>
+        <div class="dead-legend">
+          {% for item in risk_distribution %}
+            <div class="dead-legend__item">
+              <span>{{ item.label }}</span>
+              <span>{{ item.count }} ({{ item.share }}%)</span>
+            </div>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Топ по замороженной стоимости</h3>
+        <div class="dead-bars">
+          {% for item in top_value_items %}
+            <div class="dead-bar">
+              <div class="dead-bar__head">
+                <span>{{ item.product.internal_sku }}</span>
+                <span>{{ item.estimated_value|floatformat:2 }} ₽</span>
+              </div>
+              <div class="dead-bar__track">
+                <div class="dead-bar__fill" style="width:{{ item.value_share }}%;"></div>
+              </div>
+            </div>
+          {% empty %}
+            <p class="muted">Нет данных для графика.</p>
+          {% endfor %}
+        </div>
+      </article>
+    </section>
+
+    <section class="card card--glass card--lg">
+      <div class="card__header">
+        <h3 class="h3">Список мёртвых остатков</h3>
+        <p class="muted">Сортировка по убыванию дней без движения.</p>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="dead-table">
+          <thead>
+            <tr>
+              <th>Товар</th>
+              <th>Место</th>
+              <th class="is-right">Количество</th>
+              <th class="is-right">Дней без движения</th>
+              <th class="is-right">Последнее движение</th>
+              <th class="is-right">Стоимость, ₽</th>
+              <th class="is-right">Риск</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+              <tr>
+                <td>
+                  <div>{{ item.product.internal_sku }}</div>
+                  <div class="hint">{{ item.product.name }}</div>
+                </td>
+                <td>{{ item.stock.storage_location.code }}</td>
+                <td class="is-right">{{ item.qty_available|floatformat:0 }}</td>
+                <td class="is-right">{{ item.days_without_movement }}</td>
+                <td class="is-right">{{ item.last_movement_date|date:"d.m.Y"|default:"—" }}</td>
+                <td class="is-right">{{ item.estimated_value|floatformat:2 }}</td>
+                <td class="is-right">
+                  {% if item.days_without_movement >= 360 %}
+                    <span class="risk risk--critical">Критический</span>
+                  {% elif item.days_without_movement >= 180 %}
+                    <span class="risk risk--high">Высокий</span>
+                  {% else %}
+                    <span class="risk risk--medium">Средний</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" style="padding:20px;text-align:center;" class="muted">Мёртвых остатков не найдено.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% include "partials/pagination.html" with page_obj=page_obj %}
+    </section>
+  </section>
+{% endblock %}

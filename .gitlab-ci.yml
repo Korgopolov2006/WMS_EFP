@@ -1,0 +1,56 @@
+stages:
+  - build
+  - quality
+  - security
+
+variables:
+  VENV_DIR: ".ci-venv"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONUNBUFFERED: "1"
+
+default:
+  image: python:3.11
+  cache:
+    key: "pip-$CI_COMMIT_REF_SLUG"
+    paths:
+      - .cache/pip/
+  before_script:
+    - python -m venv "$VENV_DIR"
+    - . "$VENV_DIR/bin/activate"
+    - python -m pip install --upgrade pip
+    - python -m pip install -r requirements-dev.txt
+    - python -m pip install flake8 radon bandit
+    - |
+      if [ -n "${DOTENV_CONTENT:-}" ]; then
+        printf "%s" "$DOTENV_CONTENT" > .env
+      elif [ -f ".env.example" ] && [ ! -f ".env" ]; then
+        cp .env.example .env
+      fi
+
+build_project:
+  stage: build
+  script:
+    - . "$VENV_DIR/bin/activate"
+    - python -m compileall -q .
+    - python -m pip check
+
+lint_flake8:
+  stage: quality
+  script:
+    - . "$VENV_DIR/bin/activate"
+    - flake8 .
+
+code_quality_radon:
+  stage: quality
+  script:
+    - . "$VENV_DIR/bin/activate"
+    - radon cc -s -a . --exclude "*/migrations/*,$VENV_DIR/*,static/*,templates/*,2Диплом/*,_export_smoke/*"
+    - radon mi -s . --exclude "*/migrations/*,$VENV_DIR/*,static/*,templates/*,2Диплом/*,_export_smoke/*"
+
+security_bandit:
+  stage: security
+  script:
+    - . "$VENV_DIR/bin/activate"
+    - bandit -r . -x "$VENV_DIR,static,templates,2Диплом,_export_smoke,**/migrations/**"

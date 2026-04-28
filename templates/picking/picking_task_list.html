@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Задачи подбора · WMS{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'dashboard' %}">Дашборд</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Задачи подбора</span>
+      </div>
+      <h1 class="page__title">Задачи подбора</h1>
+      <p class="page__subtitle">Маршруты подбора товаров по зонам склада</p>
+    </div>
+  </header>
+
+  <div class="data-table" data-density="normal">
+    <form class="data-table__toolbar" method="get">
+      <label class="field flex-1" style="max-width:320px;">
+        <input type="search" name="q" value="{{ q|default:'' }}"
+               placeholder="Заказ, клиент, зона, исполнитель" class="input" autofocus>
+      </label>
+
+      <label class="field">
+        <select name="status" onchange="this.form.submit()" style="min-width:180px;">
+          <option value="">Все статусы</option>
+          {% for code, label in statuses %}
+            <option value="{{ code }}" {% if status == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="field">
+        <select name="zone_type" onchange="this.form.submit()" style="min-width:150px;">
+          <option value="">Все зоны</option>
+          <option value="CELL"  {% if zone_type == "CELL"  %}selected{% endif %}>Ячейки</option>
+          <option value="SHELF" {% if zone_type == "SHELF" %}selected{% endif %}>Полки</option>
+          <option value="FLOOR" {% if zone_type == "FLOOR" %}selected{% endif %}>Напольное</option>
+        </select>
+      </label>
+
+      <button type="submit" class="btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Найти
+      </button>
+
+      {% if q or status or zone_type %}
+        <a class="btn btn--ghost" href="{% url 'picking_task_list' %}">Сбросить</a>
+      {% endif %}
+
+      <div class="data-table__toolbar-spacer"></div>
+
+      <div class="data-table__density" role="group" aria-label="Плотность строк">
+        <button type="button" data-density-set="compact"     aria-pressed="false" title="Компактно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="7" x2="13" y2="7"/><line x1="3" y1="10" x2="13" y2="10"/><line x1="3" y1="12" x2="13" y2="12"/></svg></button>
+        <button type="button" data-density-set="normal"      aria-pressed="true"  title="Обычно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="5" x2="13" y2="5"/><line x1="3" y1="9" x2="13" y2="9"/><line x1="3" y1="13" x2="13" y2="13"/></svg></button>
+        <button type="button" data-density-set="comfortable" aria-pressed="false" title="Просторно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="12" x2="13" y2="12"/></svg></button>
+      </div>
+    </form>
+
+    <div class="data-table__scroll">
+      {% if tasks %}
+        <table class="data-table__table">
+          <thead>
+            <tr>
+              <th>Заказ</th>
+              <th>Клиент</th>
+              <th>Тип зоны</th>
+              <th>Статус</th>
+              <th class="data-table__actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              <tr>
+                <td><strong>{{ task.order.number }}</strong></td>
+                <td>{{ task.order.customer_name|default:"—" }}</td>
+                <td class="muted">{{ task.get_zone_type_code_display|default:task.zone_type_code }}</td>
+                <td>
+                  {% include "partials/status_badge.html" with c=task.status label=task.get_status_display %}
+                </td>
+                <td class="data-table__actions">
+                  <a class="btn btn--ghost btn--sm" href="{% url 'picking_task_detail' task.pk %}">Открыть</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="data-table__empty">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+               style="margin:0 auto 12px;color:var(--text-4);" aria-hidden="true">
+            <path d="M20 7l-8-4-8 4 8 4 8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 17l8 4 8-4"/>
+          </svg>
+          <p class="muted mb-2">Задач подбора не найдено</p>
+          {% if q or status or zone_type %}
+            <a class="btn btn--ghost btn--sm" href="{% url 'picking_task_list' %}">Очистить фильтры</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="data-table__footer">
+      <div>
+        {% if page_obj %}
+          Показано <strong>{{ page_obj.start_index }}</strong>–<strong>{{ page_obj.end_index }}</strong>
+          из <strong>{{ page_obj.paginator.count }}</strong>
+        {% endif %}
+      </div>
+      <div>
+        {% include "partials/pagination.html" with page_obj=page_obj %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

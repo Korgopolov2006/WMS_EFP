@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Удалить склад · Панель управления{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'admin_panel:dashboard' %}">Панель управления</a>
+        <span class="breadcrumbs__sep">/</span>
+        <a href="{% url 'admin_panel:wms_warehouse_list' %}">Склады</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Удаление</span>
+      </div>
+      <h1 class="page__title">Удалить склад</h1>
+    </div>
+  </header>
+
+  <div class="card" style="max-width:540px;">
+    <div class="card__body">
+      <div class="toast toast--danger mb-4" role="alert">
+        <strong>Внимание!</strong> Это действие необратимо. Склад и все связанные данные будут удалены.
+      </div>
+      <p>Вы собираетесь удалить склад:</p>
+      <p class="mt-2 mb-4"><strong>{{ warehouse }}</strong></p>
+      <p class="text-muted text-sm mb-4">
+        Удаление невозможно, если к складу привязаны зоны хранения, остатки или документы приёмки.
+        В таком случае рекомендуем <a href="{% url 'admin_panel:wms_warehouse_edit' warehouse.pk %}">деактивировать склад</a>.
+      </p>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+          <button type="submit" class="btn btn--danger">Удалить склад</button>
+          <a class="btn btn--ghost" href="{% url 'admin_panel:wms_warehouse_list' %}">Отмена</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

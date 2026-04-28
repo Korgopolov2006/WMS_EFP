@@ -1,0 +1,58 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}WMS · ЕФП-ПАРТС{% endblock %}</title>
+
+  {# Inter — единый шрифт интерфейса #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+  <link rel="stylesheet" href="{% static 'css/app.css' %}?v=v2-003" />
+  {% block extra_css %}{% endblock %}
+  <script defer src="{% static 'js/app.js' %}?v=v2-003"></script>
+</head>
+<body>
+{% if request.user.is_authenticated %}
+  {# Залогиненные — полный shell c sidebar + topbar #}
+  <div class="app-shell" id="app-shell">
+    {% include "partials/sidebar.html" %}
+    {% include "partials/topbar.html" %}
+
+    <main class="main">
+      {% if messages %}
+        <div class="stack stack--sm mb-4">
+          {% for message in messages %}
+            <div class="toast toast--{{ message.tags|default:'info' }}">
+              <div class="toast__title">{{ message }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+{% else %}
+  {# Анонимные (login и т.п.) — без shell. Сама страница рисует .auth-shell. #}
+  {% if messages %}
+    <div style="position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:1000;width:min(400px,calc(100% - 32px));">
+      <div class="stack stack--sm">
+        {% for message in messages %}
+          <div class="toast toast--{{ message.tags|default:'info' }}">
+            <div class="toast__title">{{ message }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+
+  {% block content %}{% endblock %}
+
+{% if request.user.is_authenticated %}
+    </main>
+  </div>
+{% endif %}
+</body>
+</html>

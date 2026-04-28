@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Уведомления · WMS{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'dashboard' %}">Дашборд</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Уведомления</span>
+      </div>
+      <h1 class="page__title">Уведомления</h1>
+      <p class="page__subtitle">
+        Всего {{ page_obj.paginator.count }} ·
+        непрочитанных <strong>{{ unread_count }}</strong>
+      </p>
+    </div>
+    <div class="page__actions">
+      {% if only_unread %}
+        <a class="btn btn--ghost" href="{% url 'notifications:list' %}">Все</a>
+      {% else %}
+        <a class="btn btn--ghost" href="?unread=1">Только непрочитанные</a>
+      {% endif %}
+      <form method="post" action="{% url 'notifications:mark_all_read' %}" style="margin:0;">
+        {% csrf_token %}
+        <button class="btn" type="submit" {% if not unread_count %}disabled{% endif %}>
+          Отметить все прочитанными
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <div class="data-table" data-density="normal">
+    <div class="data-table__scroll">
+      {% if items %}
+        <table class="data-table__table">
+          <thead>
+            <tr>
+              <th style="width:32px;"></th>
+              <th>Дата</th>
+              <th>Тип</th>
+              <th>Заголовок</th>
+              <th>Текст</th>
+              <th class="data-table__actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for n in items %}
+              <tr style="{% if not n.is_read %}background:var(--brand-soft);{% endif %}">
+                <td>
+                  {% if not n.is_read %}
+                    <span title="Не прочитано" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--brand);"></span>
+                  {% endif %}
+                </td>
+                <td class="muted">{{ n.created_at|date:"d.m.Y H:i" }}</td>
+                <td>
+                  {% if n.kind == "SUCCESS" %}<span class="badge badge--success">{{ n.get_kind_display }}</span>
+                  {% elif n.kind == "WARNING" %}<span class="badge badge--warning">{{ n.get_kind_display }}</span>
+                  {% elif n.kind == "DANGER" %}<span class="badge badge--danger">{{ n.get_kind_display }}</span>
+                  {% else %}<span class="badge badge--info">{{ n.get_kind_display }}</span>{% endif %}
+                </td>
+                <td><strong>{{ n.title }}</strong></td>
+                <td class="muted">{{ n.body|truncatechars:120 }}</td>
+                <td class="data-table__actions">
+                  {% if n.link %}
+                    <a class="btn btn--ghost btn--sm" href="{{ n.link }}">Открыть</a>
+                  {% endif %}
+                  {% if not n.is_read %}
+                    <form method="post" action="{% url 'notifications:mark_read' n.pk %}" style="display:inline;margin:0;">
+                      {% csrf_token %}
+                      <button class="btn btn--ghost btn--sm" type="submit">Прочитано</button>
+                    </form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="data-table__empty">
+          <p class="muted">{% if only_unread %}Нет непрочитанных уведомлений.{% else %}Уведомлений нет.{% endif %}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="data-table__footer">
+      <div>
+        {% if page_obj %}
+          Показано <strong>{{ page_obj.start_index }}</strong>–<strong>{{ page_obj.end_index }}</strong>
+          из <strong>{{ page_obj.paginator.count }}</strong>
+        {% endif %}
+      </div>
+      <div>
+        {% include "partials/pagination.html" with page_obj=page_obj %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

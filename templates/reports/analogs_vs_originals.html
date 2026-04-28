@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — WMS{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    .an-shell {
+      display: grid;
+      gap: 14px;
+    }
+
+    .an-intro {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+    }
+
+    .an-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .an-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .an-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .an-table th,
+    .an-table td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, .1);
+      vertical-align: top;
+    }
+
+    .an-table th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .an-table th.is-right,
+    .an-table td.is-right {
+      text-align: right;
+    }
+
+    .an-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 82px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--stroke);
+    }
+
+    .an-badge--high {
+      border-color: rgba(45, 212, 191, .55);
+      background: rgba(45, 212, 191, .18);
+    }
+
+    .an-badge--mid {
+      border-color: rgba(251, 191, 36, .55);
+      background: rgba(251, 191, 36, .18);
+    }
+
+    .an-badge--low {
+      border-color: rgba(148, 163, 184, .55);
+      background: rgba(148, 163, 184, .18);
+    }
+
+    .an-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .an-chart-grid {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 12px;
+    }
+
+    .an-donut-wrap {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+    }
+
+    .an-donut {
+      width: 176px;
+      height: 176px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      position: relative;
+    }
+
+    .an-donut::after {
+      content: "";
+      position: absolute;
+      inset: 23px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--glass2), var(--glass));
+      z-index: 1;
+    }
+
+    .an-donut__center {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-content: center;
+      text-align: center;
+    }
+
+    .an-donut__center strong {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .an-bars {
+      display: grid;
+      gap: 10px;
+    }
+
+    .an-bar {
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      background: rgba(148, 163, 184, .08);
+      padding: 8px 10px;
+    }
+
+    .an-bar__head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .an-bar__track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, .25);
+      overflow: hidden;
+      display: flex;
+    }
+
+    .an-bar__part--orig {
+      background: rgba(59, 130, 246, .85);
+      height: 100%;
+    }
+
+    .an-bar__part--analog {
+      background: rgba(45, 212, 191, .85);
+      height: 100%;
+    }
+
+    .an-mini {
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: rgba(148, 163, 184, .08);
+    }
+
+    .an-mini-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .an-mini-track {
+      width: 100%;
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, .25);
+      overflow: hidden;
+    }
+
+    .an-mini-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(45, 212, 191, .9), rgba(34, 197, 94, .8));
+    }
+
+    @media (max-width: 980px) {
+      .an-intro,
+      .an-grid,
+      .an-chart-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <section class="an-shell">
+    <div class="row row--between row--wrap">
+      <div>
+        <h1 class="h2">{{ title }}</h1>
+        <p class="muted">Период: {{ period_start|date:"d.m.Y" }} — {{ period_end|date:"d.m.Y" }}</p>
+      </div>
+      <div class="row row--wrap">
+        <form method="get" class="row row--wrap" style="gap:10px;">
+          <input type="text" name="q" value="{{ q }}" class="form__input" style="min-width:220px;" placeholder="SKU или название пары">
+          <select name="period" class="form__input" style="width:auto;">
+            <option value="7" {% if period_days == 7 %}selected{% endif %}>7 дней</option>
+            <option value="30" {% if period_days == 30 %}selected{% endif %}>30 дней</option>
+            <option value="90" {% if period_days == 90 %}selected{% endif %}>90 дней</option>
+            <option value="180" {% if period_days == 180 %}selected{% endif %}>180 дней</option>
+          </select>
+          <button type="submit" class="btn btn--primary">Применить</button>
+        </form>
+        <a class="btn btn--ghost" href="{% url 'reports_home' %}">← К отчётам</a>
+      </div>
+    </div>
+
+    <section class="an-intro">
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Что это за анализ</h3>
+        <p class="muted">
+          Отчёт сравнивает продажи пар “оригинал/аналог” и показывает,
+          насколько клиенты замещают оригинал аналогом.
+        </p>
+        <ul class="an-list">
+          <li><strong>Замещение, %</strong> = продажи аналога / (оригинал + аналог) × 100.</li>
+          <li>Высокое значение означает, что спрос уходит в сторону аналога.</li>
+          <li>Это помогает управлять ассортиментом, закупками и маржинальностью.</li>
+        </ul>
+      </article>
+
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Как читать результат</h3>
+        <ul class="an-list">
+          <li><strong>70%+</strong> — аналог доминирует, стоит пересмотреть объём оригинала.</li>
+          <li><strong>40–70%</strong> — сбалансированная пара, держать оба товара.</li>
+          <li><strong>&lt; 40%</strong> — оригинал доминирует, аналог можно держать ограниченно.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="an-grid">
+      <article class="kv">
+        <div class="kv__k">Пар в анализе</div>
+        <div class="kv__v">{{ pairs_count }}</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Общий % замещения</div>
+        <div class="kv__v">{{ overall_substitution_rate|floatformat:1 }}%</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Выручка оригиналов</div>
+        <div class="kv__v">{{ total_original_amount|floatformat:2 }} ₽</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Выручка аналогов</div>
+        <div class="kv__v">{{ total_analog_amount|floatformat:2 }} ₽</div>
+      </article>
+    </section>
+
+    <section class="grid grid--3">
+      <article class="kv">
+        <div class="kv__k">Аналог доминирует (70%+)</div>
+        <div class="kv__v">{{ segment_counts.high_analog }}</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Сбалансированные пары (40–70%)</div>
+        <div class="kv__v">{{ segment_counts.balanced }}</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Оригинал доминирует (&lt;40%)</div>
+        <div class="kv__v">{{ segment_counts.original_dominant }}</div>
+      </article>
+    </section>
+
+    <section class="an-chart-grid">
+      <article class="card card--glass card--lg an-donut-wrap">
+        <h3 class="h3">Сегменты по парам</h3>
+        <div
+          class="an-donut"
+          style="background:conic-gradient(
+            rgba(45, 212, 191, .85) 0 {{ segment_distribution.0.end }}%,
+            rgba(251, 191, 36, .85) {{ segment_distribution.0.end }}% {{ segment_distribution.1.end }}%,
+            rgba(148, 163, 184, .85) {{ segment_distribution.1.end }}% 100%
+          );"
+        >
+          <div class="an-donut__center">
+            <strong>{{ pairs_count }}</strong>
+            <span class="hint">пар</span>
+          </div>
+        </div>
+        <div class="stack stack--sm" style="width:100%;">
+          {% for item in segment_distribution %}
+            <div class="an-mini">
+              <div class="an-mini-head"><span>{{ item.label }}</span><span>{{ item.count }} ({{ item.share }}%)</span></div>
+              <div class="an-mini-track"><div class="an-mini-fill" style="width:{{ item.share }}%;"></div></div>
+            </div>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Оригинал vs аналог в объеме</h3>
+        <div class="an-bars">
+          <div class="an-bar">
+            <div class="an-bar__head">
+              <span>По количеству, шт</span>
+              <span>Ориг. {{ qty_split.original_share }}% / Аналог {{ qty_split.analog_share }}%</span>
+            </div>
+            <div class="an-bar__track">
+              <div class="an-bar__part--orig" style="width:{{ qty_split.original_share }}%;"></div>
+              <div class="an-bar__part--analog" style="width:{{ qty_split.analog_share }}%;"></div>
+            </div>
+          </div>
+          <div class="an-bar">
+            <div class="an-bar__head">
+              <span>По выручке, ₽</span>
+              <span>Ориг. {{ amount_split.original_share }}% / Аналог {{ amount_split.analog_share }}%</span>
+            </div>
+            <div class="an-bar__track">
+              <div class="an-bar__part--orig" style="width:{{ amount_split.original_share }}%;"></div>
+              <div class="an-bar__part--analog" style="width:{{ amount_split.analog_share }}%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="hint" style="margin-bottom:8px;">Топ пар по замещению</div>
+            <div class="stack stack--sm">
+              {% for item in top_substitution_pairs %}
+                <div class="an-mini">
+                  <div class="an-mini-head">
+                    <span>{{ item.original_product.internal_sku }} → {{ item.analog_product.internal_sku }}</span>
+                    <span>{{ item.substitution_rate|floatformat:1 }}%</span>
+                  </div>
+                  <div class="an-mini-track">
+                    <div class="an-mini-fill" style="width:{{ item.substitution_rate|floatformat:1 }}%;"></div>
+                  </div>
+                </div>
+              {% empty %}
+                <p class="muted">Нет данных для графика.</p>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="card card--glass card--lg">
+      <div class="card__header">
+        <h3 class="h3">Сравнение по парам</h3>
+        <p class="an-note">Таблица отсортирована по убыванию процента замещения.</p>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="an-table">
+          <thead>
+            <tr>
+              <th>Оригинал</th>
+              <th>Аналог</th>
+              <th class="is-right">Ориг., шт / ₽</th>
+              <th class="is-right">Аналог, шт / ₽</th>
+              <th class="is-right">Замещение</th>
+              <th>Рекомендация</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+              <tr>
+                <td>
+                  <div>{{ item.original_product.internal_sku }}</div>
+                  <div class="hint">{{ item.original_product.name }}</div>
+                </td>
+                <td>
+                  <div>{{ item.analog_product.internal_sku }}</div>
+                  <div class="hint">{{ item.analog_product.name }}</div>
+                </td>
+                <td class="is-right">
+                  {{ item.original_sales_qty|floatformat:0 }} / {{ item.original_sales_amount|floatformat:2 }}
+                </td>
+                <td class="is-right">
+                  {{ item.analog_sales_qty|floatformat:0 }} / {{ item.analog_sales_amount|floatformat:2 }}
+                </td>
+                <td class="is-right">{{ item.substitution_rate|floatformat:1 }}%</td>
+                <td>
+                  {% if item.substitution_rate >= 70 %}
+                    <span class="an-badge an-badge--high">Аналог лидер</span>
+                    <div class="hint">Увеличить фокус на аналоге, проверить избыточный запас оригинала.</div>
+                  {% elif item.substitution_rate >= 40 %}
+                    <span class="an-badge an-badge--mid">Баланс</span>
+                    <div class="hint">Поддерживать обе позиции и контролировать маржу по паре.</div>
+                  {% else %}
+                    <span class="an-badge an-badge--low">Оригинал лидер</span>
+                    <div class="hint">Аналог держать ограниченно, в основном под чувствительных к цене клиентов.</div>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" style="padding:20px;text-align:center;" class="muted">Данных для анализа не найдено.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% include "partials/pagination.html" with page_obj=page_obj %}
+    </section>
+  </section>
+{% endblock %}

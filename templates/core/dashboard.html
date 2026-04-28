@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Дашборд · WMS{% endblock %}
+
+{% block content %}
+<div class="page">
+  {# ---------- Header ---------- #}
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <span class="breadcrumbs__current">Дашборд</span>
+      </div>
+      <h1 class="page__title">Сегодня в работе</h1>
+      <p class="page__subtitle">
+        Роль: <strong>{{ request.user.get_role_display|default:request.user.role }}</strong>
+        {% if is_admin_mode %} · Витрина: <strong>{{ effective_role_label }}</strong>{% endif %}
+      </p>
+    </div>
+
+    <div class="page__actions">
+      {% if is_admin_mode %}
+        <form method="get" class="row gap-2">
+          <label class="field" style="min-width:180px;">
+            <span class="field__label">Режим просмотра</span>
+            <select name="as_role" onchange="this.form.submit()">
+              {% for code, label in role_switch_options %}
+                <option value="{{ code }}" {% if effective_role == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </form>
+      {% endif %}
+    </div>
+  </header>
+
+  {# ---------- KPI row ---------- #}
+  <section class="kpi-grid" aria-label="Ключевые показатели">
+    <div class="kpi">
+      <div class="kpi__label">
+        <svg class="kpi__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/>
+        </svg>
+        Принято сегодня
+      </div>
+      <div class="kpi__value num">{{ kpi_received_today|default:0 }}</div>
+      <div class="kpi__delta kpi__delta--flat">шт за смену</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi__label">
+        <svg class="kpi__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Заказы в работе
+      </div>
+      <div class="kpi__value num">{{ today_summary.in_progress_tasks|default:0 }}</div>
+      <div class="kpi__delta kpi__delta--flat">из {{ today_summary.pending_tasks|add:today_summary.in_progress_tasks|default:0 }} активных</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi__label">
+        <svg class="kpi__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 7l-8-4-8 4 8 4 8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 17l8 4 8-4"/>
+        </svg>
+        Остатки (SKU)
+      </div>
+      <div class="kpi__value num">{{ kpi_total_sku|default_if_none:0 }}</div>
+      <div class="kpi__delta kpi__delta--flat">уникальных позиций</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi__label">
+        <svg class="kpi__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Ошибки / дефицит
+      </div>
+      <div class="kpi__value num text-danger">{{ kpi_errors|default:0 }}</div>
+      <div class="kpi__delta kpi__delta--flat">за текущую смену</div>
+    </div>
+  </section>
+
+  {# ---------- 2x2 grid ---------- #}
+  <section class="grid grid--2">
+    {# 1. Мои задачи #}
+    <article class="card">
+      <div class="card__header">
+        <div class="row row--between">
+          <h2 class="h3">Мои задачи</h2>
+          <a class="btn btn--ghost btn--sm" href="{% url 'task_list' %}?my_tasks=1">Все задачи →</a>
+        </div>
+      </div>
+      <div class="card__body">
+        <div class="grid grid--2">
+          <div class="kv">
+            <div class="kv__k">Ожидают выполнения</div>
+            <div class="kv__v num" style="font-size:24px;font-weight:600;">{{ today_summary.pending_tasks|default:0 }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">В работе</div>
+            <div class="kv__v num text-warning" style="font-size:24px;font-weight:600;">{{ today_summary.in_progress_tasks|default:0 }}</div>
+          </div>
+        </div>
+
+        {% if today_summary.progress_percent > 0 %}
+          <div class="mt-3">
+            <div style="height:6px;background:var(--surface-2);border-radius:999px;overflow:hidden;">
+              <div style="height:100%;width:{{ today_summary.progress_percent }}%;background:var(--brand);border-radius:999px;"></div>
+            </div>
+            <div class="hint mt-1 text-right">{{ today_summary.progress_percent }}% задач уже в работе</div>
+          </div>
+        {% endif %}
+      </div>
+      <div class="card__footer">
+        <a class="btn btn--primary btn--block" href="{% url 'task_list' %}?my_tasks=1">Перейти к задачам</a>
+      </div>
+    </article>
+
+    {# 2. Быстрые действия #}
+    <article class="card">
+      <div class="card__header">
+        <h2 class="h3">Быстрые действия</h2>
+      </div>
+      <div class="card__body">
+        <div class="stack stack--sm">
+          {% for card in dashboard_cards|slice:":4" %}
+            {% with primary=card.actions.0 %}
+              {% if primary %}
+                <a class="row row--between" href="{{ primary.url }}"
+                   style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);text-decoration:none;color:inherit;transition:background var(--t-fast);"
+                   onmouseover="this.style.background='var(--surface-2)'"
+                   onmouseout="this.style.background='var(--surface)'">
+                  <div>
+                    <div style="font-weight:500;color:var(--text);">{{ card.title }}</div>
+                    <div class="hint">{{ card.subtitle }}</div>
+                  </div>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                </a>
+              {% endif %}
+            {% endwith %}
+          {% empty %}
+            <p class="muted">Действия для выбранной роли пока не настроены.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </article>
+
+    {# 3. Последняя активность #}
+    <article class="card">
+      <div class="card__header">
+        <h2 class="h3">Последняя активность</h2>
+      </div>
+      <div class="card__body">
+        <div class="stack stack--sm">
+          {% for card in dashboard_cards %}
+            {% for metric in card.metrics|slice:":1" %}
+              <div class="row row--between" style="padding:6px 0;border-bottom:1px solid var(--border);">
+                <div>
+                  <div style="font-size:13px;color:var(--text);">{{ card.title }}</div>
+                  <div class="hint">{{ metric.label }}</div>
+                </div>
+                <div class="num" style="font-weight:600;
+                  {% if metric.kind == 'completed' %}color:var(--success);
+                  {% elif metric.kind == 'in_progress' %}color:var(--warning);
+                  {% else %}color:var(--text);{% endif %}">
+                  {{ metric.value|default:0 }}
+                </div>
+              </div>
+            {% endfor %}
+          {% empty %}
+            <p class="muted">Нет данных за смену.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </article>
+
+    {# 4. Следующий шаг #}
+    <article class="card">
+      <div class="card__header">
+        <h2 class="h3">Следующий шаг</h2>
+      </div>
+      <div class="card__body">
+        {% if today_summary.next_action %}
+          <div class="stack stack--sm">
+            <div style="font-weight:500;color:var(--text);font-size:15px;">
+              {{ today_summary.next_action.title }}
+            </div>
+            <p class="muted" style="font-size:13px;">{{ today_summary.next_action.description }}</p>
+          </div>
+        {% else %}
+          <p class="muted">Все задачи на смену завершены.</p>
+        {% endif %}
+      </div>
+      {% if today_summary.next_action %}
+        <div class="card__footer">
+          <a class="btn btn--primary btn--block" href="{{ today_summary.next_action.url }}">
+            {{ today_summary.next_action.button|default:"Открыть" }}
+          </a>
+        </div>
+      {% endif %}
+    </article>
+  </section>
+
+  {# ---------- Служебные ссылки (тонко, без декора) ---------- #}
+  {% if quick_links %}
+    <section>
+      <div class="row row--between mb-3">
+        <h2 class="h3">Служебный доступ</h2>
+      </div>
+      <div class="grid grid--4">
+        {% for link in quick_links %}
+          <a href="{{ link.url }}" class="card" style="padding:14px 16px;text-decoration:none;color:inherit;display:block;transition:border-color var(--t-fast),box-shadow var(--t-fast);"
+             onmouseover="this.style.borderColor='var(--brand)';this.style.boxShadow='var(--shadow-sm)';"
+             onmouseout="this.style.borderColor='var(--border)';this.style.boxShadow='var(--shadow-xs)';">
+            <div style="font-weight:500;font-size:13px;color:var(--text);">{{ link.title }}</div>
+            <div class="hint mt-1">{{ link.description }}</div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

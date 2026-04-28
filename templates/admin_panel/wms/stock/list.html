@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Остатки · Панель управления{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'admin_panel:dashboard' %}">Панель управления</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Остатки</span>
+      </div>
+      <h1 class="page__title">Остатки на складах</h1>
+      <p class="page__subtitle">Обзор складских остатков — {{ total }} записей</p>
+    </div>
+    <div class="page__actions">
+      <a class="btn btn--ghost" href="{% url 'stock_list' %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        Модуль остатков
+      </a>
+    </div>
+  </header>
+
+  <div class="data-table" data-density="normal">
+    <form class="data-table__toolbar" method="get">
+      <label class="field flex-1" style="max-width:320px;">
+        <input type="search" name="q" value="{{ q|default:'' }}"
+               placeholder="Артикул, название, место хранения" class="input" autofocus>
+      </label>
+      <button type="submit" class="btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Найти
+      </button>
+      {% if q %}
+        <a class="btn btn--ghost" href="{% url 'admin_panel:wms_stock_list' %}">Сбросить</a>
+      {% endif %}
+    </form>
+
+    <div class="data-table__meta">
+      <span class="data-table__count">Найдено: {{ total }}</span>
+    </div>
+
+    <div class="data-table__scroll">
+      <table class="data-table__table">
+        <thead>
+          <tr>
+            <th>Артикул</th>
+            <th>Наименование</th>
+            <th>Место хранения</th>
+            <th>Склад</th>
+            <th class="text-right">Доступно</th>
+            <th class="text-right">Зарезервировано</th>
+            <th class="text-right">Всего</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in page_obj %}
+            <tr>
+              <td><code class="mono">{{ s.product.internal_sku }}</code></td>
+              <td>{{ s.product.name }}</td>
+              <td><code class="mono">{{ s.storage_location.code }}</code></td>
+              <td class="text-muted text-sm">
+                {% if s.storage_location.zone.warehouse %}
+                  {{ s.storage_location.zone.warehouse.code }}
+                {% else %}—{% endif %}
+              </td>
+              <td class="text-right num">{{ s.qty_available }}</td>
+              <td class="text-right num text-muted">{{ s.qty_reserved }}</td>
+              <td class="text-right num fw-500">{{ s.qty_total }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="7" class="data-table__empty">Остатки не найдены</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+      <div class="data-table__pagination">
+        {% if page_obj.has_previous %}
+          <a class="btn btn--ghost btn--sm" href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.previous_page_number }}">‹ Назад</a>
+        {% endif %}
+        <span class="pagination__info">Стр. {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a class="btn btn--ghost btn--sm" href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}">Вперёд ›</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

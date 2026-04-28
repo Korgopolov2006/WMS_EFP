@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Удалить поставщика · Панель управления{% endblock %}
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'admin_panel:dashboard' %}">Панель управления</a>
+        <span class="breadcrumbs__sep">/</span>
+        <a href="{% url 'admin_panel:wms_supplier_list' %}">Поставщики</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Удаление</span>
+      </div>
+      <h1 class="page__title">Удалить поставщика</h1>
+    </div>
+  </header>
+  <div class="card" style="max-width:520px;">
+    <div class="card__body">
+      <div class="toast toast--danger mb-4" role="alert">
+        <strong>Внимание!</strong> Это действие необратимо.
+      </div>
+      <p>Вы собираетесь удалить поставщика:</p>
+      <p class="mt-2 mb-4"><strong>{{ supplier }}</strong></p>
+      <p class="text-muted text-sm mb-4">
+        Если поставщик упоминается в документах приёмки, удаление будет заблокировано.
+        Рекомендуем <a href="{% url 'admin_panel:wms_supplier_edit' supplier.pk %}">деактивировать</a> вместо удаления.
+      </p>
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+          <button type="submit" class="btn btn--danger">Удалить</button>
+          <a class="btn btn--ghost" href="{% url 'admin_panel:wms_supplier_list' %}">Отмена</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

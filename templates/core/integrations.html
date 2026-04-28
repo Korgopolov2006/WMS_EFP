@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Интеграции — WMS{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <div class="hero__left">
+      <h1 class="h2">Интеграции и API</h1>
+      <p class="lead">
+        Архитектура обмена с 1С:Розница, внешними каталогами и онлайн-витриной построена вокруг стабильного REST API.
+      </p>
+      <div class="pillbar">
+        <span class="pill">API v1: /api/v1/...</span>
+        <span class="pill">Bearer токены для сервисов</span>
+      </div>
+    </div>
+    <div class="hero__right">
+      <div class="card card--glass card--lg">
+        <div class="card__header">
+          <h2 class="h3">Каналы интеграции</h2>
+          <p class="muted">Каждый внешний сервис подключается как отдельный канал с токеном роли INTEGRATION.</p>
+        </div>
+        <div class="card__footer stack stack--sm">
+          <div class="kv">
+            <div class="kv__k">1С:Розница</div>
+            <div class="kv__v">Синхронизация номенклатуры, цен и остатков через JSON API.</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">TecDoc / каталоги</div>
+            <div class="kv__v">Обогащение карточек товара и подбор по VIN/OEM.</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Онлайн-витрина</div>
+            <div class="kv__v">Публикация остатков и резервирование заказов.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid grid--3" style="margin-top:14px;">
+    <div class="card card--glass">
+      <div class="card__header">
+        <h3 class="h3">1С:Розница</h3>
+        <p class="muted">Обмен справочниками и документами продаж.</p>
+      </div>
+      <div class="card__footer">
+        <div class="stack stack--sm">
+          <div class="hint">Номенклатура: GET /api/v1/products/</div>
+          <div class="hint">Остатки/резервы: планируется модуль хранения</div>
+          <div class="hint">Документы продаж: планируется модуль отгрузки</div>
+        </div>
+      </div>
+    </div>
+    <div class="card card--glass">
+      <div class="card__header">
+        <h3 class="h3">Онлайн-витрина</h3>
+        <p class="muted">Витрина работает поверх тех же REST-эндпоинтов, что и 1С.</p>
+      </div>
+      <div class="card__footer">
+        <div class="stack stack--sm">
+          <div class="hint">Поиск по OEM/аналогу: GET /api/v1/products/?oem=...</div>
+          <div class="hint">Карточка товара: GET /api/v1/products/&lt;id&gt;/</div>
+        </div>
+      </div>
+    </div>
+    <div class="card card--glass">
+      <div class="card__header">
+        <h3 class="h3">Сервисы подбора</h3>
+        <p class="muted">Внешние каталоги могут использовать API для сопоставления OEM ↔ аналоги.</p>
+      </div>
+      <div class="card__footer">
+        <div class="stack stack--sm">
+          <div class="hint">Перекрёстные ссылки: GET /api/v1/products/&lt;id&gt;/xrefs/</div>
+          <div class="hint">Приёмка с авторазмещением: POST /api/v1/receivings/&lt;id&gt;/scan/</div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+

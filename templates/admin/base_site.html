@@ -1,0 +1,21 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+  <a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}
+<div style="display:flex;gap:10px;align-items:center;margin-left:16px;">
+  <a href="{% url 'reports_home' %}" style="padding:6px 12px;border-radius:6px;background:#0b57d0;color:#fff;text-decoration:none;font-weight:600;">
+    Аналитика и дашборды
+  </a>
+  <a href="{% url 'dashboard' %}?as_role=ANALYST" style="padding:6px 12px;border-radius:6px;border:1px solid #0b57d0;color:#0b57d0;text-decoration:none;font-weight:600;">
+    Аналитический режим
+  </a>
+</div>
+{% endblock %}

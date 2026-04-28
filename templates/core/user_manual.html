@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} — WMS{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/help-modal.css' %}?v=20260219-2">
+  <style>
+    .manual-hero {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1.2fr .8fr;
+      margin-bottom: 16px;
+    }
+
+    .manual-page {
+      color: var(--text);
+    }
+
+    .manual-page h1,
+    .manual-page h2,
+    .manual-page h3,
+    .manual-page p,
+    .manual-page li {
+      color: var(--text);
+    }
+
+    .manual-page .muted {
+      color: var(--muted);
+    }
+
+    .manual-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 12px;
+    }
+
+    .manual-workflow {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .manual-step {
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: var(--glass);
+      color: var(--text);
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .manual-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .manual-list li {
+      color: var(--text);
+    }
+
+    .manual-role-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .manual-role-option {
+      display: grid;
+      gap: 4px;
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(13, 20, 40, 0.62);
+      cursor: pointer;
+    }
+
+    .manual-role-option:hover {
+      border-color: rgba(111, 180, 255, 0.45);
+    }
+
+    .manual-role-option input {
+      margin-right: 8px;
+    }
+
+    .manual-role-option strong {
+      color: var(--text);
+    }
+
+    .manual-role-option small {
+      display: block;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .manual-role-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 980px) {
+      .manual-hero,
+      .manual-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="manual-page">
+  <section class="manual-hero">
+    <div class="card card--glass card--lg">
+      <h1 class="h2">Инструкция по работе в WMS</h1>
+      <p class="muted">Практическая инструкция: что именно должен делать сотрудник в программе по своей роли.</p>
+      <div class="pillbar" style="margin-top:10px;">
+        <span class="pill">Роль: {{ request.user.get_role_display|default:request.user.role }}</span>
+        <span class="pill">Пользователь: {{ request.user.username }}</span>
+      </div>
+    </div>
+    <div class="card card--glass card--lg">
+      <h2 class="h3">Быстрые ссылки</h2>
+      <div class="stack stack--sm">
+        {% if allow_role_switch %}
+          <button id="open-manual-role-modal" type="button" class="btn btn--primary btn--block">Скачать инструкцию (PDF)</button>
+        {% else %}
+          <a class="btn btn--primary btn--block" href="{% url 'user_manual_download' %}?role={{ request.user.role }}">Скачать мою инструкцию (PDF)</a>
+        {% endif %}
+        {% for label, url in quick_links %}
+          <a class="btn btn--ghost btn--block" href="{{ url }}">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <section class="card card--glass card--lg">
+    <h2 class="h3">{% if role_cards|length == 1 %}Ваш функционал{% else %}Функционал по ролям{% endif %}</h2>
+    <div class="manual-grid">
+      {% for card in role_cards %}
+        <article class="kv" style="height:100%;">
+          <div class="kv__k">{{ card.role }}</div>
+          <div class="kv__v">{{ card.scope }}</div>
+          <ul class="manual-list">
+            {% for action in card.actions %}
+              <li>{{ action }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card card--glass card--lg" style="margin-top:14px;">
+    <h2 class="h3">Как работать в программе (по шагам)</h2>
+    <div class="manual-workflow">
+      {% for step in workflow_steps %}
+        <article class="manual-step">
+          <div class="kv__v">{{ step.title }}</div>
+          <p class="muted">{{ step.desc }}</p>
+          <a class="btn btn--primary" href="{{ step.url }}">{{ step.cta }}</a>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card card--glass card--lg" style="margin-top:14px;">
+    <h2 class="h3">Правила работы сотрудника</h2>
+    <ul class="manual-list">
+      {% for note in work_principles %}
+        <li>{{ note }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  {% if allow_role_switch %}
+    <div id="manual-role-modal" class="help-modal" aria-hidden="true">
+      <div class="help-modal__content">
+        <div class="help-modal__header">
+          <h2 class="help-modal__title">Выберите роль для инструкции</h2>
+          <button type="button" class="help-modal__close" aria-label="Закрыть">&times;</button>
+        </div>
+        <div class="help-modal__body">
+          <p class="muted">Система сформирует отдельный PDF с шагами, обязанностями и ключевыми страницами для выбранной роли.</p>
+          <form class="manual-role-form" action="{% url 'user_manual_download' %}" method="get">
+            {% for role in role_choices %}
+              <label class="manual-role-option">
+                <span>
+                  <input type="radio" name="role" value="{{ role.code }}" {% if role.code == request.user.role %}checked{% endif %}>
+                  <strong>{{ role.label }}</strong>
+                </span>
+                <small>{{ role.scope }}</small>
+              </label>
+            {% endfor %}
+            <div class="manual-role-actions">
+              <button type="button" class="btn btn--ghost" id="manual-role-cancel">Отмена</button>
+              <button type="submit" class="btn btn--primary">Скачать PDF</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+  </div>
+
+  <script>
+    (function () {
+      const openBtn = document.getElementById("open-manual-role-modal");
+      const modal = document.getElementById("manual-role-modal");
+      if (!openBtn || !modal) {
+        return;
+      }
+      const closeBtn = modal.querySelector(".help-modal__close");
+      const cancelBtn = document.getElementById("manual-role-cancel");
+
+      function openModal() {
+        modal.classList.add("help-modal--active");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeModal() {
+        modal.classList.remove("help-modal--active");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+      }
+
+      openBtn.addEventListener("click", openModal);
+      if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+      }
+      if (cancelBtn) {
+        cancelBtn.addEventListener("click", closeModal);
+      }
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) {
+          closeModal();
+        }
+      });
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && modal.classList.contains("help-modal--active")) {
+          closeModal();
+        }
+      });
+    })();
+  </script>
+{% endblock %}

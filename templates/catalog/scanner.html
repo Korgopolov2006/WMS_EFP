@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Сканер · WMS{% endblock %}
+
+{% block extra_css %}
+<style>
+  .scanner-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 800px) { .scanner-grid { grid-template-columns: 1fr; } }
+
+  #scanner-reader {
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 4 / 3;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+  }
+  #scanner-reader video,
+  #scanner-reader img { width: 100% !important; height: 100% !important; object-fit: cover; display: block; }
+  #scanner-reader:empty::before {
+    content: "Камера не запущена";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 13px;
+  }
+
+  .scanner-result {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    background: var(--surface);
+    min-height: 240px;
+  }
+  .scanner-result h3 { margin: 0 0 8px; font-size: 14px; color: var(--text); }
+  .scanner-result code { font-family: ui-monospace, Menlo, Consolas, monospace; }
+
+  .scanner-history { margin-top: 12px; max-height: 200px; overflow-y: auto; font-size: 13px; }
+  .scanner-history li { padding: 4px 0; border-bottom: 1px solid var(--border); list-style: none; }
+  .scanner-history li:last-child { border-bottom: none; }
+
+  .scanner-form { display: flex; gap: 8px; margin-bottom: 12px; }
+  .scanner-form input { flex: 1; }
+
+  .scanner-status {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 8px; border-radius: 6px; font-size: 12px;
+    background: var(--surface-2); color: var(--text-2);
+    margin-top: 8px;
+  }
+  .scanner-status--err { background: #fef2f2; color: #b91c1c; }
+  .scanner-status--ok  { background: #ecfdf5; color: #047857; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'dashboard' %}">Дашборд</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Сканер</span>
+      </div>
+      <h1 class="page__title">Сканер штрихкодов и QR</h1>
+      <p class="page__subtitle">Камера или ручной ввод — поиск товара по коду.</p>
+    </div>
+  </header>
+
+  <div class="scanner-grid">
+    <div>
+      <form class="scanner-form" id="manual-form" onsubmit="return false;">
+        <input class="input" type="text" id="manual-code"
+               placeholder="Введите код вручную и нажмите Enter"
+               autocomplete="off" autofocus>
+        <button class="btn" type="submit">Найти</button>
+      </form>
+
+      <div id="scanner-reader"></div>
+
+      <div class="row" style="gap:8px; margin-top:8px; flex-wrap:wrap;">
+        <button class="btn btn--ghost btn--sm" id="btn-start">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+          </svg>
+          Запустить камеру
+        </button>
+        <button class="btn btn--ghost btn--sm" id="btn-stop" disabled>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="6" y="6" width="12" height="12" rx="1"/>
+          </svg>
+          Остановить
+        </button>
+        <select class="input" id="camera-select" style="display:none; max-width:240px;"></select>
+      </div>
+
+      <div class="scanner-status" id="scanner-status">Готов к сканированию</div>
+    </div>
+
+    <div class="scanner-result" id="result">
+      <h3>Результат сканирования</h3>
+      <p class="muted">Отсканируйте код или введите его вручную.</p>
+      <ul class="scanner-history" id="history"></ul>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/vendor/html5-qrcode.min.js' %}"></script>
+<script>
+(function () {
+  const lookupUrl = "{% url 'catalog_code_lookup' %}";
+  const result      = document.getElementById("result");
+  const btnStart    = document.getElementById("btn-start");
+  const btnStop     = document.getElementById("btn-stop");
+  const cameraSelect = document.getElementById("camera-select");
+  const manualInput = document.getElementById("manual-code");
+  const manualForm  = document.getElementById("manual-form");
+  const statusEl    = document.getElementById("scanner-status");
+  let scanner = null;
+  const seen = new Map();
+
+  function setStatus(text, kind) {
+    statusEl.textContent = text;
+    statusEl.classList.remove("scanner-status--err", "scanner-status--ok");
+    if (kind === "err") statusEl.classList.add("scanner-status--err");
+    if (kind === "ok")  statusEl.classList.add("scanner-status--ok");
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function renderResult(data) {
+    if (!data.found) {
+      result.innerHTML = `
+        <h3>Не найдено</h3>
+        <p>Код: <code>${escapeHtml(data.code || "")}</code></p>
+        <p class="muted">Проверьте, задан ли штрихкод в карточке товара.</p>
+        <ul class="scanner-history" id="history"></ul>`;
+    } else {
+      const p = data.product;
+      result.innerHTML = `
+        <h3>Найден товар</h3>
+        <p><strong>${escapeHtml(p.name)}</strong></p>
+        <p>SKU: <code>${escapeHtml(p.internal_sku)}</code></p>
+        <p>OEM: <code>${escapeHtml(p.oem_number || "—")}</code></p>
+        <p>Бренд: ${escapeHtml(p.brand || "—")}</p>
+        <p>
+          <a class="btn btn--ghost btn--sm" href="${escapeHtml(p.label_url)}" target="_blank">Этикетка</a>
+        </p>
+        <ul class="scanner-history" id="history"></ul>`;
+    }
+    rebuildHistory();
+  }
+
+  function rebuildHistory() {
+    const h = document.getElementById("history");
+    if (!h) return;
+    h.innerHTML = "";
+    [...seen.entries()].slice(-10).reverse().forEach(([code, name]) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<code>${escapeHtml(code)}</code> — ${escapeHtml(name || "не найдено")}`;
+      h.appendChild(li);
+    });
+  }
+
+  async function lookup(code) {
+    const resp = await fetch(lookupUrl + "?code=" + encodeURIComponent(code), {
+      credentials: "same-origin",
+    });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    return resp.json();
+  }
+
+  async function handleCode(code) {
+    code = (code || "").trim();
+    if (!code) return;
+    setStatus("Поиск кода: " + code);
+    try {
+      const data = await lookup(code);
+      seen.set(code, data.found ? data.product.name : "");
+      renderResult(data);
+      setStatus(data.found ? "Найдено: " + data.product.internal_sku : "Не найдено: " + code,
+                data.found ? "ok" : "err");
+      manualInput.value = "";
+      manualInput.focus();
+    } catch (e) {
+      setStatus("Ошибка запроса: " + e.message, "err");
+    }
+  }
+
+  manualForm.addEventListener("submit", () => handleCode(manualInput.value));
+  manualInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); handleCode(manualInput.value); }
+  });
+
+  // ─── Камера ────────────────────────────────────────────
+  function libraryAvailable() {
+    return typeof window.Html5Qrcode !== "undefined";
+  }
+
+  if (!libraryAvailable()) {
+    setStatus("Библиотека сканера не загрузилась — доступен только ручной ввод", "err");
+    btnStart.disabled = true;
+  } else if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setStatus("Браузер не поддерживает доступ к камере — используйте ручной ввод", "err");
+    btnStart.disabled = true;
+  }
+
+  async function listCameras() {
+    try {
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras || !cameras.length) return [];
+      return cameras;
+    } catch (e) {
+      setStatus("Не удалось получить список камер: " + (e.message || e), "err");
+      return [];
+    }
+  }
+
+  async function startCamera(deviceId) {
+    if (scanner) return;
+    if (!libraryAvailable()) {
+      setStatus("Библиотека сканера не загружена", "err");
+      return;
+    }
+    scanner = new Html5Qrcode("scanner-reader");
+    const config = { fps: 10, qrbox: { width: 240, height: 160 }, aspectRatio: 1.333 };
+    const cameraConstraint = deviceId
+      ? { deviceId: { exact: deviceId } }
+      : { facingMode: { ideal: "environment" } };
+    try {
+      setStatus("Запрашиваем доступ к камере…");
+      await scanner.start(cameraConstraint, config,
+        (decoded) => { handleCode(decoded); },
+        () => {} // игнорируем onScanFailure (спам)
+      );
+      setStatus("Камера активна — наведите на штрихкод", "ok");
+      btnStart.disabled = true;
+      btnStop.disabled  = false;
+    } catch (e) {
+      const msg = (e && e.message) || String(e);
+      let hint = msg;
+      if (/Permission|denied|NotAllowed/i.test(msg)) {
+        hint = "Доступ к камере запрещён. Разрешите доступ в настройках браузера и обновите страницу.";
+      } else if (/secure|HTTPS|insecure/i.test(msg)) {
+        hint = "Камера доступна только на HTTPS или localhost. Откройте сайт через https:// или 127.0.0.1.";
+      } else if (/NotFound|no camera/i.test(msg)) {
+        hint = "Камера не найдена. Подключите камеру или используйте ручной ввод.";
+      }
+      setStatus("Камера: " + hint, "err");
+      try { await scanner.clear(); } catch (_) {}
+      scanner = null;
+    }
+  }
+
+  async function stopCamera() {
+    if (!scanner) return;
+    try { await scanner.stop(); await scanner.clear(); } catch (_) {}
+    scanner = null;
+    btnStart.disabled = false;
+    btnStop.disabled  = true;
+    setStatus("Камера остановлена");
+  }
+
+  btnStart.addEventListener("click", async () => {
+    btnStart.disabled = true;
+    const cams = await listCameras();
+    if (cams.length > 1) {
+      cameraSelect.innerHTML = cams
+        .map(c => `<option value="${escapeHtml(c.id)}">${escapeHtml(c.label || c.id)}</option>`)
+        .join("");
+      cameraSelect.style.display = "";
+    }
+    const deviceId = cameraSelect.value || (cams[0] && cams[0].id) || null;
+    await startCamera(deviceId);
+    if (!scanner) btnStart.disabled = false;
+  });
+  btnStop.addEventListener("click", stopCamera);
+  cameraSelect.addEventListener("change", async () => {
+    if (scanner) {
+      await stopCamera();
+      await startCamera(cameraSelect.value);
+    }
+  });
+})();
+</script>
+{% endblock %}

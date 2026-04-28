@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user_obj.username }} · Пользователи · Панель управления{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'admin_panel:dashboard' %}">Панель управления</a>
+        <span class="breadcrumbs__sep">/</span>
+        <a href="{% url 'admin_panel:user_list' %}">Пользователи</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">{{ user_obj.username }}</span>
+      </div>
+      <h1 class="page__title">{{ user_obj.get_full_name|default:user_obj.username }}</h1>
+      <p class="page__subtitle">
+        @{{ user_obj.username }}
+        {% if user_obj.is_active %}
+          <span class="badge badge--success" style="margin-left:6px;">Активен</span>
+        {% else %}
+          <span class="badge badge--danger" style="margin-left:6px;">Заблокирован</span>
+        {% endif %}
+      </p>
+    </div>
+    <div class="page__actions">
+      {% if user_obj != request.user %}
+        <a class="btn btn--ghost" href="{% url 'admin_panel:user_edit' user_obj.pk %}">Редактировать</a>
+        <form method="post" action="{% url 'admin_panel:user_toggle_active' user_obj.pk %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn--ghost"
+                  style="{% if user_obj.is_active %}color:var(--warning);{% else %}color:var(--success);{% endif %}">
+            {% if user_obj.is_active %}Заблокировать{% else %}Активировать{% endif %}
+          </button>
+        </form>
+        <form method="post" action="{% url 'admin_panel:user_reset_password' user_obj.pk %}" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn--ghost"
+                  onclick="return confirm('Сгенерировать новый пароль и отправить на email {{ user_obj.email }}?')">
+            Сбросить пароль
+          </button>
+        </form>
+        <a class="btn btn--ghost" href="{% url 'admin_panel:user_delete' user_obj.pk %}"
+           style="color:var(--danger);">Удалить</a>
+      {% endif %}
+    </div>
+  </header>
+
+  {# ── Временный пароль (однократный показ) ── #}
+  {% if new_credentials %}
+    <div class="toast toast--warning" style="margin-bottom:16px;align-items:flex-start;">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;" aria-hidden="true">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0110 0v4"/>
+      </svg>
+      <div>
+        <div class="toast__title">Учётные данные (показываются однократно)</div>
+        <div class="toast__body" style="margin-top:8px;">
+          <div style="font-size:13px;">
+            Логин: <code style="background:var(--surface-2);padding:2px 6px;border-radius:4px;">{{ new_credentials.username }}</code>
+          </div>
+          <div style="font-size:13px;margin-top:4px;">
+            Пароль: <code style="background:var(--surface-2);padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:.05em;">{{ new_credentials.password }}</code>
+            <button type="button" onclick="navigator.clipboard.writeText('{{ new_credentials.password }}');this.textContent='Скопировано!';"
+                    class="btn btn--ghost btn--sm" style="margin-left:8px;font-size:11px;">Копировать</button>
+          </div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:6px;">
+            Письмо отправлено на {{ new_credentials.email }}.
+            Попросите пользователя сменить пароль после первого входа.
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="grid grid--2" style="align-items:start;">
+
+    {# ── Основные данные ── #}
+    <article class="card">
+      <div class="card__header"><h2 class="h3">Профиль</h2></div>
+      <div class="card__body">
+        <div class="stack stack--sm">
+          <div class="kv">
+            <div class="kv__k">Логин</div>
+            <div class="kv__v"><code>{{ user_obj.username }}</code></div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Имя</div>
+            <div class="kv__v">{{ user_obj.get_full_name|default:"—" }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Email</div>
+            <div class="kv__v">
+              {% if user_obj.email %}
+                <a href="mailto:{{ user_obj.email }}">{{ user_obj.email }}</a>
+              {% else %}—{% endif %}
+            </div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Роль</div>
+            <div class="kv__v">
+              <span class="badge badge--neutral">{{ user_obj.get_role_display }}</span>
+            </div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Суперпользователь</div>
+            <div class="kv__v">
+              {% if user_obj.is_superuser %}
+                <span class="badge badge--warning">Да</span>
+              {% else %}
+                <span class="badge badge--neutral">Нет</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Дата регистрации</div>
+            <div class="kv__v muted">{{ user_obj.date_joined|date:"d.m.Y H:i" }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Последний вход</div>
+            <div class="kv__v muted">{{ user_obj.last_login|date:"d.m.Y H:i"|default:"никогда" }}</div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    {# ── Филиалы + недавняя активность ── #}
+    <div class="stack">
+
+      <article class="card">
+        <div class="card__header"><h2 class="h3">Филиалы</h2></div>
+        <div class="card__body">
+          {% with branches=user_obj.branches.all %}
+            {% if branches %}
+              <div class="row" style="flex-wrap:wrap;gap:6px;">
+                {% for branch in branches %}
+                  <span class="badge badge--neutral">{{ branch.code }} — {{ branch.name }}</span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="muted">Не назначены (доступ по роли).</p>
+            {% endif %}
+          {% endwith %}
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card__header">
+          <div class="row row--between">
+            <h2 class="h3">Последняя активность</h2>
+            <a class="btn btn--ghost btn--sm" href="{% url 'admin_panel:audit_list' %}?user_id={{ user_obj.pk }}">Весь журнал →</a>
+          </div>
+        </div>
+        <div class="card__body">
+          <div class="stack stack--sm">
+            {% for entry in recent_actions %}
+              <div class="row row--between" style="padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+                <div>
+                  <div style="color:var(--text);">{{ entry.get_action_display }}</div>
+                  <div class="hint">{{ entry.resource_str|default:"—" }}</div>
+                </div>
+                <div class="muted">{{ entry.timestamp|date:"d.m H:i" }}</div>
+              </div>
+            {% empty %}
+              <p class="muted">Активности не зафиксировано.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

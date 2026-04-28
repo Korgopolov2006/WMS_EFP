@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} · Панель управления{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'admin_panel:dashboard' %}">Панель управления</a>
+        <span class="breadcrumbs__sep">/</span>
+        <a href="{% url 'admin_panel:wms_warehouse_list' %}">Склады</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">{{ title }}</span>
+      </div>
+      <h1 class="page__title">{{ title }}</h1>
+    </div>
+    <div class="page__actions">
+      <a class="btn btn--ghost" href="{% url 'admin_panel:wms_warehouse_list' %}">Отмена</a>
+    </div>
+  </header>
+
+  <div class="card" style="max-width:640px;">
+    <div class="card__body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="toast toast--danger mb-3">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for field in form %}
+          <div class="field mb-3 {% if field.errors %}field--error{% endif %}">
+            <label class="field__label {% if field.field.required %}field__label--required{% endif %}" for="{{ field.id_for_label }}">
+              {{ field.label }}
+            </label>
+            {{ field }}
+            {% if field.help_text %}
+              <small class="field__help">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+              <small class="field__error">{{ error }}</small>
+            {% endfor %}
+          </div>
+        {% endfor %}
+
+        <div class="form-actions mt-4">
+          <button type="submit" class="btn btn--primary">
+            {% if is_create %}Создать склад{% else %}Сохранить изменения{% endif %}
+          </button>
+          <a class="btn btn--ghost" href="{% url 'admin_panel:wms_warehouse_list' %}">Отмена</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

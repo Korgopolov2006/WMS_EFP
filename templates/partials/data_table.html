@@ -1,0 +1,83 @@
+{% comment %}
+============================================================
+Универсальная таблица.
+
+Параметры (все опциональны):
+  search_value  — текущее значение поиска
+  search_name   — name инпута (по умолчанию 'q')
+  search_form   — action URL формы; если пусто — текущий путь
+  placeholder   — placeholder для поиска
+  density       — compact | normal (default) | comfortable
+  empty_text    — текст empty state
+  total         — всего записей (для футера)
+  page_obj      — Django Page object (для пагинации)
+
+Слоты-блоки (через extends):
+  block toolbar_filters — доп. поля фильтров
+  block toolbar_actions — кнопки справа
+  block table_head      — строка thead
+  block table_body      — строки tbody
+  block empty           — пустое состояние
+============================================================
+{% endcomment %}
+
+<div class="data-table" data-density="{{ density|default:'normal' }}">
+  <form class="data-table__toolbar"
+        method="get"
+        {% if search_form %}action="{{ search_form }}"{% endif %}>
+    <label class="field flex-1" style="max-width:360px;">
+      <input type="search"
+             name="{{ search_name|default:'q' }}"
+             value="{{ search_value|default:'' }}"
+             placeholder="{{ placeholder|default:'Поиск…' }}"
+             class="input">
+    </label>
+
+    {% block toolbar_filters %}{% endblock %}
+
+    <button type="submit" class="btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      Найти
+    </button>
+
+    <div class="data-table__toolbar-spacer"></div>
+
+    <div class="data-table__density" role="group" aria-label="Плотность строк">
+      <button type="button" data-density-set="compact"     aria-pressed="false" title="Компактно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="7" x2="13" y2="7"/><line x1="3" y1="10" x2="13" y2="10"/><line x1="3" y1="12" x2="13" y2="12"/></svg></button>
+      <button type="button" data-density-set="normal"      aria-pressed="true"  title="Обычно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="5" x2="13" y2="5"/><line x1="3" y1="9" x2="13" y2="9"/><line x1="3" y1="13" x2="13" y2="13"/></svg></button>
+      <button type="button" data-density-set="comfortable" aria-pressed="false" title="Просторно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="12" x2="13" y2="12"/></svg></button>
+    </div>
+
+    {% block toolbar_actions %}{% endblock %}
+  </form>
+
+  <div class="data-table__scroll">
+    {% block table_html %}
+      <table class="data-table__table">
+        <thead>{% block table_head %}{% endblock %}</thead>
+        <tbody>{% block table_body %}{% endblock %}</tbody>
+      </table>
+    {% endblock %}
+
+    {% block empty %}
+      {% if is_empty %}
+        <div class="data-table__empty">
+          <p class="muted">{{ empty_text|default:"Нет записей" }}</p>
+        </div>
+      {% endif %}
+    {% endblock %}
+  </div>
+
+  <div class="data-table__footer">
+    <div>
+      {% if total %}Всего: <strong>{{ total }}</strong>{% endif %}
+    </div>
+    <div>
+      {% if page_obj %}
+        {% include "partials/pagination.html" with page_obj=page_obj %}
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Панель управления · WMS{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <span class="breadcrumbs__current">Панель управления</span>
+      </div>
+      <h1 class="page__title">Панель управления</h1>
+      <p class="page__subtitle">Обзор системы WMS · только для администраторов</p>
+    </div>
+    <div class="page__actions">
+      <a class="btn btn--ghost" href="{% url 'dashboard' %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/>
+          <rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>
+        </svg>
+        Рабочий дашборд
+      </a>
+    </div>
+  </header>
+
+  {# ── KPI row ── #}
+  <section class="kpi-grid" aria-label="Ключевые показатели системы">
+
+    <div class="kpi">
+      <div class="kpi__label">
+        <svg class="kpi__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        Пользователи
+      </div>
+      <div class="kpi__value num">{{ stats.active_users }}</div>
+      <div class="kpi__delta kpi__delta--flat">из {{ stats.total_users }} активных</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi__label">
+        <svg class="kpi__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        </svg>
+        Задачи в работе
+      </div>
+      <div class="kpi__value num">{{ stats.in_progress_tasks }}</div>
+      <div class="kpi__delta kpi__delta--flat">ожидают: {{ stats.pending_tasks }}</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi__label">
+        <svg class="kpi__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.7 13.4a2 2 0 002 1.6h9.7a2 2 0 002-1.6L23 6H6"/>
+        </svg>
+        Открытые заказы
+      </div>
+      <div class="kpi__value num">{{ stats.open_orders }}</div>
+      <div class="kpi__delta kpi__delta--flat">отгружено сегодня: {{ stats.shipped_today }}</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi__label">
+        <svg class="kpi__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        Дефицит / ошибки
+      </div>
+      <div class="kpi__value num text-danger">{{ stats.low_stock_sku }}</div>
+      <div class="kpi__delta kpi__delta--flat">SKU с нулевым остатком</div>
+    </div>
+  </section>
+
+  {# ── 2×2 quick-access grid ── #}
+  <section class="grid grid--2">
+
+    {# Пользователи #}
+    <article class="card">
+      <div class="card__header">
+        <div class="row row--between">
+          <h2 class="h3">Пользователи</h2>
+          <a class="btn btn--ghost btn--sm" href="{% url 'admin_panel:user_list' %}">Все →</a>
+        </div>
+      </div>
+      <div class="card__body">
+        <div class="grid grid--2">
+          <div class="kv">
+            <div class="kv__k">Всего</div>
+            <div class="kv__v num" style="font-size:24px;font-weight:600;">{{ stats.total_users }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Активных</div>
+            <div class="kv__v num text-success" style="font-size:24px;font-weight:600;">{{ stats.active_users }}</div>
+          </div>
+        </div>
+        {% if stats.new_users_today %}
+          <div class="hint mt-2">
+            <span class="badge badge--success">+{{ stats.new_users_today }} сегодня</span>
+          </div>
+        {% endif %}
+      </div>
+      <div class="card__footer">
+        <a class="btn btn--primary btn--block" href="{% url 'admin_panel:user_create' %}">
+          + Создать пользователя
+        </a>
+      </div>
+    </article>
+
+    {# Быстрые ссылки #}
+    <article class="card">
+      <div class="card__header">
+        <h2 class="h3">Разделы управления</h2>
+      </div>
+      <div class="card__body">
+        <div class="stack stack--sm">
+          {% for item in quick_nav %}
+            <a class="row row--between" href="{{ item.url }}"
+               style="padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);text-decoration:none;color:inherit;transition:background var(--t-fast);"
+               onmouseover="this.style.background='var(--surface-2)'"
+               onmouseout="this.style.background='var(--surface)'">
+              <span style="font-weight:500;font-size:13px;">{{ item.label }}</span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </article>
+
+    {# Последние действия #}
+    <article class="card">
+      <div class="card__header">
+        <div class="row row--between">
+          <h2 class="h3">Последние действия</h2>
+          <a class="btn btn--ghost btn--sm" href="{% url 'admin_panel:audit_list' %}">Журнал →</a>
+        </div>
+      </div>
+      <div class="card__body">
+        <div class="stack stack--sm">
+          {% for entry in recent_audit %}
+            <div class="row row--between" style="padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;">
+              <div>
+                <div style="color:var(--text);font-weight:500;">{{ entry.get_action_display }}</div>
+                <div class="hint">{{ entry.resource_str|default:"—" }} · {{ entry.user.username|default:"system" }}</div>
+              </div>
+              <div class="muted">{{ entry.timestamp|date:"H:i" }}</div>
+            </div>
+          {% empty %}
+            <p class="muted">Действий ещё нет.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </article>
+
+    {# Состояние системы #}
+    <article class="card">
+      <div class="card__header">
+        <h2 class="h3">Состояние системы</h2>
+      </div>
+      <div class="card__body">
+        <div class="stack stack--sm">
+          <div class="kv">
+            <div class="kv__k">SKU в остатках</div>
+            <div class="kv__v num">{{ stats.total_sku }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Задач завершено сегодня</div>
+            <div class="kv__v num text-success">{{ stats.completed_today }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Событий аудита сегодня</div>
+            <div class="kv__v num">{{ stats.audit_today }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Приёмок в черновике</div>
+            <div class="kv__v num">{{ stats.receiving_draft }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="card__footer">
+        <a class="btn btn--ghost btn--block" href="{% url 'admin_panel:settings' %}">Параметры системы</a>
+      </div>
+    </article>
+
+  </section>
+</div>
+{% endblock %}

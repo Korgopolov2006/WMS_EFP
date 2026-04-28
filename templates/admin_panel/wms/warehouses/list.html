@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Склады · Панель управления{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'admin_panel:dashboard' %}">Панель управления</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Склады</span>
+      </div>
+      <h1 class="page__title">Склады</h1>
+      <p class="page__subtitle">Управление складами системы WMS</p>
+    </div>
+    <div class="page__actions">
+      <a class="btn btn--primary" href="{% url 'admin_panel:wms_warehouse_create' %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Создать склад
+      </a>
+    </div>
+  </header>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="toast toast--{{ msg.tags|default:'info' }} mb-3" role="alert">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="data-table" data-density="normal">
+    <form class="data-table__toolbar" method="get">
+      <label class="field flex-1" style="max-width:300px;">
+        <input type="search" name="q" value="{{ q|default:'' }}"
+               placeholder="Код, название, филиал" class="input" autofocus>
+      </label>
+      <label class="field">
+        <select name="branch" onchange="this.form.submit()" style="min-width:180px;">
+          <option value="">Все филиалы</option>
+          {% for b in branches %}
+            <option value="{{ b.pk }}" {% if branch_filter == b.pk|stringformat:"s" %}selected{% endif %}>{{ b.code }} — {{ b.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="field">
+        <select name="status" onchange="this.form.submit()" style="min-width:150px;">
+          <option value="">Все статусы</option>
+          <option value="active"   {% if status_filter == "active"   %}selected{% endif %}>Активные</option>
+          <option value="inactive" {% if status_filter == "inactive" %}selected{% endif %}>Неактивные</option>
+        </select>
+      </label>
+      <button type="submit" class="btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Найти
+      </button>
+      {% if q or branch_filter or status_filter %}
+        <a class="btn btn--ghost" href="{% url 'admin_panel:wms_warehouse_list' %}">Сбросить</a>
+      {% endif %}
+    </form>
+
+    <div class="data-table__meta">
+      <span class="data-table__count">Найдено: {{ total }}</span>
+    </div>
+
+    <div class="data-table__scroll">
+      <table class="data-table__table">
+        <thead>
+          <tr>
+            <th>Код</th>
+            <th>Название</th>
+            <th>Филиал</th>
+            <th>Размеры, м</th>
+            <th>Статус</th>
+            <th style="width:120px;">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for wh in page_obj %}
+            <tr>
+              <td><code class="mono">{{ wh.code }}</code></td>
+              <td><span class="fw-500">{{ wh.name }}</span></td>
+              <td>{{ wh.branch.code }} — {{ wh.branch.name }}</td>
+              <td class="text-muted text-sm">{{ wh.width_m }} × {{ wh.length_m }} × {{ wh.height_m }}</td>
+              <td>
+                {% if wh.is_active %}
+                  <span class="status-badge status-badge--active">Активен</span>
+                {% else %}
+                  <span class="status-badge status-badge--inactive">Неактивен</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="action-group">
+                  <a class="btn btn--ghost btn--xs" href="{% url 'admin_panel:wms_warehouse_edit' wh.pk %}" title="Редактировать">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </a>
+                  <a class="btn btn--ghost btn--xs btn--danger" href="{% url 'admin_panel:wms_warehouse_delete' wh.pk %}" title="Удалить">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                    </svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="data-table__empty">Склады не найдены</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+      <div class="data-table__pagination">
+        {% if page_obj.has_previous %}
+          <a class="btn btn--ghost btn--sm" href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.previous_page_number }}">‹ Назад</a>
+        {% endif %}
+        <span class="pagination__info">Стр. {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a class="btn btn--ghost btn--sm" href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}">Вперёд ›</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

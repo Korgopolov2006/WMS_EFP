@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Резервные копии · Панель управления{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'admin_panel:dashboard' %}">Панель управления</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Резервные копии</span>
+      </div>
+      <h1 class="page__title">Резервные копии</h1>
+      <p class="page__subtitle">Управление резервными копиями базы данных PostgreSQL</p>
+    </div>
+  </header>
+
+  {# ── Создание новой резервной копии ── #}
+  <article class="card" style="margin-bottom:24px;">
+    <div class="card__header">
+      <h2 class="h3">Создать резервную копию</h2>
+    </div>
+    <form method="post" action="{% url 'admin_panel:backup_create' %}">
+      {% csrf_token %}
+      <div class="card__body">
+        <div class="toast toast--info" style="margin-bottom:16px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <div class="toast__body">
+            Резервная копия создаётся через <code>pg_dump</code>.
+            Убедитесь, что утилита <code>pg_dump</code> доступна в системе и настроены переменные окружения базы данных.
+          </div>
+        </div>
+        <div class="field" style="max-width:600px;">
+          <span class="field__label">{{ form.notes.label }}</span>
+          {{ form.notes }}
+        </div>
+      </div>
+      <div class="form-footer">
+        <button type="submit" class="btn btn--primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Создать сейчас
+        </button>
+      </div>
+    </form>
+  </article>
+
+  {# ── Список резервных копий ── #}
+  <div class="data-table" data-density="normal">
+    <div class="data-table__scroll">
+      {% if backups %}
+        <table class="data-table__table">
+          <thead>
+            <tr>
+              <th>Файл</th>
+              <th>Размер</th>
+              <th>Создан</th>
+              <th>Кем</th>
+              <th>Комментарий</th>
+              <th class="data-table__actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for backup in backups %}
+              <tr>
+                <td>
+                  <code style="font-size:12px;">{{ backup.filename }}</code>
+                  {% if backup.is_auto %}
+                    <span class="badge badge--neutral" style="margin-left:6px;font-size:10px;">авто</span>
+                  {% endif %}
+                </td>
+                <td class="num muted">{{ backup.size_human }}</td>
+                <td class="muted">{{ backup.created_at|date:"d.m.Y H:i" }}</td>
+                <td class="muted">{{ backup.created_by.username|default:"system" }}</td>
+                <td class="muted">{{ backup.notes|default:"—"|truncatechars:40 }}</td>
+                <td class="data-table__actions">
+                  <a class="btn btn--ghost btn--sm"
+                     href="{% url 'admin_panel:backup_download' backup.filename %}">
+                    Скачать
+                  </a>
+
+                  {# Восстановление — с двойным подтверждением #}
+                  <button type="button" class="btn btn--ghost btn--sm"
+                          style="color:var(--warning);"
+                          onclick="showRestoreConfirm('{{ backup.filename }}')">
+                    Восстановить
+                  </button>
+
+                  <form method="post" action="{% url 'admin_panel:backup_delete' backup.filename %}"
+                        style="display:inline;"
+                        onsubmit="return confirm('Удалить резервную копию «{{ backup.filename }}»?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--ghost btn--sm" style="color:var(--danger);">
+                      Удалить
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="data-table__empty">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+               style="margin:0 auto 12px;color:var(--text-4);" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <p class="muted mb-2">Резервных копий нет</p>
+          <p class="hint">Создайте первую резервную копию с помощью формы выше.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{# ── Модальное подтверждение восстановления ── #}
+<dialog id="restore-dialog"
+        style="border:1px solid var(--border);border-radius:var(--r-lg);padding:0;max-width:480px;width:100%;box-shadow:var(--shadow-sm);">
+  <div style="padding:20px 24px;border-bottom:1px solid var(--border);">
+    <h3 style="margin:0;font-size:16px;color:var(--text);">Восстановить из резервной копии</h3>
+  </div>
+  <div style="padding:20px 24px;">
+    <div class="toast toast--danger" style="margin-bottom:12px;">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;" aria-hidden="true">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <div class="toast__body">
+        Это действие <strong>необратимо</strong>. Текущие данные будут заменены данными из резервной копии.
+        Все текущие изменения будут потеряны.
+      </div>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);">Файл: <code id="restore-filename" style="font-size:12px;"></code></p>
+    <p style="font-size:13px;color:var(--text-2);">Вы уверены, что хотите продолжить?</p>
+  </div>
+  <div style="padding:16px 24px;background:var(--surface-2);border-top:1px solid var(--border);display:flex;gap:12px;justify-content:flex-end;">
+    <button type="button" class="btn btn--ghost" onclick="document.getElementById('restore-dialog').close()">
+      Отмена
+    </button>
+    <form id="restore-form" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="confirm_restore" value="yes">
+      <button type="submit" class="btn"
+              style="background:var(--danger);color:#fff;border-color:var(--danger);">
+        Восстановить
+      </button>
+    </form>
+  </div>
+</dialog>
+
+<script>
+function showRestoreConfirm(filename) {
+  const dialog = document.getElementById('restore-dialog');
+  document.getElementById('restore-filename').textContent = filename;
+  document.getElementById('restore-form').action = '{% url "admin_panel:backup_restore" "PLACEHOLDER" %}'.replace('PLACEHOLDER', encodeURIComponent(filename));
+  dialog.showModal();
+}
+document.getElementById('restore-dialog').addEventListener('click', function(e) {
+  if (e.target === this) this.close();
+});
+</script>
+{% endblock %}

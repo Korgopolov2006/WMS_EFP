@@ -1,0 +1,29 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.log
+*.out
+*.err
+*.pid
+*.sqlite3
+db.sqlite3
+.env
+.env.*
+.idea/
+.vscode/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+celerybeat-schedule
+
+# docs/local notes
+*.md
+!README.md
+
+# windows junk
+*.lnk
+Desktop.ini
+Thumbs.db
+.DS_Store

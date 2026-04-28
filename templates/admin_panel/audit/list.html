@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Журнал аудита · Панель управления{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'admin_panel:dashboard' %}">Панель управления</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Журнал аудита</span>
+      </div>
+      <h1 class="page__title">Журнал аудита</h1>
+      <p class="page__subtitle">История действий администраторов в системе</p>
+    </div>
+  </header>
+
+  <div class="data-table" data-density="normal">
+    <form class="data-table__toolbar" method="get">
+      <label class="field flex-1" style="max-width:280px;">
+        <input type="search" name="q" value="{{ q|default:'' }}"
+               placeholder="Ресурс, пользователь, IP" class="input" autofocus>
+      </label>
+
+      <label class="field">
+        <select name="action" onchange="this.form.submit()" style="min-width:200px;">
+          <option value="">Все действия</option>
+          {% for code, label in action_choices %}
+            <option value="{{ code }}" {% if action_filter == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="field">
+        <select name="user_id" onchange="this.form.submit()" style="min-width:160px;">
+          <option value="">Все администраторы</option>
+          {% for admin_user in admin_users %}
+            <option value="{{ admin_user.pk }}"
+                    {% if user_filter == admin_user.pk|stringformat:"s" %}selected{% endif %}>
+              {{ admin_user.username }}
+            </option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <button type="submit" class="btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Найти
+      </button>
+      {% if q or action_filter or user_filter %}
+        <a class="btn btn--ghost" href="{% url 'admin_panel:audit_list' %}">Сбросить</a>
+      {% endif %}
+
+      <div class="data-table__toolbar-spacer"></div>
+
+      <div class="data-table__density" role="group" aria-label="Плотность">
+        <button type="button" data-density-set="compact"     aria-pressed="false" title="Компактно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="7" x2="13" y2="7"/><line x1="3" y1="10" x2="13" y2="10"/><line x1="3" y1="12" x2="13" y2="12"/></svg></button>
+        <button type="button" data-density-set="normal"      aria-pressed="true"  title="Обычно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="5" x2="13" y2="5"/><line x1="3" y1="9" x2="13" y2="9"/><line x1="3" y1="13" x2="13" y2="13"/></svg></button>
+        <button type="button" data-density-set="comfortable" aria-pressed="false" title="Просторно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="12" x2="13" y2="12"/></svg></button>
+      </div>
+    </form>
+
+    <div class="data-table__scroll">
+      {% if logs %}
+        <table class="data-table__table">
+          <thead>
+            <tr>
+              <th>Дата / время</th>
+              <th>Пользователь</th>
+              <th>Действие</th>
+              <th>Ресурс</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in logs %}
+              <tr>
+                <td class="muted" style="white-space:nowrap;">
+                  {{ entry.timestamp|date:"d.m.Y" }}<br>
+                  <small>{{ entry.timestamp|date:"H:i:s" }}</small>
+                </td>
+                <td>
+                  {% if entry.user %}
+                    <a href="{% url 'admin_panel:user_detail' entry.user.pk %}">{{ entry.user.username }}</a>
+                  {% else %}
+                    <span class="muted">system</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% with a=entry.action %}
+                    {% if a == "CREATE" or a == "ACTIVATE" or a == "BACKUP_CREATE" %}
+                      <span class="badge badge--success">{{ entry.get_action_display }}</span>
+                    {% elif a == "DELETE" or a == "DEACTIVATE" or a == "BACKUP_DELETE" %}
+                      <span class="badge badge--danger">{{ entry.get_action_display }}</span>
+                    {% elif a == "UPDATE" or a == "PASSWORD_RESET" or a == "BACKUP_RESTORE" %}
+                      <span class="badge badge--warning">{{ entry.get_action_display }}</span>
+                    {% else %}
+                      <span class="badge badge--neutral">{{ entry.get_action_display }}</span>
+                    {% endif %}
+                  {% endwith %}
+                </td>
+                <td>
+                  <div style="font-size:13px;">{{ entry.resource_str|default:"—" }}</div>
+                  {% if entry.resource_type %}
+                    <div class="hint">{{ entry.resource_type }}{% if entry.resource_id %} #{{ entry.resource_id }}{% endif %}</div>
+                  {% endif %}
+                </td>
+                <td class="muted">{{ entry.ip_address|default:"—" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="data-table__empty">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+               style="margin:0 auto 12px;color:var(--text-4);" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <p class="muted">Записей аудита не найдено</p>
+          {% if q or action_filter or user_filter %}
+            <a class="btn btn--ghost btn--sm" href="{% url 'admin_panel:audit_list' %}">Очистить фильтры</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="data-table__footer">
+      <div>
+        {% if page_obj %}
+          Показано <strong>{{ page_obj.start_index }}</strong>–<strong>{{ page_obj.end_index }}</strong>
+          из <strong>{{ page_obj.paginator.count }}</strong>
+        {% endif %}
+      </div>
+      <div>{% include "partials/pagination.html" with page_obj=page_obj %}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

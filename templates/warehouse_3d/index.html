@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}3D-склад · Выбор склада{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'dashboard' %}">Дашборд</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">3D-склад</span>
+      </div>
+      <h1 class="page__title">3D-склад</h1>
+      <p class="page__subtitle">Выберите склад для перехода в трёхмерный просмотр и редактирование разметки.</p>
+    </div>
+  </header>
+
+  <div class="data-table">
+    <div class="data-table__scroll">
+      <table class="data-table__table">
+        <thead>
+          <tr>
+            <th>Филиал</th>
+            <th>Код</th>
+            <th>Название</th>
+            <th class="data-table__actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for w in warehouses %}
+            <tr>
+              <td class="muted">{{ w.branch.name }}</td>
+              <td><code>{{ w.code }}</code></td>
+              <td><strong>{{ w.name }}</strong></td>
+              <td class="data-table__actions">
+                <a class="btn btn--ghost btn--sm" href="{% url 'warehouse_3d:view' w.id %}">
+                  Открыть 3D
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="data-table__empty">Нет доступных складов</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

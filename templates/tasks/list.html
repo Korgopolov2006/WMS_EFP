@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Задачи · WMS{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'dashboard' %}">Дашборд</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Задачи</span>
+      </div>
+      <h1 class="page__title">Мои задачи</h1>
+      <p class="page__subtitle">Список задач для выполнения</p>
+    </div>
+    <div class="page__actions">
+      {% if user.is_superuser or user_role == "ADMIN" %}
+        <a class="btn btn--ghost" href="{% url 'task_list' %}?my_tasks=0">Все задачи</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="data-table" data-density="normal">
+    {# ── Toolbar ── #}
+    <form class="data-table__toolbar" method="get">
+      <label class="field flex-1" style="max-width:320px;">
+        <input type="search" name="q" value="{{ q|default:'' }}"
+               placeholder="Название, заказ, документ, сотрудник" class="input" autofocus>
+      </label>
+
+      <label class="field">
+        <select name="type" onchange="this.form.submit()" style="min-width:160px;">
+          <option value="">Все типы</option>
+          {% for code, label in task_types %}
+            <option value="{{ code }}" {% if task_type == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="field">
+        <select name="status" onchange="this.form.submit()" style="min-width:160px;">
+          <option value="">Все статусы</option>
+          {% for code, label in task_statuses %}
+            <option value="{{ code }}" {% if status == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      {% if user.is_superuser or user_role == "ADMIN" %}
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer;">
+          <input type="checkbox" name="my_tasks" value="1"
+                 {% if my_tasks %}checked{% endif %}
+                 onchange="this.form.submit()">
+          Только мои
+        </label>
+      {% endif %}
+
+      <button type="submit" class="btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Найти
+      </button>
+
+      {% if q or status or task_type %}
+        <a class="btn btn--ghost" href="{% url 'task_list' %}{% if my_tasks %}?my_tasks=1{% endif %}">Сбросить</a>
+      {% endif %}
+
+      <div class="data-table__toolbar-spacer"></div>
+
+      <div class="data-table__density" role="group" aria-label="Плотность строк">
+        <button type="button" data-density-set="compact"     aria-pressed="false" title="Компактно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="7" x2="13" y2="7"/><line x1="3" y1="10" x2="13" y2="10"/><line x1="3" y1="12" x2="13" y2="12"/></svg></button>
+        <button type="button" data-density-set="normal"      aria-pressed="true"  title="Обычно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="5" x2="13" y2="5"/><line x1="3" y1="9" x2="13" y2="9"/><line x1="3" y1="13" x2="13" y2="13"/></svg></button>
+        <button type="button" data-density-set="comfortable" aria-pressed="false" title="Просторно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="12" x2="13" y2="12"/></svg></button>
+      </div>
+    </form>
+
+    {# ── Task cards ── #}
+    <div style="padding: 4px 0;">
+      {% for task in tasks %}
+        <div style="padding: 14px 20px; border-bottom: 1px solid var(--border);">
+          <div class="row row--between" style="gap: 12px; align-items: flex-start;">
+
+            {# Left: info #}
+            <div style="flex: 1; min-width: 0;">
+              <div class="row" style="gap: 6px; margin-bottom: 6px; flex-wrap: wrap; align-items: center;">
+                {# Type badge #}
+                <span class="badge badge--neutral">{{ task.get_task_type_display }}</span>
+
+                {# Status badge #}
+                {% with c=task.status label=task.get_status_display %}
+                  {% include "partials/status_badge.html" %}
+                {% endwith %}
+
+                {# Priority #}
+                {% if task.priority == 'URGENT' %}
+                  <span class="badge badge--danger">Срочно</span>
+                {% elif task.priority == 'HIGH' %}
+                  <span class="badge badge--warning">Высокий</span>
+                {% endif %}
+              </div>
+
+              <div style="font-size:14px; font-weight:500; color:var(--text); margin-bottom:4px;">
+                {{ task.title }}
+              </div>
+
+              {% if task.description %}
+                <div class="hint" style="margin-bottom:6px;">{{ task.description|truncatewords:20 }}</div>
+              {% endif %}
+
+              <div class="hint" style="font-size:12px; color:var(--text-4);">
+                {% if task.receiving %}
+                  Приёмка: <a href="{% url 'receiving_detail' task.receiving.pk %}">{{ task.receiving.number }}</a> ·
+                {% elif task.inventory %}
+                  Инвентаризация: <a href="{% url 'inventory_detail' task.inventory.pk %}">{{ task.inventory.number }}</a> ·
+                {% elif task.order %}
+                  Заказ: <a href="{% url 'order_detail' task.order.pk %}">{{ task.order.number }}</a> ·
+                {% elif task.picking_task %}
+                  Задача подбора: <a href="{% url 'picking_task_detail' task.picking_task.pk %}">#{{ task.picking_task.id }}</a> ·
+                {% endif %}
+                {% if task.assigned_to %}
+                  Исполнитель: {{ task.assigned_to.username }} ·
+                {% endif %}
+                {{ task.created_at|date:"d.m.Y H:i" }}
+              </div>
+
+              {# Progress bar (only for non-completed) #}
+              {% if task.status != 'COMPLETED' %}
+                <div style="max-width:240px; margin-top:8px;">
+                  <div class="progress-bar">
+                    <div class="progress-bar__fill
+                      {% if task.status == 'IN_PROGRESS' %}progress-bar__fill--warning{% endif %}"
+                      style="width:{% if task.status == 'PENDING' %}0{% elif task.status == 'IN_PROGRESS' %}50{% else %}100{% endif %}%;">
+                    </div>
+                  </div>
+                  <div class="progress-bar__text">
+                    {% if task.status == 'PENDING' %}0%{% elif task.status == 'IN_PROGRESS' %}50%{% else %}100%{% endif %} выполнено
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+
+            {# Right: actions #}
+            <div class="row" style="gap: 8px; flex-shrink: 0; flex-wrap: wrap; align-items: center;">
+              <a class="btn btn--ghost btn--sm" href="{% url 'task_detail' task.id %}">Открыть</a>
+
+              {% if task.id in startable_task_ids %}
+                <form method="post" action="{% url 'task_detail' task.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="start">
+                  <button type="submit" class="btn btn--primary btn--sm">
+                    {% if task.assigned_to_id and task.assigned_to_id == user.id %}Начать{% else %}Взять{% endif %}
+                  </button>
+                </form>
+              {% endif %}
+
+              {% if task.id in completable_task_ids %}
+                <form method="post" action="{% url 'task_detail' task.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="complete">
+                  <button type="submit" class="btn btn--primary btn--sm">Завершить</button>
+                </form>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+      {% empty %}
+        <div class="data-table__empty">
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor"
+               stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+               style="margin:0 auto 12px;color:var(--text-4);" aria-hidden="true">
+            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <path d="M9 12h6M9 16h4"/>
+          </svg>
+          <p class="muted mb-2">Задач не найдено</p>
+          {% if q or status or task_type %}
+            <a class="btn btn--ghost btn--sm" href="{% url 'task_list' %}">Очистить фильтры</a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="data-table__footer">
+      <div>
+        {% if page_obj %}
+          Показано <strong>{{ page_obj.start_index }}</strong>–<strong>{{ page_obj.end_index }}</strong>
+          из <strong>{{ page_obj.paginator.count }}</strong>
+        {% endif %}
+      </div>
+      <div>
+        {% include "partials/pagination.html" with page_obj=page_obj %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

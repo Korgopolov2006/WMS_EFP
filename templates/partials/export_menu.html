@@ -1,0 +1,37 @@
+{% comment %}
+Меню экспорта (CSV / XLSX / PDF).
+
+Использование:
+  {% include "partials/export_menu.html" %}
+
+Сохраняет все текущие GET-параметры (фильтры, поиск, сортировка)
+и добавляет export=<формат>. Стиль повторяет существующие .btn / .btn--ghost.
+{% endcomment %}
+{% with qs=request.GET.urlencode %}
+<div class="export-menu" style="position:relative; display:inline-block;">
+  <button type="button" class="btn btn--ghost"
+          onclick="this.nextElementSibling.classList.toggle('export-menu__open')"
+          aria-haspopup="menu">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Экспорт
+  </button>
+  <div class="export-menu__panel"
+       style="position:absolute; right:0; top:calc(100% + 4px); z-index:50;
+              background:var(--bg-1, #fff); border:1px solid var(--border, #d1d5db);
+              border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.08);
+              min-width:160px; padding:4px; display:none;">
+    <a class="btn btn--ghost btn--sm" style="width:100%; justify-content:flex-start;"
+       href="?{% if qs %}{{ qs }}&{% endif %}export=csv">CSV</a>
+    <a class="btn btn--ghost btn--sm" style="width:100%; justify-content:flex-start;"
+       href="?{% if qs %}{{ qs }}&{% endif %}export=xlsx">Excel (XLSX)</a>
+    <a class="btn btn--ghost btn--sm" style="width:100%; justify-content:flex-start;"
+       href="?{% if qs %}{{ qs }}&{% endif %}export=pdf">PDF</a>
+  </div>
+</div>
+<style>
+.export-menu__open { display:block !important; }
+</style>
+{% endwith %}

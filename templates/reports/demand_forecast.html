@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} — WMS{% endblock %}
+
+{% block extra_css %}
+  {{ block.super }}
+  <style>
+    .df-shell {
+      display: grid;
+      gap: 14px;
+    }
+
+    .df-intro {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 12px;
+    }
+
+    .df-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .df-kpi {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .df-chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .df-bars {
+      display: grid;
+      gap: 8px;
+    }
+
+    .df-bar {
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      background: rgba(148, 163, 184, .08);
+      padding: 8px 10px;
+    }
+
+    .df-bar__head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .df-bar__track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, .26);
+      overflow: hidden;
+      display: flex;
+    }
+
+    .df-bar__fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(59, 130, 246, .9), rgba(6, 182, 212, .8));
+    }
+
+    .df-bar__part--history {
+      background: rgba(100, 116, 139, .75);
+      height: 100%;
+    }
+
+    .df-bar__part--forecast {
+      background: rgba(14, 165, 233, .85);
+      height: 100%;
+    }
+
+    .df-note {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .df-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+
+    .df-table th,
+    .df-table td {
+      padding: 10px;
+      border-bottom: 1px solid var(--stroke);
+      vertical-align: top;
+    }
+
+    .df-table th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .df-table td.is-right,
+    .df-table th.is-right {
+      text-align: right;
+    }
+
+    .df-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .df-pill--up {
+      border-color: rgba(34, 197, 94, .45);
+      background: rgba(34, 197, 94, .14);
+      color: #166534;
+    }
+
+    .df-pill--down {
+      border-color: rgba(244, 63, 94, .45);
+      background: rgba(244, 63, 94, .14);
+      color: #9f1239;
+    }
+
+    :root[data-theme="dark"] .df-pill--up { color: #86efac; }
+    :root[data-theme="dark"] .df-pill--down { color: #fda4af; }
+
+    @media (max-width: 1180px) {
+      .df-kpi {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 980px) {
+      .df-intro,
+      .df-kpi,
+      .df-chart-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <section class="df-shell">
+    <div class="row row--between row--wrap">
+      <div>
+        <h1 class="h2">{{ title }}</h1>
+        <p class="muted">Прогноз спроса на основе истории отгрузок за последние {{ period_days }} дней.</p>
+      </div>
+      <div class="row row--wrap">
+        <form method="get" class="row row--wrap" style="gap:10px;">
+          <div class="field" style="min-width:220px;">
+            <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="SKU или название">
+          </div>
+          <div class="field" style="min-width:120px;">
+            <input type="number" name="period" value="{{ period_days }}" class="form__input" min="7" max="365" placeholder="Период">
+          </div>
+          <div class="field" style="min-width:120px;">
+            <input type="number" name="forecast_days" value="{{ forecast_days }}" class="form__input" min="1" max="90" placeholder="Прогноз">
+          </div>
+          <button type="submit" class="btn btn--primary">Применить</button>
+        </form>
+        <a class="btn btn--ghost" href="{% url 'reports_home' %}">← К отчётам</a>
+      </div>
+    </div>
+
+    <section class="df-intro">
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Как читать прогноз</h3>
+        <ul class="df-list">
+          <li>История показывает фактические отгрузки за выбранный период анализа.</li>
+          <li>Прогноз рассчитывается как среднее дневное значение, умноженное на горизонт прогноза.</li>
+          <li>Смотри в первую очередь товары с самым высоким прогнозом - они критичны для пополнения.</li>
+        </ul>
+      </article>
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Ограничения модели</h3>
+        <ul class="df-list">
+          <li>Это базовая модель без сезонной декомпозиции и промо-коррекций.</li>
+          <li>Для акционных и нерегулярных SKU прогноз нужно проверять вручную.</li>
+          <li>Используй результат как ориентир для оперативного пополнения.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="df-kpi">
+      <article class="kv">
+        <div class="kv__k">Товаров в прогнозе</div>
+        <div class="kv__v h3">{{ products_count }}</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">История, шт</div>
+        <div class="kv__v h3">{{ total_historical_qty|floatformat:0 }}</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Прогноз, шт</div>
+        <div class="kv__v h3">{{ total_forecast_qty|floatformat:0 }}</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Суммарно в день</div>
+        <div class="kv__v h3">{{ avg_daily_total|floatformat:1 }} шт</div>
+      </article>
+      <article class="kv">
+        <div class="kv__k">Отклонение прогноза</div>
+        <div class="kv__v h3">
+          {% if growth_pct >= 0 %}
+            <span class="df-pill df-pill--up">+{{ growth_pct }}%</span>
+          {% else %}
+            <span class="df-pill df-pill--down">{{ growth_pct }}%</span>
+          {% endif %}
+        </div>
+      </article>
+    </section>
+
+    <section class="df-chart-grid">
+      <article class="card card--glass card--lg">
+        <h3 class="h3">Топ товаров по прогнозу</h3>
+        <p class="df-note">Первые 10 SKU с наибольшим ожидаемым спросом.</p>
+        <div class="df-bars" style="margin-top:10px;">
+          {% for item in top_forecasts %}
+            <div class="df-bar">
+              <div class="df-bar__head">
+                <span>{{ item.product_sku }}</span>
+                <span>{{ item.forecast_qty|floatformat:0 }} шт</span>
+              </div>
+              <div class="df-bar__track">
+                <div class="df-bar__fill" style="width:{{ item.forecast_share }}%;"></div>
+              </div>
+            </div>
+          {% empty %}
+            <p class="muted">Нет данных для графика.</p>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="card card--glass card--lg">
+        <h3 class="h3">История vs прогноз (топ 10)</h3>
+        <p class="df-note">Сравнение объема за период анализа и объема на горизонт прогноза.</p>
+        <div class="df-bars" style="margin-top:10px;">
+          {% for item in top_forecasts %}
+            <div class="df-bar">
+              <div class="df-bar__head">
+                <span>{{ item.product_sku }}</span>
+                <span>H {{ item.historical_qty|floatformat:0 }} / F {{ item.forecast_qty|floatformat:0 }}</span>
+              </div>
+              <div class="df-bar__track">
+                <div class="df-bar__part--history" style="width:{{ item.history_split_share }}%;"></div>
+                <div class="df-bar__part--forecast" style="width:{{ item.forecast_split_share }}%;"></div>
+              </div>
+            </div>
+          {% empty %}
+            <p class="muted">Нет данных для сравнения.</p>
+          {% endfor %}
+        </div>
+      </article>
+    </section>
+
+    <section class="card card--glass card--lg">
+      <div class="card__header" style="padding:0 0 10px;">
+        <h3 class="h3">Детализация прогноза по товарам</h3>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="df-table">
+          <thead>
+            <tr>
+              <th>Товар</th>
+              <th class="is-right">История, шт</th>
+              <th class="is-right">Заказов</th>
+              <th class="is-right">Среднее в день</th>
+              <th class="is-right">Прогноз, шт</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in forecasts %}
+              <tr>
+                <td>
+                  <div><strong>{{ item.product_sku }}</strong></div>
+                  <div class="hint">{{ item.product_name }}</div>
+                </td>
+                <td class="is-right">{{ item.historical_qty|floatformat:0 }}</td>
+                <td class="is-right">{{ item.historical_orders }}</td>
+                <td class="is-right">{{ item.daily_avg|floatformat:2 }}</td>
+                <td class="is-right">{{ item.forecast_qty|floatformat:0 }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="muted" style="padding:20px;text-align:center;">Недостаточно данных для прогноза.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% include "partials/pagination.html" with page_obj=page_obj %}
+    </section>
+  </section>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Вход · WMS{% endblock %}
+
+{% block content %}
+  <div class="auth-shell">
+    <section class="auth-card">
+      <div class="auth-card__logo">EFP</div>
+      <h1 class="h2 mb-1">Вход в систему</h1>
+      <p class="muted mb-5">WMS · ЕФП-ПАРТС. Доступ к модулям зависит от роли.</p>
+
+      <form method="post" class="form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="toast toast--danger">
+            <div class="toast__title">{{ form.non_field_errors }}</div>
+          </div>
+        {% endif %}
+
+        <label class="field">
+          <span class="field__label">Логин</span>
+          {{ form.username }}
+          {% if form.username.errors %}
+            <span class="field__error">{{ form.username.errors|join:"; " }}</span>
+          {% endif %}
+        </label>
+
+        <label class="field">
+          <span class="field__label">Пароль</span>
+          {{ form.password }}
+          {% if form.password.errors %}
+            <span class="field__error">{{ form.password.errors|join:"; " }}</span>
+          {% endif %}
+        </label>
+
+        <button class="btn btn--primary btn--block btn--lg mt-2" type="submit">Войти</button>
+      </form>
+    </section>
+  </div>
+{% endblock %}

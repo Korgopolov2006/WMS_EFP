@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Этикетка · WMS{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Этикетка 60×40 мм. Используем CSS variables, без правки app.css. */
+  .labels-toolbar { display:flex; gap:8px; margin-bottom:12px; }
+  .labels-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap:10px;
+  }
+  .label-card {
+    border: 1px dashed var(--border, #d1d5db);
+    border-radius: 6px;
+    padding: 10px 12px;
+    background: #fff;
+    color: #111;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .label-card__sku {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 4px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  .label-card__name {
+    font-size: 12px;
+    line-height: 1.25;
+    margin-bottom: 6px;
+    max-height: 2.5em;
+    overflow: hidden;
+  }
+  .label-card__codes {
+    display:flex; gap:8px; align-items:center; justify-content:space-between;
+  }
+  .label-card__codes img.barcode { height: 38px; max-width: 100%; }
+  .label-card__codes img.qr { width: 56px; height: 56px; }
+  .label-card__meta { font-size: 10px; color: #555; margin-top: 4px; }
+
+  @media print {
+    /* Прячем весь shell — печатаем только сетку этикеток */
+    .sidebar, .topbar, .breadcrumbs, .page__header, .labels-toolbar,
+    .toast, .stack, .messages, nav, header { display:none !important; }
+    .app-shell, .main, .page {
+      display:block !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: none !important;
+      width: 100% !important;
+    }
+    body { background: #fff !important; margin: 0 !important; }
+    @page { margin: 8mm; }
+    .label-card { border: 1px solid #999; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'dashboard' %}">Дашборд</a>
+        <span class="breadcrumbs__sep">/</span>
+        <a href="{% url 'admin_panel:wms_product_list' %}">Товары</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">
+          {% if single %}Этикетка{% else %}Печать этикеток ({{ products|length }}){% endif %}
+        </span>
+      </div>
+      <h1 class="page__title">
+        {% if single %}Этикетка товара{% else %}Печать этикеток · {{ products|length }} шт.{% endif %}
+      </h1>
+    </div>
+  </header>
+
+  <div class="labels-toolbar">
+    <button class="btn" onclick="window.print()">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="6 9 6 2 18 2 18 9"/>
+        <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="8"/>
+      </svg>
+      Печать
+    </button>
+    <a class="btn btn--ghost" href="{% url 'admin_panel:wms_product_list' %}">Назад</a>
+  </div>
+
+  <div class="labels-grid">
+    {% for p in products %}
+      <div class="label-card">
+        <div class="label-card__sku">{{ p.internal_sku }}</div>
+        <div class="label-card__name" title="{{ p.name }}">{{ p.name }}</div>
+        <div class="label-card__codes">
+          <img class="barcode"
+               src="{% url 'catalog_barcode_image' p.internal_sku %}"
+               alt="barcode {{ p.internal_sku }}">
+          <img class="qr"
+               src="{% url 'catalog_qr_image' p.internal_sku %}"
+               alt="qr {{ p.internal_sku }}">
+        </div>
+        <div class="label-card__meta">
+          {{ p.brand.name }} · {{ p.oem_number }}
+        </div>
+      </div>
+    {% empty %}
+      <p class="muted">Товары не найдены.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

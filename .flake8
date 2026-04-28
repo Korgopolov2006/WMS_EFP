@@ -1,0 +1,39 @@
+[flake8]
+max-line-length = 100
+
+# Игнор только того, что реально конфликтует с современным форматтером (black)
+ignore =
+    E203,
+    W503
+
+# Где не проверяем код
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    .venv,
+    venv,
+    env,
+    migrations,
+    node_modules,
+    static,
+    media
+
+# Максимальная сложность функций (адекватный уровень)
+max-complexity = 10
+
+# Показывать источник ошибки (удобно для отладки)
+show-source = True
+
+# Статистика после запуска
+statistics = True
+
+# Поддержка расширений (если используешь плагины)
+enable-extensions = G
+
+# Проверка аннотаций (если установлен flake8-annotations)
+extend-ignore = ANN101, ANN102
+
+# Для pydocstyle (если используешь docstrings)
+docstring-convention = google

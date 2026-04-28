@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Приёмка {{ receiving.number }} — WMS{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/help-modal.css' %}">
+  <style>
+    .efp-check-btn {
+      margin-top: 8px;
+      width: 100%;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">Приёмка {{ receiving.number }}</h1>
+      <p class="muted">Поставщик: {{ receiving.supplier_name }}</p>
+    </div>
+    <div class="row row--wrap">
+      <a class="btn btn--ghost" href="{% url 'receiving_list' %}">К списку</a>
+      <a class="btn btn--primary" href="{% url 'receiving_pdf' receiving.pk %}">Скачать PDF</a>
+    </div>
+  </div>
+
+  <section class="grid grid--2" style="margin-top:14px;">
+    <div class="card card--glass card--lg">
+      <div class="card__header">
+        <h3 class="h3">Общая информация</h3>
+        <p class="muted">Статус: {{ receiving.get_status_display }}</p>
+      </div>
+      <div class="card__footer">
+        <div class="stack stack--sm">
+          <div class="kv">
+            <div class="kv__k">Документ поставщика</div>
+            <div class="kv__v">{{ receiving.supplier_doc_no|default:"—" }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Склад</div>
+            <div class="kv__v">
+              {% if receiving.warehouse %}
+                {{ receiving.warehouse.branch.code }} / {{ receiving.warehouse.code }} — {{ receiving.warehouse.name }}
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Создал</div>
+            <div class="kv__v">{{ receiving.created_by }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Плановая дата поставки</div>
+            <div class="kv__v">{{ receiving.expected_at|date:"d.m.Y"|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card--glass card--lg">
+      <div class="card__header">
+        <div class="row row--between row--wrap" style="gap:10px;">
+          <div>
+            <h3 class="h3">Добавить строку</h3>
+            <p class="muted">Место хранения подбирается автоматически по типу упаковки в ваших доступных складах. При необходимости можно выбрать вручную из доступного списка.</p>
+          </div>
+          <div>
+            <a class="btn btn--ghost" href="{{ create_product_url }}">+ Новый товар</a>
+          </div>
+        </div>
+      </div>
+      <div class="card__footer">
+        {% if not locations_available %}
+          <div class="toast toast--danger" style="margin-bottom:12px;">
+            <div class="toast__title">Нет доступных мест хранения для вашего филиала/склада.</div>
+            <div class="hint">Обратитесь к администратору: нужно назначить вам филиал и доступ к складу.</div>
+          </div>
+        {% endif %}
+        <form method="post" action="{% url 'receiving_add_line' receiving.pk %}" class="form stack" id="receiving-line-form">
+          {% csrf_token %}
+          {% for field in line_form %}
+            <div class="field">
+              <div class="field__label">{{ field.label }}</div>
+              {{ field }}
+              {% if field.errors %}
+                <div class="hint" style="color: rgba(255,80,120,.9)">{{ field.errors }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+          
+          {% if user_role == "STOREKEEPER" or user.is_superuser or user_role == "ADMIN" %}
+            <div class="field">
+              <div class="field__label">OEM код для проверки</div>
+              <div style="display:flex;gap:8px;">
+                <input type="text" id="efp-oem-input" class="form__input" placeholder="Введите OEM код" style="flex:1;">
+                <button type="button" id="efp-check-btn" class="btn btn--ghost efp-check-btn" style="white-space:nowrap;">Проверить на EFP</button>
+              </div>
+              <div class="hint" style="margin-top:4px;">Проверьте деталь на сайте EFP Parts перед добавлением</div>
+            </div>
+          {% endif %}
+          
+          <button class="btn btn--primary" type="submit">Добавить</button>
+        </form>
+      </div>
+    </div>
+    
+    <script src="{% static 'js/product-selector.js' %}"></script>
+    <script src="{% static 'js/efp-checker.js' %}"></script>
+    <script>
+      function checkLineOnEFP(oemCode) {
+        if (!oemCode) {
+          alert('OEM код не указан для этой детали');
+          return;
+        }
+        const input = document.getElementById('efp-oem-input');
+        if (input) {
+          input.value = oemCode;
+        }
+        const btn = document.getElementById('efp-check-btn');
+        if (btn) {
+          btn.click();
+        }
+      }
+
+      (function initAutoStorageSuggestion() {
+        const productSelect = document.getElementById('id_product');
+        const locationSelect = document.getElementById('id_storage_location');
+        if (!productSelect || !locationSelect) {
+          return;
+        }
+
+        const suggestUrl = "{% url 'receiving_suggest_location' receiving.pk %}";
+        let lastRequestId = 0;
+        locationSelect.dataset.autofilled = locationSelect.value ? '0' : '1';
+
+        locationSelect.addEventListener('change', function() {
+          locationSelect.dataset.autofilled = '0';
+        });
+
+        function canAutoFillLocation() {
+          return !locationSelect.value || locationSelect.dataset.autofilled === '1';
+        }
+
+        function applySuggestedLocation() {
+          const productId = (productSelect.value || '').trim();
+          if (!productId) {
+            return;
+          }
+          if (!canAutoFillLocation()) {
+            return;
+          }
+
+          const requestId = ++lastRequestId;
+          const url = new URL(suggestUrl, window.location.origin);
+          url.searchParams.set('product_id', productId);
+
+          fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(response) {
+              return response.json();
+            })
+            .then(function(payload) {
+              if (requestId !== lastRequestId || !payload || !payload.success || !payload.location) {
+                return;
+              }
+              const suggestedId = String(payload.location.id);
+              const hasOption = Array.from(locationSelect.options).some(function(opt) { return opt.value === suggestedId; });
+              if (!hasOption || !canAutoFillLocation()) {
+                return;
+              }
+              locationSelect.value = suggestedId;
+              locationSelect.dataset.autofilled = '1';
+            })
+            .catch(function() {
+              // Silent fallback: backend will still assign location on submit.
+            });
+        }
+
+        productSelect.addEventListener('change', applySuggestedLocation);
+        if (productSelect.value && !locationSelect.value) {
+          applySuggestedLocation();
+        }
+      })();
+    </script>
+  </section>
+
+  {% if not receiving.warehouse %}
+    <section style="margin-top:14px;">
+      <div class="toast toast--danger">
+        <div class="toast__title">Для документа не указан склад.</div>
+        <div class="hint">Добавление корректных строк и завершение приёмки требуют фиксации склада.</div>
+      </div>
+      <div class="card card--glass card--lg" style="margin-top:10px;">
+        <div class="card__header">
+          <h3 class="h3">Зафиксировать склад документа</h3>
+          <p class="muted">Выберите склад, в котором фактически выполняется эта приёмка.</p>
+        </div>
+        <div class="card__footer">
+          <form method="post" class="row row--wrap" style="gap:10px;align-items:flex-end;">
+            {% csrf_token %}
+            <input type="hidden" name="set_warehouse" value="1">
+            <div class="field" style="min-width:320px;">
+              <div class="field__label">Склад</div>
+              <select name="warehouse_id" class="form__input" required>
+                <option value="">Выберите склад</option>
+                {% for wh in available_warehouses %}
+                  <option value="{{ wh.id }}">{{ wh.branch.code }} / {{ wh.code }} — {{ wh.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn btn--primary">Сохранить склад</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if user_role == "STOREKEEPER" or user.is_superuser or user_role == "ADMIN" %}
+    <section style="margin-top:14px;">
+      <div class="card card--glass card--lg">
+        <div class="card__header">
+          <h3 class="h3">Действия по приёмке</h3>
+          <p class="muted">Сначала добавьте строки и фактическое количество, затем завершите документ. Если нужно принять всё количество по документу, используйте кнопку «Принять всё».</p>
+        </div>
+        <div class="card__footer">
+          <div class="row row--wrap" style="gap:10px;">
+            {% if receiving.status == "DRAFT" %}
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="change_status" value="1">
+                <input type="hidden" name="status" value="IN_PROGRESS">
+                <button type="submit" class="btn btn--ghost">Начать приёмку</button>
+              </form>
+            {% endif %}
+
+            {% if receiving.status == "DRAFT" or receiving.status == "IN_PROGRESS" %}
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="receive_all" value="1">
+                <button type="submit" class="btn btn--ghost">Принять всё (Ожид. → Принято)</button>
+              </form>
+            {% endif %}
+
+            {% if receiving.status == "DRAFT" or receiving.status == "IN_PROGRESS" %}
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="change_status" value="1">
+                <input type="hidden" name="status" value="COMPLETED">
+                <button type="submit" class="btn btn--primary">Завершить приёмку</button>
+              </form>
+            {% endif %}
+
+            {% if receiving.status == "DRAFT" or receiving.status == "IN_PROGRESS" %}
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="change_status" value="1">
+                <input type="hidden" name="status" value="CANCELLED">
+                <button type="submit" class="btn btn--ghost">Отменить</button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <section style="margin-top:14px;">
+    {% if total_received < total_expected %}
+      <div class="toast toast--danger" style="margin-bottom:10px;">
+        <div class="toast__title">Принято меньше, чем ожидаемо.</div>
+        <div class="hint">Проверьте фактические количества в строках или нажмите «Принять всё», если нужно принять весь ожидаемый объём.</div>
+      </div>
+    {% endif %}
+    <div class="grid grid--3" style="margin-bottom:14px;">
+      <div class="kv">
+        <div class="kv__k">Позиции в документе</div>
+        <div class="kv__v">{{ lines_count }}</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Ожидаемо (всего)</div>
+        <div class="kv__v">{{ total_expected }}</div>
+      </div>
+      <div class="kv">
+        <div class="kv__k">Принято (всего)</div>
+        <div class="kv__v">{{ total_received }}</div>
+      </div>
+    </div>
+
+    <div class="card card--glass card--lg">
+      <div class="card__header">
+        <h3 class="h3">Строки приёмки</h3>
+      </div>
+      <div class="card__footer">
+        <form method="get" class="row row--wrap" style="gap:10px;margin-bottom:12px;">
+          <div class="field" style="min-width:260px;">
+            <div class="field__label">Поиск по строкам</div>
+            <input type="text" name="q" value="{{ line_q }}" class="form__input" placeholder="SKU, OEM, место, название">
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button type="submit" class="btn btn--primary">Найти</button>
+          </div>
+        </form>
+        <div class="stack stack--sm">
+          {% for line in lines %}
+            <div class="kv">
+              <div class="row row--between row--wrap">
+                <div style="flex:1;">
+                  <div class="kv__k">{{ line.product.internal_sku }} · OEM {{ line.product.oem_number }}</div>
+                  <div class="kv__v">{{ line.product.name }}</div>
+                  <div class="hint">
+                    Ожидаемо: {{ line.qty_expected }} · Принято: {{ line.qty_received }}
+                    {% if line.storage_location %}
+                      · Место: {{ line.storage_location }}
+                    {% endif %}
+                  </div>
+                </div>
+                {% if user_role == "STOREKEEPER" or user.is_superuser or user_role == "ADMIN" %}
+                  <div class="row row--wrap">
+                    <button type="button" class="btn btn--ghost" onclick="checkLineOnEFP('{{ line.product.oem_number|default:"" }}')" style="font-size:12px;">Проверить на EFP</button>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% empty %}
+            <p class="muted">Пока нет строк приёмки.</p>
+          {% endfor %}
+        </div>
+        {% include "partials/pagination.html" with page_obj=page_obj %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

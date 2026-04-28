@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Инвентаризация {{ inventory.number }} — WMS{% endblock %}
+
+{% block content %}
+  <div class="row row--between row--wrap">
+    <div>
+      <h1 class="h2">{{ inventory.number }}</h1>
+      <p class="muted">Статус: {{ inventory.get_status_display }}</p>
+    </div>
+    <div>
+      <a class="btn btn--ghost" href="{% url 'inventory_list' %}">← К списку</a>
+    </div>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Добавить строку</h3>
+      <p class="muted">Шаги: 1) найдите товар по названию/SKU/OEM, 2) укажите код места, 3) внесите фактическое количество.</p>
+    </div>
+    <form method="post" class="form stack">
+      {% csrf_token %}
+      <input type="hidden" name="add_line" value="1">
+      <div class="row row--wrap" style="gap:10px;">
+        <div class="field" style="min-width:260px;">
+          <div class="field__label">Товар (название / SKU / OEM)</div>
+          <input type="text" class="form__input" name="product_query" placeholder="Например: фильтр, DMO-SMALL-001, OEM-123" required>
+        </div>
+        <div class="field" style="min-width:180px;">
+          <div class="field__label">Код места хранения</div>
+          <input type="text" class="form__input" name="location_code" placeholder="Например: A01" required>
+        </div>
+        <div class="field" style="min-width:120px;">
+          <div class="field__label">Фактически, шт</div>
+          <input type="number" class="form__input" name="qty_actual" min="0" step="1" required>
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button type="submit" class="btn btn--primary">Добавить</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card--glass card--lg" style="margin-top:14px;">
+    <div class="card__header">
+      <h3 class="h3">Строки инвентаризации</h3>
+      <p class="muted">После внесения строк сравните "По учёту" и "Фактически". Расхождения подсвечиваются отдельно.</p>
+    </div>
+    <form method="get" class="row row--wrap" style="gap:10px;margin-bottom:12px;">
+      <div class="field" style="min-width:260px;">
+        <div class="field__label">Поиск по строкам</div>
+        <input type="text" name="q" value="{{ q }}" class="form__input" placeholder="SKU, название, место">
+      </div>
+      <div style="display:flex;align-items:flex-end;">
+        <button type="submit" class="btn btn--primary">Найти</button>
+      </div>
+    </form>
+    <div class="stack">
+      {% for line in lines %}
+        <div class="kv">
+          <div class="row row--between row--wrap">
+            <div>
+              <div class="kv__v">{{ line.product.internal_sku }} — {{ line.product.name }}</div>
+              <div class="hint">Место: {{ line.storage_location.code }}</div>
+            </div>
+            <div>
+              <div class="kv__v">По учёту: {{ line.qty_book }} шт</div>
+              <div class="kv__v">Фактически: {{ line.qty_actual|default:"—" }} шт</div>
+              {% if line.discrepancy != 0 %}
+                <div class="hint" style="color:rgba(255,80,120,.9);">Расхождение: {{ line.discrepancy }} шт</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="muted">Строк инвентаризации пока нет.</p>
+      {% endfor %}
+    </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
+  </div>
+{% endblock %}

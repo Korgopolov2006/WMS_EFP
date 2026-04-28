@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Удаление пользователя · Панель управления{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'admin_panel:dashboard' %}">Панель управления</a>
+        <span class="breadcrumbs__sep">/</span>
+        <a href="{% url 'admin_panel:user_list' %}">Пользователи</a>
+        <span class="breadcrumbs__sep">/</span>
+        <a href="{% url 'admin_panel:user_detail' user_obj.pk %}">{{ user_obj.username }}</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Удаление</span>
+      </div>
+      <h1 class="page__title">Удалить пользователя</h1>
+    </div>
+  </header>
+
+  <div style="max-width:560px;">
+    <article class="card">
+      <div class="card__body">
+        <div class="toast toast--danger" style="margin-bottom:16px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <div>
+            <div class="toast__title">Это действие необратимо</div>
+            <div class="toast__body">
+              Пользователь будет удалён из системы вместе со всеми связанными данными.
+              Вместо удаления рекомендуется <strong>заблокировать</strong> учётную запись.
+            </div>
+          </div>
+        </div>
+
+        <div class="stack stack--sm" style="margin-bottom:20px;">
+          <div class="kv">
+            <div class="kv__k">Логин</div>
+            <div class="kv__v"><strong>{{ user_obj.username }}</strong></div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Имя</div>
+            <div class="kv__v">{{ user_obj.get_full_name|default:"—" }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Email</div>
+            <div class="kv__v">{{ user_obj.email|default:"—" }}</div>
+          </div>
+          <div class="kv">
+            <div class="kv__k">Роль</div>
+            <div class="kv__v">
+              <span class="badge badge--neutral">{{ user_obj.get_role_display }}</span>
+            </div>
+          </div>
+        </div>
+
+        <p style="font-size:14px;color:var(--text-2);">
+          Вы уверены, что хотите удалить пользователя <strong>«{{ user_obj.username }}»</strong>?
+        </p>
+      </div>
+
+      <div class="form-footer">
+        <a class="btn btn--ghost" href="{% url 'admin_panel:user_detail' user_obj.pk %}">Отмена</a>
+
+        <form method="post" action="{% url 'admin_panel:user_delete' user_obj.pk %}" style="display:contents;">
+          {% csrf_token %}
+          {# Дополнительная защита: кнопка разблокировки #}
+          <a class="btn btn--ghost" href="{% url 'admin_panel:user_detail' user_obj.pk %}"
+             style="color:var(--success);">Лучше заблокирую</a>
+          <button type="submit" class="btn"
+                  style="background:var(--danger);color:#fff;border-color:var(--danger);">
+            Да, удалить безвозвратно
+          </button>
+        </form>
+      </div>
+    </article>
+  </div>
+</div>
+{% endblock %}
