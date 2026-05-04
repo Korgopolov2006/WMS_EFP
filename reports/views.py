@@ -2,24 +2,23 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from datetime import date, timedelta
-from math import sqrt
 
+from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Count, Q, Sum
-from django.db.models.functions import TruncDate
+from django.db.models import Count, Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from accounts.constants import Roles
 from accounts.permissions import role_required
-from picking.models import OrderLine, OrderStatus
 from reports.services import (
     analyze_analogs_vs_originals,
+    build_abc_xyz_products,
     calculate_staff_efficiency,
-    calculate_abc_class,
-    calculate_xyz_class,
     find_dead_stock,
+    generate_report_snapshots,
     get_picking_errors_summary,
 )
 
@@ -63,77 +62,38 @@ def _contains_query(value, query: str) -> bool:
 
 
 def _build_abc_xyz_products(period_start: date, period_end: date) -> list[dict]:
-    sales_data = (
-        OrderLine.objects.filter(
-            order__status=OrderStatus.SHIPPED,
-            order__shipped_at__date__gte=period_start,
-            order__shipped_at__date__lte=period_end,
-        )
-        .values("product_id", "product__internal_sku", "product__name")
-        .annotate(
-            total_qty=Sum("qty_picked"),
-            total_amount=Sum("qty_picked") * Sum("price"),
-        )
-        .order_by("-total_amount")
-    )
-
-    products_data = []
-    for item in sales_data:
-        products_data.append(
-            {
-                "product_id": item["product_id"],
-                "product_sku": item["product__internal_sku"],
-                "product_name": item["product__name"],
-                "qty": item["total_qty"] or 0,
-                "amount": item["total_amount"] or 0,
-            }
-        )
-
-    # Для XYZ считаем коэффициент вариации по дневным отгрузкам за период.
-    # Чем выше разброс, тем менее предсказуем спрос.
-    day_sales = (
-        OrderLine.objects.filter(
-            order__status=OrderStatus.SHIPPED,
-            order__shipped_at__date__gte=period_start,
-            order__shipped_at__date__lte=period_end,
-        )
-        .annotate(day=TruncDate("order__shipped_at"))
-        .values("product_id", "day")
-        .annotate(day_qty=Sum("qty_picked"))
-    )
-    qty_by_product_day: dict[int, dict[date, float]] = defaultdict(dict)
-    for row in day_sales:
-        qty_by_product_day[row["product_id"]][row["day"]] = float(row["day_qty"] or 0)
-
-    period_len = max((period_end - period_start).days + 1, 1)
-    for item in products_data:
-        product_id = item["product_id"]
-        daily_values = [
-            qty_by_product_day.get(product_id, {}).get(period_start + timedelta(days=offset), 0.0)
-            for offset in range(period_len)
-        ]
-        mean = sum(daily_values) / period_len
-        if mean <= 0:
-            item["coefficient_variation"] = 1.0
-            continue
-        variance = sum((val - mean) ** 2 for val in daily_values) / period_len
-        std_dev = sqrt(variance)
-        item["coefficient_variation"] = std_dev / mean
-
-    abc_classes = calculate_abc_class(products_data)
-    xyz_classes = calculate_xyz_class(products_data)
-
-    for item in products_data:
-        item["abc_class"] = abc_classes.get(item["product_id"], "-")
-        item["xyz_class"] = xyz_classes.get(item["product_id"], "-")
-        item["abc_xyz"] = f"{item['abc_class']}{item['xyz_class']}"
-
-    return products_data
+    return build_abc_xyz_products(period_start, period_end)
 
 
 @role_required(Roles.ADMIN, Roles.ANALYST)
 def reports_home(request: HttpRequest) -> HttpResponse:
     return render(request, "reports/home.html", {"title": "Отчёты и аналитика"})
+
+
+@role_required(Roles.ADMIN, Roles.ANALYST)
+@require_POST
+def reports_autogenerate(request: HttpRequest) -> HttpResponse:
+    period_days = _safe_int(request.POST.get("period"), 30, min_value=7, max_value=365)
+    dead_stock_days = _safe_int(request.POST.get("dead_stock_days"), 90, min_value=1, max_value=3650)
+    forecast_days = _safe_int(request.POST.get("forecast_days"), 7, min_value=1, max_value=90)
+
+    summary = generate_report_snapshots(
+        period_days=period_days,
+        dead_stock_days=dead_stock_days,
+        forecast_days=forecast_days,
+        calculated_by=request.user,
+    )
+    messages.success(
+        request,
+        (
+            "Автогенерация отчётов завершена: "
+            f"ABC-XYZ — {summary['abc_xyz']}, "
+            f"мёртвые остатки — {summary['dead_stock']}, "
+            f"аналоги — {summary['analogs']}, "
+            f"прогноз спроса — {summary['demand_forecast']}."
+        ),
+    )
+    return redirect("reports_home")
 
 
 @role_required(Roles.ADMIN, Roles.ANALYST)

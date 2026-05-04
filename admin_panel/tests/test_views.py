@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -429,6 +430,31 @@ class TestBackupViews(TestCase):
         self.assertRedirects(resp, reverse("admin_panel:backup_list"),
                               fetch_redirect_response=False)
 
+    @patch("admin_panel.views.upload_backup_file")
+    def test_backup_upload_success(self, mock_upload):
+        mock_upload.return_value = BackupRecord(filename="backup_uploaded.sql", size_bytes=10)
+
+        resp = self.client.post(
+            reverse("admin_panel:backup_upload"),
+            {
+                "notes": "От коллеги",
+                "backup_file": SimpleUploadedFile("demo.sql", b"-- dump --"),
+            },
+        )
+
+        self.assertRedirects(resp, reverse("admin_panel:backup_list"), fetch_redirect_response=False)
+        mock_upload.assert_called_once()
+
+    @patch("admin_panel.views.upload_backup_file")
+    def test_backup_upload_invalid_extension(self, mock_upload):
+        resp = self.client.post(
+            reverse("admin_panel:backup_upload"),
+            {"backup_file": SimpleUploadedFile("demo.txt", b"text")},
+        )
+
+        self.assertRedirects(resp, reverse("admin_panel:backup_list"), fetch_redirect_response=False)
+        mock_upload.assert_not_called()
+
     def test_backup_download_missing_file_404(self):
         resp = self.client.get(
             reverse("admin_panel:backup_download", args=["nonexistent.sql"])
@@ -771,9 +797,11 @@ class TestBackupRestoreConfirmed(TestCase):
             reverse("admin_panel:backup_restore", args=["backup.sql"]),
             {"confirm_restore": "yes"},
         )
-        mock_restore.assert_called_once_with(
-            filename="backup.sql", actor=self.admin
-        )
+        mock_restore.assert_called_once()
+        kwargs = mock_restore.call_args.kwargs
+        self.assertEqual(kwargs["filename"], "backup.sql")
+        self.assertEqual(kwargs["actor"], self.admin)
+        self.assertFalse(kwargs.get("wipe_first", False))
         self.assertRedirects(resp, reverse("admin_panel:backup_list"),
                               fetch_redirect_response=False)
 

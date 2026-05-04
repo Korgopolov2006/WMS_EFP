@@ -17,7 +17,7 @@ from django.views.decorators.http import require_POST
 from accounts.constants import ROLE_CHOICES, Roles
 from core.export import ExportColumn, dispatch_export
 from .decorators import admin_required
-from .forms import BackupCreateForm, SupplierForm, UserCreateForm, UserEditForm, WarehouseForm
+from .forms import BackupCreateForm, BackupUploadForm, SupplierForm, UserCreateForm, UserEditForm, WarehouseForm
 from .models import AuditLog, BackupRecord
 from .services import (
     create_database_backup,
@@ -28,6 +28,7 @@ from .services import (
     reset_user_password,
     restore_database_backup,
     sync_backup_records,
+    upload_backup_file,
 )
 
 User = get_user_model()
@@ -76,12 +77,14 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
 @admin_required
 def user_list(request: HttpRequest) -> HttpResponse:
-    """Список пользователей с поиском и фильтрацией."""
+    """Список пользователей с поиском, фильтрацией и сортировкой."""
+    from core.sorting import apply_ordering
+
     q = (request.GET.get("q") or "").strip()
     role = request.GET.get("role", "")
-    status = request.GET.get("status", "")  # "active" | "inactive" | ""
+    status = request.GET.get("status", "")
 
-    qs = User.objects.all().order_by("username")
+    qs = User.objects.all()
 
     if q:
         qs = qs.filter(
@@ -97,6 +100,15 @@ def user_list(request: HttpRequest) -> HttpResponse:
     elif status == "inactive":
         qs = qs.filter(is_active=False)
 
+    qs, sort, order = apply_ordering(qs, request, {
+        "username": "username",
+        "name":     "first_name",
+        "email":    "email",
+        "role":     "role",
+        "joined":   "date_joined",
+        "active":   "is_active",
+    }, default="username", default_order="asc")
+
     page_obj = _paginate(request, qs)
 
     return render(request, "admin_panel/users/list.html", {
@@ -106,6 +118,8 @@ def user_list(request: HttpRequest) -> HttpResponse:
         "role": role,
         "status": status,
         "role_choices": ROLE_CHOICES,
+        "sort": sort,
+        "order": order,
     })
 
 
@@ -241,33 +255,168 @@ def user_delete(request: HttpRequest, pk: int) -> HttpResponse:
 @admin_required
 @require_POST
 def user_toggle_active(request: HttpRequest, pk: int) -> HttpResponse:
-    """Блокировка / разблокировка пользователя (POST)."""
+    """Блокировка / разблокировка пользователя (POST). Принимает reason."""
     user_obj = get_object_or_404(User, pk=pk)
 
     if user_obj == request.user:
         messages.error(request, "Нельзя заблокировать собственную учётную запись.")
         return redirect("admin_panel:user_detail", pk=pk)
 
-    user_obj.is_active = not user_obj.is_active
-    user_obj.save(update_fields=["is_active"])
-
-    action_type = (
-        AuditLog.ActionType.ACTIVATE
-        if user_obj.is_active
-        else AuditLog.ActionType.DEACTIVATE
-    )
-    log_action(
-        actor=request.user,
-        action=action_type,
-        resource_type="User",
-        resource_id=str(user_obj.pk),
-        resource_str=user_obj.username,
-        request=request,
-    )
+    reason = (request.POST.get("reason") or "").strip()[:500]
+    _apply_user_toggle(request.user, user_obj, reason=reason, request=request)
 
     status_word = "активирован" if user_obj.is_active else "заблокирован"
     messages.success(request, f"Пользователь «{user_obj.username}» {status_word}.")
     return redirect("admin_panel:user_detail", pk=pk)
+
+
+def _apply_user_toggle(actor, target_user, *, reason: str = "", request=None) -> None:
+    """
+    Переключает is_active на target_user, пишет AuditLog (с причиной)
+    и шлёт persistent in-app Notification — оно сохраняется в БД и
+    остаётся после перезапуска сервера.
+    """
+    target_user.is_active = not target_user.is_active
+    target_user.save(update_fields=["is_active"])
+
+    action_type = (
+        AuditLog.ActionType.ACTIVATE
+        if target_user.is_active
+        else AuditLog.ActionType.DEACTIVATE
+    )
+    changes = {"is_active": target_user.is_active}
+    if reason:
+        changes["reason"] = reason
+
+    log_action(
+        actor=actor,
+        action=action_type,
+        resource_type="User",
+        resource_id=str(target_user.pk),
+        resource_str=target_user.username,
+        changes=changes,
+        request=request,
+    )
+
+    # Persistent notification — хранится в БД (notifications.Notification),
+    # переживает перезапуск, не зависит от Django messages framework.
+    try:
+        from notifications.services import notify
+        from notifications.models import NotificationKind, NotificationPriority
+
+        if target_user.is_active:
+            title = "Доступ восстановлен"
+            body = f"Администратор {actor.username} разблокировал вашу учётную запись."
+            kind = NotificationKind.SUCCESS
+            prio = NotificationPriority.NORMAL
+        else:
+            title = "Учётная запись заблокирована"
+            body = f"Администратор {actor.username} заблокировал ваш доступ."
+            if reason:
+                body += f" Причина: {reason}"
+            kind = NotificationKind.DANGER
+            prio = NotificationPriority.HIGH
+
+        notify(
+            target_user,
+            title=title, body=body,
+            kind=kind, priority=prio,
+            dedup_key=f"user-toggle-{target_user.pk}-{int(target_user.is_active)}",
+        )
+    except Exception:
+        # уведомление не должно ломать основной поток
+        pass
+
+
+def _apply_user_role_change(actor, target_user, new_role: str, *, request=None) -> bool:
+    """Меняет роль и пишет аудит + persistent notification."""
+    if new_role == target_user.role:
+        return False
+    old_role = target_user.role
+    target_user.role = new_role
+    target_user.save(update_fields=["role"])
+
+    log_action(
+        actor=actor,
+        action=AuditLog.ActionType.UPDATE,
+        resource_type="User",
+        resource_id=str(target_user.pk),
+        resource_str=target_user.username,
+        changes={"role": {"from": old_role, "to": new_role}},
+        request=request,
+    )
+    try:
+        from notifications.services import notify
+        from notifications.models import NotificationKind
+        notify(
+            target_user,
+            title="Роль изменена",
+            body=f"Администратор {actor.username} изменил вашу роль: "
+                 f"{old_role} → {new_role}.",
+            kind=NotificationKind.INFO,
+            dedup_key=f"user-role-{target_user.pk}-{new_role}",
+        )
+    except Exception:
+        pass
+    return True
+
+
+@admin_required
+@require_POST
+def user_bulk_action(request: HttpRequest) -> HttpResponse:
+    """
+    Массовые операции над пользователями.
+
+    POST поля:
+        action      — "block" | "unblock" | "set_role"
+        ids         — список User.pk через запятую
+        reason      — причина блокировки/разблокировки (опционально)
+        role        — код роли для action=set_role
+    """
+    raw_ids = (request.POST.get("ids") or "").strip()
+    pks = [int(x) for x in raw_ids.split(",") if x.strip().isdigit()]
+    action = (request.POST.get("action") or "").strip()
+    reason = (request.POST.get("reason") or "").strip()[:500]
+    new_role = (request.POST.get("role") or "").strip()
+
+    if not pks:
+        messages.error(request, "Не выбрано ни одного пользователя.")
+        return redirect("admin_panel:user_list")
+    if action not in {"block", "unblock", "set_role"}:
+        messages.error(request, "Неизвестное действие.")
+        return redirect("admin_panel:user_list")
+
+    # Не позволяем себя самого
+    pks = [pk for pk in pks if pk != request.user.pk]
+    qs = User.objects.filter(pk__in=pks)
+
+    affected = 0
+    if action == "block":
+        for u in qs:
+            if u.is_active:
+                _apply_user_toggle(request.user, u, reason=reason, request=request)
+                affected += 1
+        messages.success(request, f"Заблокировано пользователей: {affected}.")
+    elif action == "unblock":
+        for u in qs:
+            if not u.is_active:
+                _apply_user_toggle(request.user, u, reason=reason, request=request)
+                affected += 1
+        messages.success(request, f"Разблокировано пользователей: {affected}.")
+    elif action == "set_role":
+        valid_roles = {code for code, _ in ROLE_CHOICES}
+        if new_role not in valid_roles:
+            messages.error(request, "Некорректная роль.")
+            return redirect("admin_panel:user_list")
+        for u in qs:
+            if _apply_user_role_change(request.user, u, new_role, request=request):
+                affected += 1
+        messages.success(
+            request,
+            f"Роль изменена у {affected} пользователей на «{dict(ROLE_CHOICES).get(new_role, new_role)}».",
+        )
+
+    return redirect("admin_panel:user_list")
 
 
 @admin_required
@@ -304,11 +453,13 @@ def user_reset_password(request: HttpRequest, pk: int) -> HttpResponse:
 @admin_required
 def audit_log_list(request: HttpRequest) -> HttpResponse:
     """Журнал действий администраторов."""
+    from core.sorting import apply_ordering
+
     q = (request.GET.get("q") or "").strip()
     action_filter = request.GET.get("action", "")
     user_filter = request.GET.get("user_id", "")
 
-    qs = AuditLog.objects.select_related("user").order_by("-timestamp")
+    qs = AuditLog.objects.select_related("user")
 
     if q:
         qs = qs.filter(
@@ -321,12 +472,22 @@ def audit_log_list(request: HttpRequest) -> HttpResponse:
     if user_filter:
         qs = qs.filter(user_id=user_filter)
 
+    qs, sort, order = apply_ordering(qs, request, {
+        "time":     "timestamp",
+        "user":     "user__username",
+        "action":   "action",
+        "resource": "resource_str",
+        "ip":       "ip_address",
+    }, default="time", default_order="desc")
+
     page_obj = _paginate(request, qs, per_page=50)
 
     return render(request, "admin_panel/audit/list.html", {
         "page_obj": page_obj,
         "logs": page_obj.object_list,
         "q": q,
+        "sort": sort,
+        "order": order,
         "action_filter": action_filter,
         "user_filter": user_filter,
         "action_choices": AuditLog.ActionType.choices,
@@ -346,9 +507,11 @@ def backup_list(request: HttpRequest) -> HttpResponse:
     sync_backup_records()
     backups = BackupRecord.objects.all().order_by("-created_at")
     form = BackupCreateForm()
+    upload_form = BackupUploadForm()
     return render(request, "admin_panel/backups/list.html", {
         "backups": backups,
         "form": form,
+        "upload_form": upload_form,
     })
 
 
@@ -371,6 +534,34 @@ def backup_create(request: HttpRequest) -> HttpResponse:
             messages.error(request, f"Ошибка создания резервной копии: {exc}")
     else:
         messages.error(request, "Форма заполнена некорректно.")
+    return redirect("admin_panel:backup_list")
+
+
+@admin_required
+@require_POST
+def backup_upload(request: HttpRequest) -> HttpResponse:
+    """Загрузка готового файла резервной копии пользователем."""
+    form = BackupUploadForm(request.POST, request.FILES)
+    if form.is_valid():
+        try:
+            record = upload_backup_file(
+                form.cleaned_data["backup_file"],
+                actor=request.user,
+                notes=form.cleaned_data.get("notes", ""),
+            )
+            messages.success(
+                request,
+                f"Файл резервной копии «{record.filename}» загружен. "
+                "Теперь его можно скачать или восстановить.",
+            )
+        except Exception as exc:
+            messages.error(request, f"Ошибка загрузки резервной копии: {exc}")
+    else:
+        errors = "; ".join(
+            f"{field}: {', '.join(messages_for_field)}"
+            for field, messages_for_field in form.errors.items()
+        )
+        messages.error(request, f"Форма загрузки заполнена некорректно. {errors}")
     return redirect("admin_panel:backup_list")
 
 
@@ -424,8 +615,11 @@ def backup_restore(request: HttpRequest, filename: str) -> HttpResponse:
         messages.warning(request, "Восстановление не подтверждено.")
         return redirect("admin_panel:backup_list")
 
+    wipe_first = request.POST.get("wipe_first") == "yes"
     try:
-        restore_database_backup(filename=filename, actor=request.user)
+        restore_database_backup(
+            filename=filename, actor=request.user, wipe_first=wipe_first,
+        )
         messages.success(
             request,
             f"База данных успешно восстановлена из «{filename}». "
@@ -481,14 +675,15 @@ def system_settings(request: HttpRequest) -> HttpResponse:
 
 @admin_required
 def wms_warehouse_list(request: HttpRequest) -> HttpResponse:
-    """Список складов с поиском и фильтрацией."""
+    """Список складов с поиском, фильтрацией и сортировкой."""
+    from core.sorting import apply_ordering
     from catalog.models import Branch, Warehouse
 
     q = (request.GET.get("q") or "").strip()
     branch_filter = request.GET.get("branch", "")
     status_filter = request.GET.get("status", "")
 
-    qs = Warehouse.objects.select_related("branch").order_by("branch__code", "code")
+    qs = Warehouse.objects.select_related("branch")
     if q:
         qs = qs.filter(Q(code__icontains=q) | Q(name__icontains=q) | Q(branch__name__icontains=q))
     if branch_filter:
@@ -498,12 +693,21 @@ def wms_warehouse_list(request: HttpRequest) -> HttpResponse:
     elif status_filter == "inactive":
         qs = qs.filter(is_active=False)
 
+    qs, sort, order = apply_ordering(qs, request, {
+        "code":   "code",
+        "name":   "name",
+        "branch": "branch__name",
+        "active": "is_active",
+    }, default="code", default_order="asc")
+
     page_obj = _paginate(request, qs, per_page=25)
     branches = Branch.objects.filter(is_active=True).order_by("code")
 
     return render(request, "admin_panel/wms/warehouses/list.html", {
         "page_obj": page_obj,
         "q": q,
+        "sort": sort,
+        "order": order,
         "branch_filter": branch_filter,
         "status_filter": status_filter,
         "branches": branches,
@@ -599,12 +803,13 @@ def wms_warehouse_delete(request: HttpRequest, pk: int) -> HttpResponse:
 @admin_required
 def wms_supplier_list(request: HttpRequest) -> HttpResponse:
     """Список поставщиков."""
+    from core.sorting import apply_ordering
     from receiving.models import Supplier
 
     q = (request.GET.get("q") or "").strip()
     status_filter = request.GET.get("status", "")
 
-    qs = Supplier.objects.order_by("name")
+    qs = Supplier.objects.all()
     if q:
         qs = qs.filter(Q(code__icontains=q) | Q(name__icontains=q))
     if status_filter == "active":
@@ -612,10 +817,18 @@ def wms_supplier_list(request: HttpRequest) -> HttpResponse:
     elif status_filter == "inactive":
         qs = qs.filter(is_active=False)
 
+    qs, sort, order = apply_ordering(qs, request, {
+        "code":   "code",
+        "name":   "name",
+        "active": "is_active",
+    }, default="name", default_order="asc")
+
     page_obj = _paginate(request, qs, per_page=25)
     return render(request, "admin_panel/wms/suppliers/list.html", {
         "page_obj": page_obj,
         "q": q,
+        "sort": sort,
+        "order": order,
         "status_filter": status_filter,
         "total": qs.count(),
     })
@@ -729,7 +942,9 @@ def wms_product_list(request: HttpRequest) -> HttpResponse:
     brand_filter = request.GET.get("brand", "")
     category_filter = request.GET.get("category", "")
 
-    qs = Product.objects.select_related("brand", "category").order_by("internal_sku")
+    from core.sorting import apply_ordering
+
+    qs = Product.objects.select_related("brand", "category")
     if q:
         qs = qs.filter(
             Q(internal_sku__icontains=q)
@@ -741,6 +956,15 @@ def wms_product_list(request: HttpRequest) -> HttpResponse:
         qs = qs.filter(brand_id=brand_filter)
     if category_filter:
         qs = qs.filter(category_id=category_filter)
+
+    qs, sort, order = apply_ordering(qs, request, {
+        "sku":      "internal_sku",
+        "name":     "name",
+        "brand":    "brand__name",
+        "category": "category__name",
+        "oem":      "oem_number",
+        "barcode":  "barcode",
+    }, default="internal_sku", default_order="asc")
 
     export_resp = dispatch_export(
         request, qs, _PRODUCT_EXPORT_COLUMNS,
@@ -760,7 +984,89 @@ def wms_product_list(request: HttpRequest) -> HttpResponse:
         "brands": brands,
         "categories": categories,
         "total": qs.count(),
+        "sort": sort,
+        "order": order,
     })
+
+
+@admin_required
+@require_POST
+def wms_product_bulk_action(request: HttpRequest) -> HttpResponse:
+    """
+    Массовые операции над выбранными товарами.
+
+    Поля POST:
+        action     — bulk-действие: "delete" | "set_category" | "set_brand"
+        ids        — список Product.pk через запятую
+        category   — pk Category (для action=set_category)
+        brand      — pk Brand    (для action=set_brand)
+    """
+    from catalog.models import Brand, Category, Product
+
+    raw_ids = (request.POST.get("ids") or "").strip()
+    pks = [int(x) for x in raw_ids.split(",") if x.strip().isdigit()]
+    action = (request.POST.get("action") or "").strip()
+
+    if not pks:
+        messages.error(request, "Не выбрано ни одного товара.")
+        return redirect("admin_panel:wms_product_list")
+    if action not in {"delete", "set_category", "set_brand"}:
+        messages.error(request, "Неизвестное действие.")
+        return redirect("admin_panel:wms_product_list")
+
+    qs = Product.objects.filter(pk__in=pks)
+    count = qs.count()
+
+    if action == "delete":
+        try:
+            qs.delete()
+            log_action(
+                actor=request.user,
+                action=AuditLog.ActionType.DELETE,
+                resource_type="Product",
+                resource_str=f"bulk delete {count} items",
+                changes={"count": count, "ids": pks},
+                request=request,
+            )
+            messages.success(request, f"Удалено товаров: {count}.")
+        except Exception as exc:
+            messages.error(request, f"Ошибка удаления: {exc}")
+
+    elif action == "set_category":
+        cat_id = (request.POST.get("category") or "").strip()
+        if not cat_id.isdigit() or not Category.objects.filter(pk=int(cat_id)).exists():
+            messages.error(request, "Некорректная категория.")
+            return redirect("admin_panel:wms_product_list")
+        category = Category.objects.get(pk=int(cat_id))
+        qs.update(category=category)
+        log_action(
+            actor=request.user,
+            action=AuditLog.ActionType.UPDATE,
+            resource_type="Product",
+            resource_str=f"bulk set_category={category.name} for {count} items",
+            changes={"category_id": category.pk, "ids": pks},
+            request=request,
+        )
+        messages.success(request, f"Изменена категория у {count} товаров на «{category.name}».")
+
+    elif action == "set_brand":
+        brand_id = (request.POST.get("brand") or "").strip()
+        if not brand_id.isdigit() or not Brand.objects.filter(pk=int(brand_id)).exists():
+            messages.error(request, "Некорректный бренд.")
+            return redirect("admin_panel:wms_product_list")
+        brand = Brand.objects.get(pk=int(brand_id))
+        qs.update(brand=brand)
+        log_action(
+            actor=request.user,
+            action=AuditLog.ActionType.UPDATE,
+            resource_type="Product",
+            resource_str=f"bulk set_brand={brand.name} for {count} items",
+            changes={"brand_id": brand.pk, "ids": pks},
+            request=request,
+        )
+        messages.success(request, f"Изменён бренд у {count} товаров на «{brand.name}».")
+
+    return redirect("admin_panel:wms_product_list")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -769,17 +1075,27 @@ def wms_product_list(request: HttpRequest) -> HttpResponse:
 
 @admin_required
 def wms_order_list(request: HttpRequest) -> HttpResponse:
-    """Обзорный список заказов с фильтрацией по статусу."""
+    """Обзорный список заказов с фильтрацией и сортировкой."""
+    from core.sorting import apply_ordering
     from picking.models import Order, OrderStatus
 
     q = (request.GET.get("q") or "").strip()
     status_filter = request.GET.get("status", "")
 
-    qs = Order.objects.select_related("created_by").order_by("-id")
+    qs = Order.objects.select_related("created_by")
     if q:
         qs = qs.filter(Q(number__icontains=q) | Q(customer_name__icontains=q))
     if status_filter:
         qs = qs.filter(status=status_filter)
+
+    qs, sort, order = apply_ordering(qs, request, {
+        "number":   "number",
+        "customer": "customer_name",
+        "status":   "status",
+        "source":   "source",
+        "created":  "created_at",
+        "creator":  "created_by__username",
+    }, default="created", default_order="desc")
 
     export_resp = dispatch_export(
         request, qs, _ORDER_EXPORT_COLUMNS,
@@ -792,6 +1108,8 @@ def wms_order_list(request: HttpRequest) -> HttpResponse:
     return render(request, "admin_panel/wms/orders/list.html", {
         "page_obj": page_obj,
         "q": q,
+        "sort": sort,
+        "order": order,
         "status_filter": status_filter,
         "status_choices": OrderStatus.choices,
         "total": qs.count(),
@@ -804,14 +1122,15 @@ def wms_order_list(request: HttpRequest) -> HttpResponse:
 
 @admin_required
 def wms_stock_list(request: HttpRequest) -> HttpResponse:
-    """Обзор остатков с поиском."""
+    """Обзор остатков с поиском и сортировкой."""
+    from core.sorting import apply_ordering
     from inventory.models import Stock
 
     q = (request.GET.get("q") or "").strip()
     qs = Stock.objects.select_related(
         "product", "storage_location", "storage_location__zone",
         "storage_location__zone__warehouse",
-    ).order_by("product__internal_sku")
+    )
 
     if q:
         qs = qs.filter(
@@ -820,10 +1139,21 @@ def wms_stock_list(request: HttpRequest) -> HttpResponse:
             | Q(storage_location__code__icontains=q)
         )
 
+    qs, sort, order = apply_ordering(qs, request, {
+        "sku":      "product__internal_sku",
+        "name":     "product__name",
+        "location": "storage_location__code",
+        "qty":      "qty_available",
+        "reserved": "qty_reserved",
+        "batch":    "batch_no",
+    }, default="product__internal_sku", default_order="asc")
+
     page_obj = _paginate(request, qs, per_page=30)
     return render(request, "admin_panel/wms/stock/list.html", {
         "page_obj": page_obj,
         "q": q,
+        "sort": sort,
+        "order": order,
         "total": qs.count(),
     })
 
@@ -835,21 +1165,33 @@ def wms_stock_list(request: HttpRequest) -> HttpResponse:
 @admin_required
 def wms_receiving_list(request: HttpRequest) -> HttpResponse:
     """Обзор документов приёмки."""
+    from core.sorting import apply_ordering
     from receiving.models import Receiving, ReceivingStatus
 
     q = (request.GET.get("q") or "").strip()
     status_filter = request.GET.get("status", "")
 
-    qs = Receiving.objects.select_related("created_by", "warehouse").order_by("-id")
+    qs = Receiving.objects.select_related("created_by", "warehouse")
     if q:
         qs = qs.filter(Q(number__icontains=q) | Q(supplier_name__icontains=q))
     if status_filter:
         qs = qs.filter(status=status_filter)
 
+    qs, sort, order = apply_ordering(qs, request, {
+        "number":   "number",
+        "supplier": "supplier_name",
+        "status":   "status",
+        "warehouse": "warehouse__name",
+        "creator":  "created_by__username",
+        "created":  "created_at",
+    }, default="created", default_order="desc")
+
     page_obj = _paginate(request, qs, per_page=25)
     return render(request, "admin_panel/wms/receivings/list.html", {
         "page_obj": page_obj,
         "q": q,
+        "sort": sort,
+        "order": order,
         "status_filter": status_filter,
         "status_choices": ReceivingStatus.choices,
         "total": qs.count(),
@@ -862,7 +1204,8 @@ def wms_receiving_list(request: HttpRequest) -> HttpResponse:
 
 @admin_required
 def wms_task_list(request: HttpRequest) -> HttpResponse:
-    """Обзор задач с фильтрацией."""
+    """Обзор задач с фильтрацией и сортировкой."""
+    from core.sorting import apply_ordering
     from tasks.models import Task, TaskPriority, TaskStatus, TaskType
 
     q = (request.GET.get("q") or "").strip()
@@ -870,7 +1213,7 @@ def wms_task_list(request: HttpRequest) -> HttpResponse:
     type_filter = request.GET.get("task_type", "")
     priority_filter = request.GET.get("priority", "")
 
-    qs = Task.objects.select_related("assigned_to", "created_by").order_by("-created_at")
+    qs = Task.objects.select_related("assigned_to", "created_by")
     if q:
         qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
     if status_filter:
@@ -880,10 +1223,23 @@ def wms_task_list(request: HttpRequest) -> HttpResponse:
     if priority_filter:
         qs = qs.filter(priority=priority_filter)
 
+    qs, sort, order = apply_ordering(qs, request, {
+        "title":    "title",
+        "type":     "task_type",
+        "status":   "status",
+        "priority": "priority",
+        "assignee": "assigned_to__username",
+        "creator":  "created_by__username",
+        "created":  "created_at",
+        "due":      "due_date",
+    }, default="created", default_order="desc")
+
     page_obj = _paginate(request, qs, per_page=25)
     return render(request, "admin_panel/wms/tasks/list.html", {
         "page_obj": page_obj,
         "q": q,
+        "sort": sort,
+        "order": order,
         "status_filter": status_filter,
         "type_filter": type_filter,
         "priority_filter": priority_filter,

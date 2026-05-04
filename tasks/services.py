@@ -101,7 +101,8 @@ class TaskService:
             description=f"Отгрузить заказ клиенту {order.customer_name}",
             order=order,
             status=TaskStatus.PENDING,
-            priority=TaskPriority.HIGH,
+            priority=getattr(order, "priority", TaskPriority.HIGH) or TaskPriority.HIGH,
+            due_date=getattr(order, "shipping_due_at", None),
             created_by=created_by,
         )
 

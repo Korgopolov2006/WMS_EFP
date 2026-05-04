@@ -171,8 +171,18 @@
           <div class="kv__v">{{ order.customer_name }}</div>
           {% if order.customer_phone %}<div class="hint">Телефон: {{ order.customer_phone }}</div>{% endif %}
           {% if order.customer_email %}<div class="hint">Email: {{ order.customer_email }}</div>{% endif %}
+          <div class="hint">Важность: {{ order.get_priority_display }}</div>
+          {% if order.shipping_due_at %}<div class="hint">Срок отгрузки: {{ order.shipping_due_at|date:"d.m.Y H:i" }}</div>{% endif %}
           {% if order.window_number %}<div class="hint">Окно выдачи: {{ order.window_number }}</div>{% endif %}
         </div>
+        {% if order.note %}
+          <div class="toast toast--warning">
+            <div>
+              <div class="toast__title">Комментарий к заказу</div>
+              <div class="hint">{{ order.note|linebreaksbr }}</div>
+            </div>
+          </div>
+        {% endif %}
 
         {% if can_confirm %}
           <form method="post">

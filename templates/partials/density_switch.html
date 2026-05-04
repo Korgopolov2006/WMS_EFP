@@ -1,0 +1,29 @@
+{% comment %}
+Переключатель плотности таблицы. Использовать внутри .data-table__toolbar.
+JS-обработчик уже подключён в static/js/app.js (data-density-set).
+{% endcomment %}
+<div class="data-table__density" role="group" aria-label="Плотность строк таблицы">
+  <button type="button" data-density-set="compact" aria-pressed="false"
+          title="Компактный вид — больше строк на экране, меньше отступы"
+          aria-label="Компактный вид">
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="7" x2="13" y2="7"/>
+      <line x1="3" y1="10" x2="13" y2="10"/><line x1="3" y1="12" x2="13" y2="12"/>
+    </svg>
+  </button>
+  <button type="button" data-density-set="normal" aria-pressed="true"
+          title="Обычный вид — стандартная плотность строк"
+          aria-label="Обычный вид">
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <line x1="3" y1="5" x2="13" y2="5"/><line x1="3" y1="9" x2="13" y2="9"/>
+      <line x1="3" y1="13" x2="13" y2="13"/>
+    </svg>
+  </button>
+  <button type="button" data-density-set="comfortable" aria-pressed="false"
+          title="Просторный вид — больше места для каждой строки, меньше строк на экране"
+          aria-label="Просторный вид">
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="12" x2="13" y2="12"/>
+    </svg>
+  </button>
+</div>

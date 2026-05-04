@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} · WMS{% endblock %}
+
+{% block content %}
+<div class="page">
+  <header class="page__header">
+    <div>
+      <div class="breadcrumbs mb-1">
+        <a href="{% url 'dashboard' %}">Дашборд</a>
+        <span class="breadcrumbs__sep">/</span>
+        <a href="{% url 'task_list' %}">Задачи</a>
+        <span class="breadcrumbs__sep">/</span>
+        <span class="breadcrumbs__current">Новая задача</span>
+      </div>
+      <h1 class="page__title">Новая задача</h1>
+      <p class="page__subtitle">
+        {% if is_admin_user %}
+          Начальник может назначить задачу сотруднику или оставить её в общей очереди.
+        {% else %}
+          Эта задача будет создана сразу на вас и появится в разделе «Мои задачи».
+        {% endif %}
+      </p>
+    </div>
+    <div class="page__actions">
+      <a class="btn btn--ghost" href="{% url 'task_list' %}">← К списку</a>
+    </div>
+  </header>
+
+  <section class="card card--glass card--lg">
+    <div class="card__header">
+      <h2 class="h3">Описание задачи</h2>
+    </div>
+    <div class="card__body">
+      <form method="post" class="form stack">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+          <div class="toast toast--danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        {% for field in form %}
+          {% if not field.is_hidden %}
+            <label class="field">
+              <span class="field__label">{{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}</span>
+              {{ field }}
+              {% if field.name == "assigned_to" %}
+                <span class="hint">Если оставить пустым, задачу сможет взять подходящий сотрудник через «Взять следующую задачу».</span>
+              {% elif field.name == "task_type" %}
+                <span class="hint">Тип задачи определяет, каким ролям она доступна.</span>
+              {% endif %}
+              {% if field.errors %}
+                <span class="hint text-danger">{{ field.errors }}</span>
+              {% endif %}
+            </label>
+          {% else %}
+            {{ field }}
+          {% endif %}
+        {% endfor %}
+
+        <div class="row row--wrap">
+          <button type="submit" class="btn btn--primary">Создать задачу</button>
+          <a class="btn btn--ghost" href="{% url 'task_list' %}">Отмена</a>
+        </div>
+      </form>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -30,13 +30,24 @@
 
       <div class="grid grid--2">
         {% for field in form %}
-          <label class="field">
+          <label class="field {% if field.name == 'note' %}grid--full{% endif %}" {% if field.name == 'note' %}style="grid-column:1 / -1;"{% endif %}>
             <span class="field__label">
               {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
             </span>
             {{ field }}
             {% if field.help_text %}
               <span class="field__hint">{{ field.help_text }}</span>
+            {% endif %}
+            {% if field.name == "source" %}
+              <span class="field__hint">Для обычного заказа выбирайте «Вручную в WMS» или «Звонок клиента».</span>
+            {% elif field.name == "external_id" %}
+              <span class="field__hint">Это не ID из WMS, а номер заказа в другой системе. Например, номер заказа на сайте или маркетплейсе.</span>
+            {% elif field.name == "priority" %}
+              <span class="field__hint">Срочные и важные заказы поднимут задачи подбора и отгрузки выше в очереди.</span>
+            {% elif field.name == "shipping_due_at" %}
+              <span class="field__hint">Если срок близко или прошёл, исполнитель увидит это в задаче.</span>
+            {% elif field.name == "note" %}
+              <span class="field__hint">Этот комментарий увидят сотрудники подбора и отгрузки.</span>
             {% endif %}
             {% if field.errors %}
               <span class="field__error">{{ field.errors|join:"; " }}</span>
@@ -57,4 +68,24 @@
     </div>
   </form>
 </div>
+
+<script>
+  (function explainExternalOrderId() {
+    const source = document.getElementById('id_source');
+    const external = document.getElementById('id_external_id');
+    if (!source || !external) return;
+
+    const manualSources = new Set(['MANUAL', 'PHONE']);
+    const update = () => {
+      const isManual = manualSources.has(source.value);
+      external.placeholder = isManual
+        ? 'Можно оставить пустым'
+        : 'Номер заказа в источнике, например SITE-1042';
+      external.closest('.field')?.classList.toggle('is-muted', isManual);
+    };
+
+    source.addEventListener('change', update);
+    update();
+  })();
+</script>
 {% endblock %}

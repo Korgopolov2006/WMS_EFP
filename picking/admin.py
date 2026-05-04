@@ -10,6 +10,8 @@ class OrderAdmin(admin.ModelAdmin):
         "number",
         "customer_name",
         "status",
+        "priority",
+        "shipping_due_at",
         "source",
         "confirmed_at",
         "picked_at",
@@ -17,14 +19,14 @@ class OrderAdmin(admin.ModelAdmin):
         "created_by",
         "created_at",
     ]
-    list_filter = ["status", "source", "created_at", "confirmed_at", "picked_at", "shipped_at"]
+    list_filter = ["status", "priority", "source", "created_at", "shipping_due_at", "confirmed_at", "picked_at", "shipped_at"]
     search_fields = ["number", "customer_name", "customer_phone", "customer_email", "external_id"]
     readonly_fields = ["created_at", "updated_at", "status_display"]
     autocomplete_fields = ["created_by", "picked_by"]
     date_hierarchy = "created_at"
     fieldsets = (
-        ("Основная информация", {"fields": ("number", "status", "status_display", "source", "external_id")}),
-        ("Клиент", {"fields": ("customer_name", "customer_phone", "customer_email")}),
+        ("Основная информация", {"fields": ("number", "status", "status_display", "priority", "shipping_due_at", "source", "external_id")}),
+        ("Клиент", {"fields": ("customer_name", "customer_phone", "customer_email", "note")}),
         ("Временные метки", {"fields": ("confirmed_at", "picked_at", "shipped_at")}),
         ("Выдача", {"fields": ("reserved_at_window", "window_number")}),
         ("Исполнители", {"fields": ("created_by", "picked_by")}),
@@ -65,14 +67,14 @@ class OrderLineAdmin(admin.ModelAdmin):
 
 @admin.register(PickingTask)
 class PickingTaskAdmin(admin.ModelAdmin):
-    list_display = ["order", "zone_type_code", "status", "assigned_to", "started_at", "completed_at", "created_at"]
-    list_filter = ["status", "zone_type_code", "created_at", "started_at", "completed_at"]
+    list_display = ["order", "zone_type_code", "status", "priority", "due_date", "assigned_to", "started_at", "completed_at", "created_at"]
+    list_filter = ["status", "priority", "zone_type_code", "due_date", "created_at", "started_at", "completed_at"]
     search_fields = ["order__number", "assigned_to__username"]
     readonly_fields = ["created_at", "updated_at", "status_display"]
     autocomplete_fields = ["order", "assigned_to"]
     date_hierarchy = "created_at"
     fieldsets = (
-        ("Основная информация", {"fields": ("order", "zone_type_code", "status", "status_display")}),
+        ("Основная информация", {"fields": ("order", "zone_type_code", "status", "status_display", "priority", "due_date")}),
         ("Исполнитель", {"fields": ("assigned_to",)}),
         ("Временные метки", {"fields": ("started_at", "completed_at")}),
         ("Системные", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),

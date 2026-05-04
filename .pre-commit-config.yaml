@@ -1,4 +1,4 @@
-repos:
+фrepos:
   - repo: https://github.com/psf/black
     rev: 23.0.0
     hooks:

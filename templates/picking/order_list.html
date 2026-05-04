@@ -79,9 +79,29 @@
           <tbody>
             {% for order in orders %}
               <tr>
-                <td><strong>{{ order.number }}</strong></td>
-                <td>{{ order.customer_name|default:"—" }}</td>
-                <td class="muted">{{ order.customer_phone|default:"—" }}</td>
+                <td>
+                  <a href="{% url 'order_detail' order.pk %}"
+                     style="text-decoration:none;color:var(--brand);font-weight:600;"
+                     title="Открыть карточку заказа">
+                    {{ order.number }}
+                  </a>
+                </td>
+                <td>
+                  {% if order.customer_name %}
+                    <a href="?q={{ order.customer_name|urlencode }}"
+                       style="text-decoration:none;color:var(--text);"
+                       title="Все заказы клиента «{{ order.customer_name }}»">
+                      {{ order.customer_name }}
+                    </a>
+                  {% else %}<span class="muted">—</span>{% endif %}
+                </td>
+                <td class="muted">
+                  {% if order.customer_phone %}
+                    <a href="tel:{{ order.customer_phone }}" style="color:var(--text-2);text-decoration:none;">
+                      {{ order.customer_phone }}
+                    </a>
+                  {% else %}—{% endif %}
+                </td>
                 <td class="muted">{{ order.external_id|default:"—" }}</td>
                 <td>
                   {% include "partials/status_badge.html" with code=order.status label=order.get_status_display %}

@@ -23,6 +23,7 @@
   let modalTarget = null; // Object for modal actions
   let isDraggingObject = false;
   let dragStartPos = new THREE.Vector3();
+  let moveDraft = null;
   let savePositionTimeout = null; // Debounce для сохранения позиции
   let wallsVisible = true;
   let wallsTransparent = false;
@@ -42,7 +43,7 @@
         hotkeysPanel.style.display = 'none';
       }
       // Disable all edit buttons
-      document.querySelectorAll('.tool-btn, #btn-finish-layout, #btn-save-object, #btn-delete-object').forEach(btn => {
+      document.querySelectorAll('.tool-btn, #btn-finish-layout, #btn-save-object, #btn-delete-object, #btn-start-move-object, #btn-save-position-object, #btn-cancel-move-object').forEach(btn => {
         if (btn) {
           btn.disabled = true;
           btn.style.opacity = '0.5';
@@ -55,7 +56,7 @@
         hotkeysPanel.style.display = 'block';
       }
       // Enable all edit buttons
-      document.querySelectorAll('.tool-btn, #btn-finish-layout, #btn-save-object, #btn-delete-object').forEach(btn => {
+      document.querySelectorAll('.tool-btn, #btn-finish-layout, #btn-save-object, #btn-delete-object, #btn-start-move-object, #btn-save-position-object, #btn-cancel-move-object').forEach(btn => {
         if (btn) {
           btn.disabled = false;
           btn.style.opacity = '1';
@@ -72,6 +73,9 @@
   // Grid settings
   const GRID_SIZE = 1.0;
   const GRID_DIVISIONS = 50;
+  const LAYOUT_CLOSE_DISTANCE = 1.25;
+  const LAYOUT_AXIS_SNAP_DISTANCE = 0.35;
+  const LAYOUT_MIN_SEGMENT_LENGTH = 0.35;
 
   // Object type defaults
   const OBJECT_DEFAULTS = {
@@ -80,6 +84,77 @@
     CELL: { width: 0.5, depth: 0.5, height: 0.5, color: 0x2dd4bf },
     FLOOR: { width: 2, depth: 2, height: 0.1, color: 0x94a3b8 }
   };
+  const SHELF_LEVEL_HEIGHTS = [0.35, 1.1, 1.85];
+  const COLLISION_OBJECT_TYPES = new Set(['RACK', 'SHELF', 'CELL', 'FLOOR']);
+
+  function createWarehouseFloorTexture(seed = 11) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#9aa3ae';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    let value = seed >>> 0;
+    const next = () => {
+      value = (value * 1664525 + 1013904223) >>> 0;
+      return value / 4294967296;
+    };
+
+    for (let i = 0; i < 1600; i++) {
+      const shade = Math.floor(120 + next() * 70);
+      ctx.fillStyle = `rgba(${shade},${shade + 4},${shade + 8},${0.025 + next() * 0.055})`;
+      ctx.fillRect(next() * 512, next() * 512, 1 + next() * 4, 1 + next() * 4);
+    }
+
+    ctx.strokeStyle = 'rgba(255,255,255,.08)';
+    ctx.lineWidth = 2;
+    for (let x = 0; x <= 512; x += 128) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 512);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= 512; y += 128) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(512, y);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(34,42,58,.16)';
+    ctx.lineWidth = 1;
+    [128, 256, 384].forEach((line) => {
+      ctx.beginPath();
+      ctx.moveTo(line + 0.5, 0);
+      ctx.lineTo(line + 0.5, 512);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, line + 0.5);
+      ctx.lineTo(512, line + 0.5);
+      ctx.stroke();
+    });
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(8, 8);
+    texture.anisotropy = renderer && renderer.capabilities ? renderer.capabilities.getMaxAnisotropy() : 1;
+    if (THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }
+
+  function createWarehouseFloorMaterial() {
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xe8ecef,
+      map: createWarehouseFloorTexture(),
+      roughness: 0.93,
+      metalness: 0.03,
+      side: THREE.DoubleSide,
+    });
+    material.userData.isWarehouseFloorMaterial = true;
+    return material;
+  }
 
   // Initialize
   function init() {
@@ -270,28 +345,44 @@
     }, 100);
     
     console.log('[Warehouse3D] Initialization complete');
+
+    // ── Экспортируем публичный API для модуля features ──
+    window.WAREHOUSE_3D = {
+      THREE: THREE,
+      get scene() { return scene; },
+      get camera() { return camera; },
+      get renderer() { return renderer; },
+      get controls() { return controls; },
+      get raycaster() { return raycaster; },
+      get storageObjects() { return storageObjects; },
+      get floorPoints() { return floorPoints; },
+      get wallsGroup() { return wallsGroup; },
+      get isEditMode() { return isEditMode; },
+      get selectedObject() { return selectedObject; },
+      selectObject: selectObject,
+      deselectObject: deselectObject,
+      setCameraView: setCameraView,
+      buildWalls: buildWalls,
+      onWindowResize: onWindowResize,
+      // Хук-точка: features.js может зарегистрировать onAfterRender
+      _hooks: { onAfterRender: [] },
+    };
+
+    // Триггерим событие готовности
+    document.dispatchEvent(new CustomEvent('warehouse3d:ready', { detail: window.WAREHOUSE_3D }));
   }
 
   function createFloor() {
     console.log('[Warehouse3D] Creating floor...');
     const floorGeometry = new THREE.PlaneGeometry(100, 100);
-    const floorMaterial = new THREE.MeshStandardMaterial({
-      color: 0x1a1f3a,
-      roughness: 0.8,
-      metalness: 0.2
-    });
+    const floorMaterial = createWarehouseFloorMaterial();
     floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+    floorMesh.name = 'warehouseFloor';
     floorMesh.rotation.x = -Math.PI / 2;
     floorMesh.receiveShadow = true;
     floorMesh.position.y = 0;
     scene.add(floorMesh);
     console.log('[Warehouse3D] Floor mesh added to scene');
-
-    // Grid helper
-    const gridHelper = new THREE.GridHelper(100, 100, 0x2a2f4a, 0x1a1f3a);
-    gridHelper.position.y = 0.01; // Slightly above floor
-    scene.add(gridHelper);
-    console.log('[Warehouse3D] Grid helper added to scene');
     console.log('[Warehouse3D] Scene children count:', scene.children.length);
   }
 
@@ -491,8 +582,29 @@
     // Object properties
     const saveBtn = document.getElementById('btn-save-object');
     const deleteBtn = document.getElementById('btn-delete-object');
+    const startMoveBtn = document.getElementById('btn-start-move-object');
+    const savePositionBtn = document.getElementById('btn-save-position-object');
+    const cancelMoveBtn = document.getElementById('btn-cancel-move-object');
     if (saveBtn) saveBtn.addEventListener('click', saveCurrentObject);
     if (deleteBtn) deleteBtn.addEventListener('click', deleteCurrentObject);
+    if (startMoveBtn) startMoveBtn.addEventListener('click', startObjectMove);
+    if (savePositionBtn) savePositionBtn.addEventListener('click', saveObjectMove);
+    if (cancelMoveBtn) cancelMoveBtn.addEventListener('click', cancelObjectMove);
+
+    // Кнопки/поле вращения
+    const rotCcw = document.getElementById('btn-rotate-ccw');
+    const rotCw = document.getElementById('btn-rotate-cw');
+    const rotInput = document.getElementById('obj-rotation');
+    if (rotCcw) rotCcw.addEventListener('click', (e) => { e.preventDefault(); rotateSelectedObject(-15); });
+    if (rotCw)  rotCw.addEventListener('click',  (e) => { e.preventDefault(); rotateSelectedObject(15); });
+    if (rotInput) {
+      rotInput.addEventListener('change', () => {
+        if (!selectedObject) return;
+        const v = parseFloat(rotInput.value) || 0;
+        const delta = v - (selectedObject.rotation || 0);
+        rotateSelectedObject(delta);
+      });
+    }
 
     // Warehouse selector
     const warehouseSelector = document.getElementById('warehouse-selector');
@@ -522,6 +634,7 @@
     
     // Clear layout button
     const clearLayoutBtn = document.getElementById('btn-clear-layout');
+    const clearObjectsBtn = document.getElementById('btn-clear-objects');
     const clearConfirmDiv = document.getElementById('clear-layout-confirm');
     const clearConfirmInput = document.getElementById('clear-confirm-input');
     const confirmClearBtn = document.getElementById('btn-confirm-clear');
@@ -539,6 +652,10 @@
       });
       
       confirmClearBtn.addEventListener('click', clearLayout);
+    }
+
+    if (clearObjectsBtn) {
+      clearObjectsBtn.addEventListener('click', deleteAllStorageObjects);
     }
     
     // Wall controls
@@ -793,18 +910,24 @@
     if (startBtn) startBtn.style.display = 'none';
     if (createBtn) createBtn.style.display = 'none';
   }
+
+  function updateLayoutControls() {
+    const finishBtn = document.getElementById('btn-finish-layout');
+    if (finishBtn) finishBtn.disabled = floorPoints.length < 3;
+  }
   
   function createWarehouseBySize() {
     const width = parseFloat(document.getElementById('warehouse-width').value) || 10;
     const length = parseFloat(document.getElementById('warehouse-length').value) || 10;
     const height = parseFloat(document.getElementById('warehouse-height').value) || 3;
-    
+    const clearChk = document.getElementById('warehouse-clear-existing');
+    const clearExisting = clearChk && clearChk.checked;
+
     if (width < 1 || length < 1 || height < 2) {
       alert('Пожалуйста, введите корректные размеры (ширина и длина от 1м, высота от 2м)');
       return;
     }
-    
-    // Create rectangular floor points
+
     const halfWidth = width / 2;
     const halfLength = length / 2;
     const floorPoints = [
@@ -813,58 +936,136 @@
       [halfWidth, halfLength],
       [-halfWidth, halfLength]
     ];
-    
-    // Save layout
-    fetch(config.urls.saveLayout, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCsrfToken()
-      },
-      body: JSON.stringify({ floor_points: floorPoints })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        hideModal('create-warehouse');
-        location.reload();
-      } else {
-        alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('Ошибка при создании склада');
-    });
+
+    // Если запросили очистку — сначала через import_layout (replace_objects: true), потом save_layout
+    const doRequest = clearExisting
+      ? fetch(config.urls.importLayout, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken()},
+          body: JSON.stringify({floor_points: floorPoints, objects: [], replace_objects: true}),
+        })
+      : fetch(config.urls.saveLayout, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken()},
+          body: JSON.stringify({floor_points: floorPoints}),
+        });
+
+    doRequest
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          hideModal('create-warehouse');
+          location.reload();
+        } else {
+          alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+        }
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        alert('Ошибка при создании склада');
+      });
   }
-  
+
   function clearLayout() {
-    if (!confirm('Вы уверены, что хотите полностью очистить разметку склада? Это действие нельзя отменить.')) {
+    const occupied = getObjectsWithStock();
+    if (occupied.length) {
+      alert(`Нельзя выполнить полный сброс: на ${occupied.length} объект(ах) есть товары. Сначала переместите или спишите товар.`);
       return;
     }
-    
-    fetch(config.urls.saveLayout, {
+    if (!confirm('Вы уверены, что хотите полностью очистить разметку склада? Это действие также удалит ВСЕ 3D-объекты склада. Это действие нельзя отменить.')) {
+      return;
+    }
+
+    // 1) Удаляем все 3D-объекты через import_layout (replace_objects: true)
+    //    с пустым массивом objects + потом отдельно очищаем floor_points
+    fetch(config.urls.importLayout, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCsrfToken()
-      },
-      body: JSON.stringify({ floor_points: [] })
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken()},
+      body: JSON.stringify({
+        floor_points: [],            // не трогаем floor_points здесь, очистим отдельно
+        objects: [],
+        replace_objects: true,       // ← деактивирует все StorageObject
+      }),
     })
-    .then(response => response.json())
+    .then(r => r.json())
+    .then(() => {
+      // 2) Теперь очищаем сами floor_points
+      return fetch(config.urls.saveLayout, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken()},
+        body: JSON.stringify({floor_points: []}),
+      });
+    })
+    .then(r => r.json())
     .then(data => {
       if (data.success) {
-        alert('Разметка склада очищена');
+        alert('Разметка склада и все 3D-объекты удалены');
         isEditMode = false;
         location.reload();
       } else {
         alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
       }
     })
-    .catch(error => {
-      console.error('Error:', error);
+    .catch(err => {
+      console.error('Error:', err);
       alert('Ошибка при очистке разметки');
     });
+  }
+
+  function deleteAllStorageObjects() {
+    if (!config.urls.importLayout) {
+      alert('Импорт layout недоступен, массовое удаление объектов невозможно');
+      return;
+    }
+
+    const objectCount = storageObjects.size;
+    if (!objectCount) {
+      alert('На складе нет 3D-объектов для удаления');
+      return;
+    }
+
+    const occupied = getObjectsWithStock();
+    if (occupied.length) {
+      alert(`Нельзя удалить все объекты: на ${occupied.length} объект(ах) есть товары. Сначала переместите или спишите товар.`);
+      return;
+    }
+
+    const confirmText = 'УДАЛИТЬ ОБЪЕКТЫ';
+    const typed = prompt(
+      `Будут удалены все 3D-объекты склада (${objectCount} шт.), но стены и контур склада останутся.\nДля подтверждения введите: ${confirmText}`,
+    );
+    if (typed !== confirmText) return;
+
+    fetch(config.urls.importLayout, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCsrfToken()},
+      body: JSON.stringify({
+        floor_points: floorPoints,
+        objects: [],
+        replace_objects: true,
+      }),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        alert('Все 3D-объекты удалены, разметка склада сохранена');
+        location.reload();
+      } else {
+        alert('Ошибка удаления объектов: ' + (data.error || 'Неизвестная ошибка'));
+      }
+    })
+    .catch(err => {
+      console.error('Error:', err);
+      alert('Ошибка при удалении объектов');
+    });
+  }
+
+  function getObjectsWithStock() {
+    return Array.from(storageObjects.values()).filter((obj) => (
+      obj && obj.mesh && obj.mesh.userData &&
+      Array.isArray(obj.mesh.userData.stocks) &&
+      obj.mesh.userData.stocks.length > 0
+    ));
   }
 
   function onCanvasClick(event) {
@@ -933,10 +1134,17 @@
       type: type,
       code: '',
       name: '',
-      position: { x: x, y: 0, z: z },
+      position: { x: x, y: type === 'SHELF' ? SHELF_LEVEL_HEIGHTS[0] : 0, z: z },
       size: { width: defaults.width, depth: defaults.depth, height: defaults.height },
       rotation: 0
     };
+
+    const initialMeshY = getInitialObjectMeshY(type, obj.position.y, obj.size.height);
+    const collision = checkCollisionAt(obj, x, z, initialMeshY);
+    if (collision) {
+      alert(`Нельзя разместить объект: пересечение с ${collision.code || collision.name || collision.type}`);
+      return;
+    }
 
     const createdObj = createStorageObject(obj);
     selectObject(createdObj);
@@ -950,10 +1158,9 @@
       console.log('[Warehouse3D] Control mode set to object for new object');
     }
     
-    // Включаем режим перетаскивания сразу после создания
-    isDraggingObject = true;
-    dragStartPos.copy(createdObj.mesh.position);
-    console.log('[Warehouse3D] Object created, ready for drag:', createdObj.type);
+    isDraggingObject = false;
+    setObjectStatus('Объект создан. Для изменения позиции нажмите «Переместить».');
+    console.log('[Warehouse3D] Object created safely:', createdObj.type);
     
     // Автоматически сохраняем новый объект на сервер
     if (createdObj && !createdObj.id) {
@@ -966,9 +1173,14 @@
 
   function onCanvasMouseMove(event) {
     updateMousePosition(event);
+
+    if (isLayoutMode && isEditMode && config.canEdit) {
+      updateLayoutGhost();
+      return;
+    }
     
     // Если перетаскиваем объект - обрабатываем перетаскивание
-    if (isDraggingObject && selectedObject && isEditMode && config.canEdit) {
+    if (isDraggingObject && selectedObject && moveDraft && moveDraft.object === selectedObject && isEditMode && config.canEdit) {
       if (controls) {
         controls.enabled = false;
       }
@@ -1022,21 +1234,25 @@
         
         if (obj) {
           selectObject(obj);
-          isDraggingObject = true;
-          dragStartPos.copy(obj.mesh.position);
-          controlMode = 'object'; // Устанавливаем режим объектов
-          console.log('[Warehouse3D] Started dragging object:', obj.id, 'Type:', obj.type);
+          if (moveDraft && moveDraft.object === obj) {
+            isDraggingObject = true;
+            dragStartPos.copy(obj.mesh.position);
+            controlMode = 'object';
+            console.log('[Warehouse3D] Started safe dragging object:', obj.id, 'Type:', obj.type);
+          } else {
+            setObjectStatus('Объект выбран. Нажмите «Переместить», чтобы включить безопасное перемещение.');
+          }
           return;
         }
       }
 
       // Check floor for dragging selected object
       const intersects = raycaster.intersectObjects([floorMesh], false);
-      if (intersects.length > 0 && selectedObject) {
+      if (intersects.length > 0 && selectedObject && moveDraft && moveDraft.object === selectedObject) {
         isDraggingObject = true;
         dragStartPos.copy(selectedObject.mesh.position);
-        controlMode = 'object'; // Устанавливаем режим объектов
-        console.log('[Warehouse3D] Started dragging selected object from floor');
+        controlMode = 'object';
+        console.log('[Warehouse3D] Started safe dragging selected object from floor');
       }
     }
     
@@ -1050,10 +1266,15 @@
   }
 
   function onCanvasMouseUp() {
+    // Сбросить визуальную подсветку коллизии у выбранного объекта
+    if (selectedObject) {
+      applyCollisionTint(selectedObject, false);
+    }
+
     isDragging = false;
     isDraggingObject = false;
     isPanning = false;
-    
+
     // Re-enable controls after drag
     if (controls && controlMode === 'camera') {
       controls.enabled = true;
@@ -1068,23 +1289,95 @@
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   }
 
-  function handleLayoutClick() {
-    raycaster.setFromCamera(mouse, camera);
-    const intersects = raycaster.intersectObjects([floorMesh], false);
-    
-    if (intersects.length > 0) {
-      const point = intersects[0].point;
-      const x = Math.round(point.x / GRID_SIZE) * GRID_SIZE;
-      const z = Math.round(point.z / GRID_SIZE) * GRID_SIZE;
+  function removeSceneObjectsByName(name) {
+    let found = scene.getObjectByName(name);
+    while (found) {
+      if (found.parent) found.parent.remove(found);
+      found = scene.getObjectByName(name);
+    }
+  }
 
-      floorPoints.push([x, z]);
-      updateLayoutPreview();
-      
-      const finishBtn = document.getElementById('btn-finish-layout');
-      if (finishBtn && floorPoints.length >= 3) {
-        finishBtn.disabled = false;
+  function distance2D(a, b) {
+    const dx = a[0] - b[0];
+    const dz = a[1] - b[1];
+    return Math.sqrt(dx * dx + dz * dz);
+  }
+
+  function normalizeLayoutPoint(rawX, rawZ) {
+    const snap = (window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.snapEnabled === 'function')
+      ? window.WAREHOUSE_3D.snapEnabled() : true;
+    let x = snap ? Math.round(rawX / GRID_SIZE) * GRID_SIZE : rawX;
+    let z = snap ? Math.round(rawZ / GRID_SIZE) * GRID_SIZE : rawZ;
+
+    if (floorPoints.length > 0) {
+      const prev = floorPoints[floorPoints.length - 1];
+      if (Math.abs(x - prev[0]) <= LAYOUT_AXIS_SNAP_DISTANCE) x = prev[0];
+      if (Math.abs(z - prev[1]) <= LAYOUT_AXIS_SNAP_DISTANCE) z = prev[1];
+    }
+
+    if (floorPoints.length >= 3) {
+      const first = floorPoints[0];
+      if (distance2D([x, z], first) <= LAYOUT_CLOSE_DISTANCE) {
+        x = first[0];
+        z = first[1];
       }
     }
+
+    return [x, z];
+  }
+
+  function getLayoutPointFromMouse() {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects([floorMesh], false);
+    if (!intersects.length) return null;
+    const point = intersects[0].point;
+    return normalizeLayoutPoint(point.x, point.z);
+  }
+
+  function addLayoutMarker(x, z, index, isClosing = false, isGhost = false) {
+    const markerGeometry = new THREE.SphereGeometry(isClosing ? 0.16 : 0.1, 12, 12);
+    const markerMaterial = new THREE.MeshBasicMaterial({
+      color: isClosing ? 0x22c55e : (isGhost ? 0xf59e0b : 0x2dd4bf),
+      transparent: isGhost,
+      opacity: isGhost ? 0.75 : 1,
+    });
+    const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+    marker.position.set(x, 0.05, z);
+    marker.name = 'layoutPreview';
+    marker.userData.layoutIndex = index;
+    scene.add(marker);
+  }
+
+  function handleLayoutClick() {
+    const layoutPoint = getLayoutPointFromMouse();
+    if (!layoutPoint) return;
+
+    const [x, z] = layoutPoint;
+
+    if (floorPoints.length > 0) {
+      const prev = floorPoints[floorPoints.length - 1];
+      if (distance2D([x, z], prev) < LAYOUT_MIN_SEGMENT_LENGTH) {
+        return;
+      }
+    }
+
+    if (floorPoints.length >= 3 && distance2D([x, z], floorPoints[0]) < 0.001) {
+      finishLayout();
+      return;
+    }
+
+    if (!floorPoints.some(([px, pz]) => px === x && pz === z)) {
+      floorPoints.push([x, z]);
+      updateLayoutPreview();
+      updateLayoutControls();
+    }
+  }
+
+  function undoLastLayoutPoint() {
+    if (!isLayoutMode || !floorPoints.length) return;
+    floorPoints.pop();
+    updateLayoutPreview();
+    updateLayoutControls();
   }
 
   function handleObjectClick() {
@@ -1194,6 +1487,194 @@
     }
   }
 
+  function getDefaultMeshY(obj) {
+    if (!obj || !obj.size) return 0;
+    if (obj.type === 'RACK') return obj.position && obj.position.y !== undefined ? obj.position.y : 0;
+    if (obj.type === 'SHELF') return obj.position && obj.position.y !== undefined ? obj.position.y : SHELF_LEVEL_HEIGHTS[0];
+    return (obj.position && obj.position.y !== undefined ? obj.position.y : 0) + obj.size.height / 2;
+  }
+
+  function getObjectBoundsAt(obj, xOverride, zOverride, meshYOverride, padding = 0) {
+    const meshPosition = obj.mesh ? obj.mesh.position : null;
+    const x = xOverride !== undefined ? xOverride : (meshPosition ? meshPosition.x : (obj.position ? obj.position.x : 0));
+    const z = zOverride !== undefined ? zOverride : (meshPosition ? meshPosition.z : (obj.position ? obj.position.z : 0));
+    const meshY = meshYOverride !== undefined ? meshYOverride : (meshPosition ? meshPosition.y : getDefaultMeshY(obj));
+    const halfWidth = obj.size.width / 2 + padding;
+    const halfDepth = obj.size.depth / 2 + padding;
+
+    let minY;
+    let maxY;
+    if (obj.type === 'RACK') {
+      minY = meshY - padding;
+      maxY = meshY + obj.size.height + padding;
+    } else {
+      minY = meshY - obj.size.height / 2 - padding;
+      maxY = meshY + obj.size.height / 2 + padding;
+    }
+
+    return {
+      minX: x - halfWidth,
+      maxX: x + halfWidth,
+      minZ: z - halfDepth,
+      maxZ: z + halfDepth,
+      minY,
+      maxY,
+    };
+  }
+
+  function boundsOverlap(a, b, includeY = true) {
+    const xzOverlap = !(a.maxX <= b.minX || b.maxX <= a.minX || a.maxZ <= b.minZ || b.maxZ <= a.minZ);
+    if (!xzOverlap) return false;
+    if (!includeY) return true;
+    return !(a.maxY <= b.minY || b.maxY <= a.minY);
+  }
+
+  /**
+   * Проверяет пересечение объекта в новой позиции.
+   * Для FLOOR блокируем совпадение по X/Z полностью: это занятое напольное место.
+   * Для остальных типов учитываем высоту, чтобы полки на разных уровнях могли существовать.
+   */
+  function checkCollisionAt(currentObj, x, z, meshYOverride) {
+    if (!currentObj || !currentObj.size || !COLLISION_OBJECT_TYPES.has(currentObj.type)) return null;
+    const padding = 0.05;
+    const currentBounds = getObjectBoundsAt(currentObj, x, z, meshYOverride, padding);
+
+    for (const [, other] of storageObjects.entries()) {
+      if (!other || other === currentObj) continue;
+      if (!other.size || !COLLISION_OBJECT_TYPES.has(other.type)) continue;
+
+      const otherBounds = getObjectBoundsAt(other, undefined, undefined, undefined, padding);
+      const planarOnly = currentObj.type === 'FLOOR' || other.type === 'FLOOR';
+      if (boundsOverlap(currentBounds, otherBounds, !planarOnly)) {
+        return other;
+      }
+    }
+    return null;
+  }
+
+  function getInitialObjectMeshY(type, positionY, height) {
+    if (type === 'RACK') return positionY || 0;
+    if (type === 'SHELF') return SHELF_LEVEL_HEIGHTS[0];
+    return (positionY || 0) + height / 2;
+  }
+
+  /** Перекрашивает объект в красный (коллизия) или возвращает обратно. */
+  function applyCollisionTint(obj, isBad) {
+    if (!obj || !obj.mesh) return;
+    const tint = isBad ? 0xff5555 : 0x666666;
+    const intensity = isBad ? 0.85 : 0.5;
+    setObjectEmissive(obj, tint, intensity);
+  }
+
+  function getObjectSnapshot(obj) {
+    return {
+      position: { ...obj.position },
+      rotation: obj.rotation || 0,
+      level: obj.level,
+      meshPosition: obj.mesh ? obj.mesh.position.clone() : null,
+      meshRotationY: obj.mesh ? obj.mesh.rotation.y : 0,
+    };
+  }
+
+  function restoreObjectSnapshot(obj, snapshot) {
+    if (!obj || !snapshot) return;
+    obj.position = { ...snapshot.position };
+    obj.rotation = snapshot.rotation || 0;
+    obj.level = snapshot.level;
+    if (obj.mesh && snapshot.meshPosition) {
+      obj.mesh.position.copy(snapshot.meshPosition);
+      obj.mesh.rotation.y = snapshot.meshRotationY || 0;
+    }
+    if (window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.refreshProductsOnObject === 'function' && obj.id) {
+      window.WAREHOUSE_3D.refreshProductsOnObject(obj.id);
+    }
+    updateObjectProperties();
+  }
+
+  function setObjectStatus(message, variant = 'muted') {
+    const status = document.getElementById('object-edit-status');
+    if (!status) return;
+    status.textContent = message || '';
+    status.style.color = variant === 'danger' ? '#dc2626' : (variant === 'ok' ? '#16a34a' : '');
+  }
+
+  function updateMoveButtons() {
+    const isMoving = Boolean(moveDraft && selectedObject && moveDraft.object === selectedObject);
+    const startBtn = document.getElementById('btn-start-move-object');
+    const saveBtn = document.getElementById('btn-save-position-object');
+    const cancelBtn = document.getElementById('btn-cancel-move-object');
+    if (startBtn) startBtn.disabled = !selectedObject || isMoving;
+    if (saveBtn) saveBtn.disabled = !isMoving || !moveDraft.dirty;
+    if (cancelBtn) cancelBtn.disabled = !isMoving;
+  }
+
+  function markObjectChanged(message = 'Есть несохранённые изменения') {
+    if (selectedObject) selectedObject.hasUnsavedChanges = true;
+    if (moveDraft && selectedObject && moveDraft.object === selectedObject) {
+      moveDraft.dirty = true;
+      setObjectStatus(message, 'muted');
+    } else {
+      setObjectStatus(message, 'muted');
+    }
+    updateMoveButtons();
+  }
+
+  function clearMoveDraft(message = '') {
+    if (moveDraft && moveDraft.object) {
+      moveDraft.object.hasUnsavedChanges = false;
+    }
+    moveDraft = null;
+    isDraggingObject = false;
+    updateMoveButtons();
+    setObjectStatus(message);
+  }
+
+  function startObjectMove() {
+    if (!selectedObject) {
+      alert('Сначала выберите объект склада');
+      return;
+    }
+    if (moveDraft && moveDraft.object !== selectedObject) {
+      cancelObjectMove();
+    }
+    moveDraft = {
+      object: selectedObject,
+      snapshot: getObjectSnapshot(selectedObject),
+      dirty: false,
+    };
+    controlMode = 'object';
+    if (controls) controls.enabled = false;
+    updateMoveButtons();
+    setObjectStatus('Режим перемещения: перетащите объект мышью, затем сохраните позицию или отмените.');
+  }
+
+  function saveObjectMove() {
+    if (!selectedObject || !moveDraft || moveDraft.object !== selectedObject) return;
+    saveCurrentObject({ clearMoveAfterSave: true });
+  }
+
+  function cancelObjectMove() {
+    if (!moveDraft) return;
+    const draftObject = moveDraft.object;
+    restoreObjectSnapshot(draftObject, moveDraft.snapshot);
+    if (draftObject) draftObject.hasUnsavedChanges = false;
+    moveDraft = null;
+    isDraggingObject = false;
+    updateMoveButtons();
+    setObjectStatus('Перемещение отменено, объект вернулся на прежнее место.');
+  }
+
+  function rotateSelectedObject(deltaDegrees) {
+    if (!selectedObject || !selectedObject.mesh) return;
+    selectedObject.rotation = ((selectedObject.rotation || 0) + deltaDegrees) % 360;
+    if (selectedObject.rotation < 0) selectedObject.rotation += 360;
+    selectedObject.mesh.rotation.y = selectedObject.rotation * Math.PI / 180;
+    console.log('[Warehouse3D] Rotation:', selectedObject.rotation, 'deg');
+    const rotInput = document.getElementById('obj-rotation');
+    if (rotInput) rotInput.value = Math.round(selectedObject.rotation || 0);
+    markObjectChanged('Поворот изменён, нажмите «Сохранить изменения».');
+  }
+
   function handleObjectDrag() {
     if (!selectedObject) return;
 
@@ -1210,18 +1691,29 @@
       }
       
       // Обычное перетаскивание для всех остальных объектов
-      // Snap to grid
-      const x = Math.round(point.x / GRID_SIZE) * GRID_SIZE;
-      const z = Math.round(point.z / GRID_SIZE) * GRID_SIZE;
-      
+      // Snap to grid (учитываем настройку snap-toggle)
+      const snap = (window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.snapEnabled === 'function')
+        ? window.WAREHOUSE_3D.snapEnabled() : true;
+      const x = snap ? Math.round(point.x / GRID_SIZE) * GRID_SIZE : point.x;
+      const z = snap ? Math.round(point.z / GRID_SIZE) * GRID_SIZE : point.z;
+
       // Check if point is within warehouse bounds (if layout is defined)
       if (config.layoutDefined && floorPoints && floorPoints.length >= 3) {
         if (!isPointInPolygon(x, z, floorPoints)) {
-          // Point is outside warehouse, don't move
           return;
         }
       }
-      
+
+      // ── Проверка коллизий с другими объектами ──
+      const collision = checkCollisionAt(selectedObject, x, z);
+      if (collision) {
+        // Подсветить объект красным, не двигать
+        applyCollisionTint(selectedObject, true);
+        return;
+      } else {
+        applyCollisionTint(selectedObject, false);
+      }
+
       // Update position (keep Y)
       selectedObject.position.x = x;
       selectedObject.position.z = z;
@@ -1234,28 +1726,10 @@
         selectedObject.mesh.position.y = selectedObject.position.y + selectedObject.size.height / 2;
       }
       
-      // Сохраняем позицию при перетаскивании (debounce для производительности)
-      if (!savePositionTimeout && selectedObject && selectedObject.id) {
-        savePositionTimeout = setTimeout(() => {
-          if (selectedObject && selectedObject.id) {
-            saveCurrentObject();
-          }
-          savePositionTimeout = null;
-        }, 500);
-      }
+      markObjectChanged('Позиция изменена, но ещё не сохранена.');
       
       // Highlight during drag
-      if (selectedObject.mesh instanceof THREE.Group) {
-        selectedObject.mesh.traverse((child) => {
-          if (child instanceof THREE.Mesh && child.material) {
-            child.material.emissive = new THREE.Color(0x666666);
-            child.material.emissiveIntensity = 0.5;
-          }
-        });
-      } else if (selectedObject.mesh && selectedObject.mesh.material) {
-        selectedObject.mesh.material.emissive = new THREE.Color(0x666666);
-        selectedObject.mesh.material.emissiveIntensity = 0.5;
-      }
+      setObjectEmissive(selectedObject, 0x666666, 0.5);
     }
   }
   
@@ -1265,11 +1739,18 @@
       // Если нет разметки, обычное поведение
       const x = Math.round(point.x / GRID_SIZE) * GRID_SIZE;
       const z = Math.round(point.z / GRID_SIZE) * GRID_SIZE;
+      const collision = checkCollisionAt(selectedObject, x, z, selectedObject.position.y);
+      if (collision) {
+        applyCollisionTint(selectedObject, true);
+        return;
+      }
+      applyCollisionTint(selectedObject, false);
       selectedObject.position.x = x;
       selectedObject.position.z = z;
       selectedObject.mesh.position.x = x;
       selectedObject.mesh.position.z = z;
-      selectedObject.mesh.position.y = selectedObject.position.y + selectedObject.size.height / 2;
+      selectedObject.mesh.position.y = selectedObject.position.y;
+      markObjectChanged('Позиция полки изменена, но ещё не сохранена.');
       return;
     }
     
@@ -1320,31 +1801,27 @@
       
       // Высота (Y) может изменяться - используем текущую позицию мыши по Y
       // Но ограничиваем: не ниже пола, не выше стены
-      const minY = selectedObject.size.height / 2; // Пол
-      const maxY = 5.0; // Максимальная высота (можно настроить)
-      let y = selectedObject.mesh.position.y;
-      
-      // Если перетаскиваем по вертикали, обновляем Y
-      // (это можно определить по движению мыши, но для простоты оставляем текущий Y)
-      y = Math.max(minY, Math.min(maxY, y));
+      const y = Math.max(
+        SHELF_LEVEL_HEIGHTS[0],
+        Math.min(SHELF_LEVEL_HEIGHTS[SHELF_LEVEL_HEIGHTS.length - 1], selectedObject.mesh.position.y),
+      );
+
+      const collision = checkCollisionAt(selectedObject, x, z, y);
+      if (collision) {
+        applyCollisionTint(selectedObject, true);
+        return;
+      }
+      applyCollisionTint(selectedObject, false);
       
       // Обновляем позицию
       selectedObject.position.x = x;
       selectedObject.position.z = z;
-      selectedObject.position.y = y - selectedObject.size.height / 2;
+      selectedObject.position.y = y;
       selectedObject.mesh.position.x = x;
       selectedObject.mesh.position.z = z;
       selectedObject.mesh.position.y = y;
       
-      // Сохраняем позицию при перетаскивании (debounce)
-      if (!savePositionTimeout) {
-        savePositionTimeout = setTimeout(() => {
-          if (selectedObject && selectedObject.id) {
-            saveCurrentObject();
-          }
-          savePositionTimeout = null;
-        }, 500);
-      }
+      markObjectChanged('Позиция полки изменена, но ещё не сохранена.');
       
       // Поворачиваем полку лицом внутрь склада
       if (wallNormal) {
@@ -1354,10 +1831,7 @@
       }
       
       // Highlight during drag
-      if (selectedObject.mesh.material) {
-        selectedObject.mesh.material.emissive = new THREE.Color(0x666666);
-        selectedObject.mesh.material.emissiveIntensity = 0.5;
-      }
+      setObjectEmissive(selectedObject, 0x666666, 0.5);
     }
   }
   
@@ -1375,34 +1849,49 @@
     return inside;
   }
 
-  function updateLayoutPreview() {
-    // Remove old preview
-    if (scene.getObjectByName('layoutPreview')) {
-      scene.remove(scene.getObjectByName('layoutPreview'));
+  function updateLayoutGhost() {
+    const ghostPoint = getLayoutPointFromMouse();
+    updateLayoutPreview(ghostPoint);
+  }
+
+  function updateLayoutPreview(ghostPoint = null) {
+    removeSceneObjectsByName('layoutPreview');
+
+    const previewPoints = floorPoints.slice();
+    let isClosing = false;
+    if (ghostPoint && floorPoints.length > 0) {
+      const prev = floorPoints[floorPoints.length - 1];
+      if (distance2D(ghostPoint, prev) >= LAYOUT_MIN_SEGMENT_LENGTH) {
+        isClosing = floorPoints.length >= 3 && distance2D(ghostPoint, floorPoints[0]) < 0.001;
+        previewPoints.push(ghostPoint);
+      }
     }
 
-    if (floorPoints.length < 2) return;
+    if (previewPoints.length < 1) return;
 
-    const points = floorPoints.map(p => new THREE.Vector3(p[0], 0.01, p[1]));
-    if (floorPoints.length >= 3) {
-      points.push(points[0]); // Close the loop
+    const points = previewPoints.map(p => new THREE.Vector3(p[0], 0.01, p[1]));
+    if (previewPoints.length >= 3 && !ghostPoint) {
+      points.push(points[0]);
     }
 
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const material = new THREE.LineBasicMaterial({ color: 0x7c5cff, linewidth: 2 });
-    const line = new THREE.Line(geometry, material);
-    line.name = 'layoutPreview';
-    scene.add(line);
+    if (points.length >= 2) {
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const material = new THREE.LineBasicMaterial({
+        color: isClosing ? 0x22c55e : 0x7c5cff,
+        linewidth: 2,
+      });
+      const line = new THREE.Line(geometry, material);
+      line.name = 'layoutPreview';
+      scene.add(line);
+    }
 
-    // Add point markers
     floorPoints.forEach(([x, z], i) => {
-      const markerGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-      const markerMaterial = new THREE.MeshBasicMaterial({ color: 0x2dd4bf });
-      const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-      marker.position.set(x, 0.05, z);
-      marker.name = 'layoutPreview';
-      scene.add(marker);
+      addLayoutMarker(x, z, i, i === 0 && isClosing, false);
     });
+
+    if (ghostPoint && previewPoints.length > floorPoints.length) {
+      addLayoutMarker(ghostPoint[0], ghostPoint[1], previewPoints.length - 1, isClosing, true);
+    }
   }
 
   function finishLayout() {
@@ -1496,11 +1985,9 @@
       shape.lineTo(firstPoint[0], firstPoint[1]);
 
       const floorGeometry = new THREE.ShapeGeometry(shape);
-      const floorMaterial = new THREE.MeshStandardMaterial({
-        color: 0x1a1f3a,
-        side: THREE.DoubleSide
-      });
+      const floorMaterial = createWarehouseFloorMaterial();
       const newFloor = new THREE.Mesh(floorGeometry, floorMaterial);
+      newFloor.name = 'warehouseFloor';
       newFloor.rotation.x = -Math.PI / 2;
       newFloor.receiveShadow = true;
       scene.remove(floorMesh);
@@ -1671,24 +2158,10 @@
       });
       mesh = new THREE.Mesh(geometry, material);
       
-      // Добавляем свойство level для полок (0, 1, 2)
-      if (!objData.level) objData.level = 1; // По умолчанию уровень 1
-      
-      // Позиция полки зависит от уровня
-      const levelHeights = [0.3, 1.0, 1.7]; // Высоты для уровней 0, 1, 2
-      const currentLevel = objData.level !== undefined && objData.level !== null ? objData.level : 1;
-      const yOffset = levelHeights[currentLevel] || levelHeights[1];
-      
-      // Для полок: если position.y задан из базы, используем его напрямую
-      // Иначе вычисляем на основе уровня
-      let finalY;
-      if (objData.position.y !== undefined && objData.position.y !== null && objData.id) {
-        // Загружаем из базы - используем сохранённую позицию
-        finalY = objData.position.y;
-      } else {
-        // Новый объект или без позиции - вычисляем на основе уровня
-        finalY = yOffset;
-      }
+      let finalY = objData.position.y !== undefined && objData.position.y !== null
+        ? objData.position.y
+        : SHELF_LEVEL_HEIGHTS[1];
+      finalY = Math.max(SHELF_LEVEL_HEIGHTS[0], Math.min(SHELF_LEVEL_HEIGHTS[SHELF_LEVEL_HEIGHTS.length - 1], finalY));
       
       mesh.position.set(
         objData.position.x || 0,
@@ -1696,10 +2169,8 @@
         objData.position.z || 0
       );
       
-      // Сохраняем уровень в объекте
-      objData.level = currentLevel;
-      // Обновляем position.y для сохранения
-      objData.position.y = finalY - yOffset; // Сохраняем базовую позицию
+      objData.level = nearestShelfLevel(finalY);
+      objData.position.y = finalY;
       mesh.rotation.y = (objData.rotation || 0) * Math.PI / 180;
       
     } else {
@@ -1771,7 +2242,7 @@
       rotation: objData.rotation || 0,
       storageLocationId: locationId || null,
       mesh: mesh,
-      level: objData.level || (objData.type === 'SHELF' ? 1 : null) // Уровень для полок
+      level: objData.level || (objData.type === 'SHELF' ? nearestShelfLevel(objData.position.y || SHELF_LEVEL_HEIGHTS[1]) : null)
     };
 
     if (obj.id) {
@@ -1788,48 +2259,86 @@
   function changeShelfLevel(shelfObj, delta) {
     if (!shelfObj || shelfObj.type !== 'SHELF') return;
     
-    const currentLevel = shelfObj.level !== undefined ? shelfObj.level : 1;
-    const newLevel = Math.max(0, Math.min(2, currentLevel + delta));
+    const currentLevel = nearestShelfLevel(shelfObj.mesh.position.y);
+    const newLevel = Math.max(0, Math.min(SHELF_LEVEL_HEIGHTS.length - 1, currentLevel + delta));
     
     if (newLevel === currentLevel) {
       console.log('[Warehouse3D] Level unchanged:', currentLevel);
       return; // Уровень не изменился
     }
+
+    const newY = SHELF_LEVEL_HEIGHTS[newLevel];
+    const collision = checkCollisionAt(shelfObj, shelfObj.mesh.position.x, shelfObj.mesh.position.z, newY);
+    if (collision) {
+      applyCollisionTint(shelfObj, true);
+      alert(`Нельзя поднять/опустить полку: пересечение с ${collision.code || collision.name || collision.type}`);
+      return;
+    }
+    applyCollisionTint(shelfObj, false);
     
     shelfObj.level = newLevel;
-    
-    // Обновляем позицию полки по уровню
-    const levelHeights = [0.3, 1.0, 1.7]; // Высоты для уровней 0, 1, 2
-    const yOffset = levelHeights[newLevel];
-    
-    // Сохраняем базовую позицию (X, Z) и обновляем только Y
-    const baseY = shelfObj.position.y !== undefined ? shelfObj.position.y : 0;
-    shelfObj.mesh.position.y = baseY + yOffset;
-    shelfObj.position.y = baseY; // Сохраняем базовую позицию для сохранения в БД
+    shelfObj.mesh.position.y = newY;
+    shelfObj.position.y = shelfObj.mesh.position.y;
     
     console.log('[Warehouse3D] Shelf level changed from', currentLevel, 'to', newLevel, 'Y:', shelfObj.mesh.position.y);
-    
-    // Сохраняем изменения на сервер
-    saveCurrentObject();
+    markObjectChanged('Уровень полки изменён, нажмите «Сохранить изменения».');
+  }
+
+  function nearestShelfLevel(y) {
+    let bestIdx = 0;
+    let bestDist = Infinity;
+    SHELF_LEVEL_HEIGHTS.forEach((height, idx) => {
+      const dist = Math.abs((y || 0) - height);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = idx;
+      }
+    });
+    return bestIdx;
+  }
+
+  function forEachObjectMaterial(obj, callback) {
+    if (!obj || !obj.mesh) return;
+    const visitMesh = (mesh) => {
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      materials.forEach((material) => {
+        if (material && material.emissive) callback(material, mesh);
+      });
+    };
+    if (obj.mesh instanceof THREE.Group) {
+      obj.mesh.traverse((child) => {
+        if (child instanceof THREE.Mesh) visitMesh(child);
+      });
+      return;
+    }
+    if (obj.mesh instanceof THREE.Mesh) visitMesh(obj.mesh);
+  }
+
+  function setObjectEmissive(obj, colorHex, intensity) {
+    const color = new THREE.Color(colorHex);
+    forEachObjectMaterial(obj, (material) => {
+      material.emissive.copy(color);
+      material.emissiveIntensity = intensity;
+      material.needsUpdate = true;
+    });
+  }
+
+  function clearObjectEmissive(obj) {
+    forEachObjectMaterial(obj, (material) => {
+      material.emissive.setHex(0x000000);
+      material.emissiveIntensity = 0;
+      material.needsUpdate = true;
+    });
   }
 
   function selectObject(obj) {
+    if (moveDraft && moveDraft.object !== obj) {
+      cancelObjectMove();
+    }
     deselectObject();
     selectedObject = obj;
 
-    // Highlight (reset if was dragging)
-    // Для Group (стеллажи) нужно обрабатывать все дочерние элементы
-    if (obj.mesh instanceof THREE.Group) {
-      obj.mesh.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.material) {
-          child.material.emissive = new THREE.Color(0x444444);
-          child.material.emissiveIntensity = 0.3;
-        }
-      });
-    } else if (obj.mesh && obj.mesh.material) {
-      obj.mesh.material.emissive = new THREE.Color(0x444444);
-      obj.mesh.material.emissiveIntensity = 0.3;
-    }
+    setObjectEmissive(obj, 0x444444, 0.3);
 
     // Show properties panel
     const propsPanel = document.getElementById('object-properties');
@@ -1837,29 +2346,36 @@
       propsPanel.style.display = 'block';
       updateObjectProperties();
     }
+    updateMoveButtons();
+    setObjectStatus('Объект выбран. Для безопасного перемещения нажмите «Переместить».');
+    document.dispatchEvent(new CustomEvent('warehouse3d:object-selected', { detail: obj }));
   }
 
   function deselectObject() {
+    if (moveDraft && selectedObject && moveDraft.object === selectedObject) {
+      cancelObjectMove();
+    }
     if (selectedObject && selectedObject.mesh) {
-      // Для Group (стеллажи) нужно обрабатывать все дочерние элементы
-      if (selectedObject.mesh instanceof THREE.Group) {
-        selectedObject.mesh.traverse((child) => {
-          if (child instanceof THREE.Mesh && child.material) {
-            child.material.emissive = new THREE.Color(0x000000);
-            child.material.emissiveIntensity = 0;
-          }
-        });
-      } else if (selectedObject.mesh.material) {
-        selectedObject.mesh.material.emissive = new THREE.Color(0x000000);
-        selectedObject.mesh.material.emissiveIntensity = 0;
-      }
+      clearObjectEmissive(selectedObject);
     }
     selectedObject = null;
+    updateMoveButtons();
 
     const propsPanel = document.getElementById('object-properties');
     if (propsPanel) {
       propsPanel.style.display = 'none';
     }
+    document.dispatchEvent(new CustomEvent('warehouse3d:object-deselected'));
+  }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
   }
 
   function updateObjectProperties() {
@@ -1867,17 +2383,31 @@
 
     const codeInput = document.getElementById('obj-code');
     const nameInput = document.getElementById('obj-name');
+    const locationInput = document.getElementById('obj-storage-location');
     const widthInput = document.getElementById('obj-width');
     const depthInput = document.getElementById('obj-depth');
     const heightInput = document.getElementById('obj-height');
+    const rotationInput = document.getElementById('obj-rotation');
     const stockInfo = document.getElementById('object-stock-info');
     const stockList = document.getElementById('object-stock-list');
 
     if (codeInput) codeInput.value = selectedObject.code || '';
     if (nameInput) nameInput.value = selectedObject.name || '';
+    if (locationInput) {
+      const locations = config.storageLocations || [];
+      const current = selectedObject.storageLocationId ? String(selectedObject.storageLocationId) : '';
+      locationInput.innerHTML = '<option value="">Не привязано к WMS-локации</option>' +
+        locations.map(loc => {
+          const selected = String(loc.id) === current ? ' selected' : '';
+          const label = `${loc.label}${loc.name ? ' — ' + loc.name : ''}`;
+          return `<option value="${loc.id}"${selected}>${escapeHtml(label)}</option>`;
+        }).join('');
+    }
     if (widthInput) widthInput.value = selectedObject.size.width;
     if (depthInput) depthInput.value = selectedObject.size.depth;
     if (heightInput) heightInput.value = selectedObject.size.height;
+    if (rotationInput) rotationInput.value = Math.round(selectedObject.rotation || 0);
+    updateMoveButtons();
 
     // Show stock info if available
     if (selectedObject.mesh.userData.stocks && selectedObject.mesh.userData.stocks.length > 0) {
@@ -1893,20 +2423,41 @@
     }
   }
 
-  function saveCurrentObject() {
+  function saveCurrentObject(options = {}) {
     if (!selectedObject) return;
 
     const codeInput = document.getElementById('obj-code');
     const nameInput = document.getElementById('obj-name');
+    const locationInput = document.getElementById('obj-storage-location');
     const widthInput = document.getElementById('obj-width');
     const depthInput = document.getElementById('obj-depth');
     const heightInput = document.getElementById('obj-height');
 
+    const previousSize = { ...selectedObject.size };
+
     selectedObject.code = codeInput.value;
     selectedObject.name = nameInput.value;
+    selectedObject.storageLocationId = locationInput && locationInput.value ? parseInt(locationInput.value, 10) : null;
     selectedObject.size.width = parseFloat(widthInput.value) || 1;
     selectedObject.size.depth = parseFloat(depthInput.value) || 1;
     selectedObject.size.height = parseFloat(heightInput.value) || 1;
+
+    const collision = checkCollisionAt(
+      selectedObject,
+      selectedObject.mesh.position.x,
+      selectedObject.mesh.position.z,
+      selectedObject.mesh.position.y,
+    );
+    if (collision) {
+      selectedObject.size = previousSize;
+      if (widthInput) widthInput.value = previousSize.width;
+      if (depthInput) depthInput.value = previousSize.depth;
+      if (heightInput) heightInput.value = previousSize.height;
+      applyCollisionTint(selectedObject, true);
+      alert(`Нельзя сохранить объект: пересечение с ${collision.code || collision.name || collision.type}`);
+      return;
+    }
+    applyCollisionTint(selectedObject, false);
 
     // Update mesh (только для не-Group объектов)
     if (!(selectedObject.mesh instanceof THREE.Group)) {
@@ -1920,7 +2471,11 @@
         selectedObject.mesh.geometry.dispose();
       }
       selectedObject.mesh.geometry = newGeometry;
-      selectedObject.mesh.position.y = selectedObject.position.y + selectedObject.size.height / 2;
+      if (selectedObject.type === 'SHELF') {
+        selectedObject.mesh.position.y = selectedObject.position.y;
+      } else {
+        selectedObject.mesh.position.y = selectedObject.position.y + selectedObject.size.height / 2;
+      }
     }
 
     // Save to server
@@ -1942,6 +2497,7 @@
         depth: selectedObject.size.depth,
         height: selectedObject.size.height,
         rotation_y: selectedObject.rotation,
+        storage_location_id: selectedObject.storageLocationId,
         level: selectedObject.level || null // Сохраняем уровень для полок
       })
     })
@@ -1949,11 +2505,18 @@
     .then(data => {
       if (data.success) {
         console.log('[Warehouse3D] Object saved successfully:', data);
+        // Пересобрать товары на этом объекте, чтобы их размер совпал с новым размером
+        if (window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.refreshProductsOnObject === 'function' && selectedObject.id) {
+          window.WAREHOUSE_3D.refreshProductsOnObject(selectedObject.id);
+        }
         if (data.id) {
           // Если объект был новым, обновляем его ID
           if (!selectedObject.id) {
             const oldKey = selectedObject.mesh ? selectedObject.mesh.uuid : null;
             selectedObject.id = data.id;
+            if (data.object) {
+              selectedObject.storageLocationId = data.object.storageLocationId || null;
+            }
             if (oldKey) {
               storageObjects.delete(oldKey);
             }
@@ -1961,9 +2524,19 @@
             console.log('[Warehouse3D] Object ID assigned:', data.id);
           } else {
             // Обновляем существующий объект
+            if (data.object) {
+              selectedObject.storageLocationId = data.object.storageLocationId || null;
+            }
             storageObjects.set(selectedObject.id, selectedObject);
             console.log('[Warehouse3D] Object updated:', selectedObject.id);
           }
+        }
+        selectedObject.hasUnsavedChanges = false;
+        if (moveDraft && moveDraft.object === selectedObject) {
+          clearMoveDraft(options.clearMoveAfterSave ? 'Позиция сохранена.' : 'Изменения и позиция сохранены.');
+        } else {
+          updateMoveButtons();
+          setObjectStatus('Изменения сохранены.', 'ok');
         }
       } else {
         console.error('[Warehouse3D] Save error:', data.error);
@@ -1985,6 +2558,7 @@
     console.log('[Warehouse3D] Deleting object:', selectedObject.id, selectedObject.type);
     
     if (!selectedObject.id) {
+      if (!confirm('Удалить ещё не сохранённый объект со сцены?')) return;
       // Just remove from scene if not saved
       if (selectedObject.mesh) {
         scene.remove(selectedObject.mesh);
@@ -2003,7 +2577,11 @@
       return;
     }
 
-    // Удаление без подтверждения - сразу удаляем
+    const objectLabel = selectedObject.code || selectedObject.name || `${selectedObject.type} #${selectedObject.id}`;
+    if (!confirm(`Удалить объект «${objectLabel}»?\n\nТип: ${selectedObject.type}\nЭто действие нельзя отменить через интерфейс.`)) {
+      return;
+    }
+
     const deleteUrl = config.urls.deleteObject.replace('999999', String(selectedObject.id));
     console.log('[Warehouse3D] Sending DELETE request to:', deleteUrl, 'Object ID:', selectedObject.id);
     
@@ -2162,46 +2740,138 @@
   }
 
   function onKeyDown(event) {
-    // Проверяем, не вводит ли пользователь текст в поле ввода
+    // Если активен Picker mode — все hotkeys editor.js игнорируются (управляет features.js)
+    if (window.WAREHOUSE_3D && window.WAREHOUSE_3D.isPickerActive) {
+      return;
+    }
+    // Проверяем, не вводит ли пользователь текст в поле ввода / select
     const activeElement = document.activeElement;
-    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-      // Разрешаем только Escape и некоторые горячие клавиши даже в полях ввода
+    if (activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElement.tagName)) {
       if (event.key === 'Escape') {
         activeElement.blur();
       }
       return;
     }
+    // Если открыт help-overlay — Esc/?/h должны его закрыть
+    const helpOverlay = document.querySelector('.w3d-help-overlay:not([hidden])');
+    if (helpOverlay) {
+      if (event.key === 'Escape' || event.key === '?' || event.key === 'h' || event.key === 'H') {
+        event.preventDefault();
+        helpOverlay.hidden = true;
+        return;
+      }
+    }
+    console.log('[Warehouse3D] Key:', event.key, '| ctrl:', event.ctrlKey, '| editMode:', isEditMode, '| canEdit:', config.canEdit);
     
-    // Hotkeys only work in edit mode
+    // Hotkeys only work in edit mode (но в view-mode разрешены: камера + help + theme + minimap + picker)
     if (!isEditMode || !config.canEdit) {
-      // Only camera controls work in view mode
+      // Camera views
       if (['1', '2', '3'].includes(event.key)) {
-        switch(event.key) {
-          case '1':
-            setCameraView('top');
-            break;
-          case '2':
-            setCameraView('iso');
-            break;
-          case '3':
-            setCameraView('reset');
-            break;
+        if (event.key === '1') setCameraView('top');
+        else if (event.key === '2') setCameraView('iso');
+        else if (event.key === '3') setCameraView('reset');
+        return;
+      }
+      // Help / theme / minimap / picker — доступны всем
+      if (event.key === '?' || event.key === 'h' || event.key === 'H') {
+        if (window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.toggleHelp === 'function') {
+          event.preventDefault();
+          window.WAREHOUSE_3D.toggleHelp();
         }
+        return;
+      }
+      const k = event.key.toLowerCase();
+      if (k === 't' && window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.toggleTheme === 'function') {
+        event.preventDefault();
+        window.WAREHOUSE_3D.toggleTheme();
+        return;
+      }
+      if (k === 'm') {
+        const btn = document.getElementById('btn-toggle-minimap');
+        if (btn) { event.preventDefault(); btn.click(); }
+        return;
+      }
+      if (k === 'p') {
+        const btn = document.getElementById('btn-toggle-picker');
+        if (btn) { event.preventDefault(); btn.click(); }
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.closeHelp === 'function') {
+          window.WAREHOUSE_3D.closeHelp();
+        }
+        return;
       }
       return;
     }
 
+    if (isLayoutMode) {
+      if ((event.ctrlKey && event.key.toLowerCase() === 'z') || event.key === 'Backspace') {
+        event.preventDefault();
+        undoLastLayoutPoint();
+        return;
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        finishLayout();
+        return;
+      }
+    }
+
     // Prevent default for hotkeys
-    if (['r', 's', 'c', 'f', 'Delete', 'Escape', ' ', 'ArrowUp', 'ArrowDown'].includes(event.key) || 
+    const trapKeys = ['r', 's', 'c', 'f', 'Delete', 'Backspace', 'Enter', 'Escape', ' ', 'ArrowUp', 'ArrowDown', '?', 'h'];
+    if (trapKeys.includes(event.key) ||
         (event.ctrlKey && event.key.toLowerCase() === 'z')) {
       event.preventDefault();
     }
 
-    switch(event.key.toLowerCase()) {
+    // Спец. клавиши (регистрозависимые) — обрабатываем ДО toLowerCase()
+    switch (event.key) {
+      case 'Delete':
+      case 'Backspace':
+        if (selectedObject) {
+          console.log('[Warehouse3D] HOTKEY_PRESS: Delete');
+          deleteCurrentObject();
+          return;
+        }
+        break;
+      case 'Escape':
+        console.log('[Warehouse3D] HOTKEY_PRESS: Escape');
+        deselectObject();
+        hideModal('empty');
+        hideModal('add-object');
+        hideModal('object');
+        hideModal('create-warehouse');
+        return;
+      case 'ArrowUp':
+        if (selectedObject && selectedObject.type === 'SHELF' && selectedObject.level !== undefined) {
+          changeShelfLevel(selectedObject, 1);
+          return;
+        }
+        break;
+      case 'ArrowDown':
+        if (selectedObject && selectedObject.type === 'SHELF' && selectedObject.level !== undefined) {
+          changeShelfLevel(selectedObject, -1);
+          return;
+        }
+        break;
+      case '?':
+      case 'h':
+      case 'H':
+        if (window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.toggleHelp === 'function') {
+          window.WAREHOUSE_3D.toggleHelp();
+          return;
+        }
+        break;
+    }
+
+    // Регистронезависимые клавиши
+    switch (event.key.toLowerCase()) {
       case 'r':
         if (isEditMode && config.canEdit) {
           console.log('[Warehouse3D] HOTKEY_PRESS: R');
-          addStorageObject('RACK', true); // true = create at cursor
+          addStorageObject('RACK', true);
         }
         break;
       case 's':
@@ -2222,33 +2892,58 @@
           addStorageObject('FLOOR', true);
         }
         break;
-      case 'Delete':
-        if (selectedObject) deleteCurrentObject();
-        break;
-      case 'Escape':
-        deselectObject();
-        hideModal('empty');
-        hideModal('add-object');
-        hideModal('object');
-        hideModal('create-warehouse');
-        break;
       case ' ':
-        event.preventDefault();
         toggleControlMode();
         break;
-      case 'ArrowUp':
-        if (selectedObject && selectedObject.type === 'SHELF' && selectedObject.level !== undefined) {
-          changeShelfLevel(selectedObject, 1); // Увеличить уровень
-        }
-        break;
-      case 'ArrowDown':
-        if (selectedObject && selectedObject.type === 'SHELF' && selectedObject.level !== undefined) {
-          changeShelfLevel(selectedObject, -1); // Уменьшить уровень
-        }
-        break;
       case 'z':
-        if (event.ctrlKey) {
-          undoLastAction();
+        if (event.ctrlKey || event.metaKey) {
+          if (window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.undo === 'function') {
+            window.WAREHOUSE_3D.undo();
+          } else {
+            const btn = document.getElementById('btn-undo');
+            if (btn) btn.click();
+          }
+        }
+        break;
+      case 'y':
+        if ((event.ctrlKey || event.metaKey) && window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.redo === 'function') {
+          window.WAREHOUSE_3D.redo();
+        }
+        break;
+      case 't':
+        if (window.WAREHOUSE_3D && typeof window.WAREHOUSE_3D.toggleTheme === 'function') {
+          window.WAREHOUSE_3D.toggleTheme();
+        }
+        break;
+      case 'g':
+        // toggle snap-to-grid
+        {
+          const snap = document.getElementById('snap-toggle');
+          if (snap) { snap.checked = !snap.checked; snap.dispatchEvent(new Event('change')); }
+        }
+        break;
+      case 'q':
+        // Поворот выбранного объекта против часовой (-15°)
+        if (isEditMode && config.canEdit && selectedObject) {
+          rotateSelectedObject(-15);
+        }
+        break;
+      case 'e':
+        // Поворот выбранного объекта по часовой (+15°)
+        if (isEditMode && config.canEdit && selectedObject) {
+          rotateSelectedObject(15);
+        }
+        break;
+      case 'm':
+        {
+          const btn = document.getElementById('btn-toggle-minimap');
+          if (btn) btn.click();
+        }
+        break;
+      case 'p':
+        {
+          const btn = document.getElementById('btn-toggle-picker');
+          if (btn) btn.click();
         }
         break;
       case '1':
@@ -2312,8 +3007,16 @@
     if (controls && controls.enabled) {
       controls.update();
     }
-    
+
     renderer.render(scene, camera);
+
+    // Хуки расширения (мини-карта, fly-to, FPS-mode)
+    if (window.WAREHOUSE_3D && window.WAREHOUSE_3D._hooks) {
+      const hooks = window.WAREHOUSE_3D._hooks.onAfterRender;
+      for (let i = 0; i < hooks.length; i++) {
+        try { hooks[i](); } catch (e) { /* swallow */ }
+      }
+    }
   }
   
   function toggleControlMode() {

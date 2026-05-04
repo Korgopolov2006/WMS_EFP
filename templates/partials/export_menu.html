@@ -1,37 +1,49 @@
 {% comment %}
-Меню экспорта (CSV / XLSX / PDF).
-
-Использование:
-  {% include "partials/export_menu.html" %}
-
-Сохраняет все текущие GET-параметры (фильтры, поиск, сортировка)
-и добавляет export=<формат>. Стиль повторяет существующие .btn / .btn--ghost.
+Меню экспорта (CSV / XLSX / PDF). Использует общий компонент .menu-pop из app.css.
+Сохраняет все текущие GET-параметры и добавляет export=<формат>.
 {% endcomment %}
 {% with qs=request.GET.urlencode %}
-<div class="export-menu" style="position:relative; display:inline-block;">
-  <button type="button" class="btn btn--ghost"
-          onclick="this.nextElementSibling.classList.toggle('export-menu__open')"
-          aria-haspopup="menu">
+<div class="menu-pop" data-menu-pop>
+  <button type="button" class="btn btn--ghost" data-menu-toggle aria-haspopup="menu" aria-expanded="false">
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
       <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
     </svg>
     Экспорт
   </button>
-  <div class="export-menu__panel"
-       style="position:absolute; right:0; top:calc(100% + 4px); z-index:50;
-              background:var(--bg-1, #fff); border:1px solid var(--border, #d1d5db);
-              border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.08);
-              min-width:160px; padding:4px; display:none;">
-    <a class="btn btn--ghost btn--sm" style="width:100%; justify-content:flex-start;"
+  <div class="menu-pop__panel" role="menu">
+    <a class="menu-pop__item" role="menuitem"
        href="?{% if qs %}{{ qs }}&{% endif %}export=csv">CSV</a>
-    <a class="btn btn--ghost btn--sm" style="width:100%; justify-content:flex-start;"
+    <a class="menu-pop__item" role="menuitem"
        href="?{% if qs %}{{ qs }}&{% endif %}export=xlsx">Excel (XLSX)</a>
-    <a class="btn btn--ghost btn--sm" style="width:100%; justify-content:flex-start;"
+    <a class="menu-pop__item" role="menuitem"
        href="?{% if qs %}{{ qs }}&{% endif %}export=pdf">PDF</a>
   </div>
 </div>
-<style>
-.export-menu__open { display:block !important; }
-</style>
 {% endwith %}
+<script>
+(function(){
+  if (window.__menuPopInited) return;
+  window.__menuPopInited = true;
+  document.addEventListener("click", function(e){
+    var toggle = e.target.closest("[data-menu-toggle]");
+    if (toggle) {
+      var pop = toggle.closest("[data-menu-pop]");
+      var open = pop.classList.toggle("is-open");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      e.stopPropagation();
+      return;
+    }
+    document.querySelectorAll("[data-menu-pop].is-open").forEach(function(p){
+      if (!p.contains(e.target)) p.classList.remove("is-open");
+    });
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape") {
+      document.querySelectorAll("[data-menu-pop].is-open").forEach(function(p){
+        p.classList.remove("is-open");
+      });
+    }
+  });
+})();
+</script>

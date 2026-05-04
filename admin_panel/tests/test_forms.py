@@ -2,9 +2,10 @@
 Тесты форм административной панели.
 """
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from admin_panel.forms import BackupCreateForm, UserCreateForm, UserEditForm
+from admin_panel.forms import BackupCreateForm, BackupUploadForm, UserCreateForm, UserEditForm
 
 User = get_user_model()
 
@@ -155,3 +156,21 @@ class TestBackupCreateForm(TestCase):
         form = BackupCreateForm(data={"notes": "x" * 501})
         self.assertFalse(form.is_valid())
         self.assertIn("notes", form.errors)
+
+
+class TestBackupUploadForm(TestCase):
+
+    def test_sql_file_valid(self):
+        form = BackupUploadForm(
+            data={"notes": "От коллеги"},
+            files={"backup_file": SimpleUploadedFile("demo.sql", b"-- dump --")},
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_wrong_extension_invalid(self):
+        form = BackupUploadForm(
+            data={"notes": ""},
+            files={"backup_file": SimpleUploadedFile("demo.txt", b"text")},
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("backup_file", form.errors)

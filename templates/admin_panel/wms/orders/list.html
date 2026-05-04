@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url_tags %}
 
 {% block title %}Заказы · Панель управления{% endblock %}
 
@@ -59,19 +60,39 @@
       <table class="data-table__table">
         <thead>
           <tr>
-            <th>Номер</th>
-            <th>Клиент</th>
-            <th>Статус</th>
-            <th>Источник</th>
-            <th>Создал</th>
-            <th>Создан</th>
+            {% include "partials/sortable_th.html" with key="number" label="Номер" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="customer" label="Клиент" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="status" label="Статус" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="source" label="Источник" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="creator" label="Создал" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="created" label="Создан" current=sort order=order %}
           </tr>
         </thead>
         <tbody>
           {% for order in page_obj %}
             <tr>
-              <td><code class="mono">{{ order.number }}</code></td>
-              <td><span class="fw-500">{{ order.customer_name }}</span></td>
+              <td>
+                <a href="{% url 'order_detail' order.pk %}"
+                   class="row" style="gap:6px;align-items:center;text-decoration:none;color:var(--brand);font-weight:500;"
+                   title="Открыть карточку заказа">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                  <code class="mono" style="color:inherit;">{{ order.number }}</code>
+                </a>
+              </td>
+              <td>
+                {% if order.customer_name %}
+                  <a href="?q={{ order.customer_name|urlencode }}"
+                     style="text-decoration:none;color:var(--text);font-weight:500;"
+                     title="Все заказы клиента «{{ order.customer_name }}»">
+                    {{ order.customer_name }}
+                  </a>
+                {% else %}
+                  <span class="muted">—</span>
+                {% endif %}
+              </td>
               <td>
                 <span class="status-badge status-badge--{{ order.status|lower }}">
                   {{ order.get_status_display }}

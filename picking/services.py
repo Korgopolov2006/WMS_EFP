@@ -207,6 +207,8 @@ class PickingService:
                 order=order,
                 zone_type_code=zone_type_code,
                 status=PickingTaskStatus.PENDING,
+                priority=order.priority,
+                due_date=order.shipping_due_at,
             )
             tasks.append(task)
 

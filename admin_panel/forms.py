@@ -104,6 +104,45 @@ class BackupCreateForm(forms.Form):
     )
 
 
+class BackupUploadForm(forms.Form):
+    """Форма загрузки готового файла резервной копии."""
+
+    backup_file = forms.FileField(
+        label="Файл резервной копии",
+        widget=forms.ClearableFileInput(
+            attrs={
+                "accept": ".sql,.sqlite3,.db",
+                "class": "file-picker__input",
+                "style": "position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip-path:inset(50%);pointer-events:none;",
+                "tabindex": "-1",
+            }
+        ),
+    )
+    notes = forms.CharField(
+        label="Комментарий",
+        max_length=500,
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "rows": 2,
+                "class": "backup-upload-comment",
+            }
+        ),
+    )
+
+    def clean_backup_file(self):
+        file = self.cleaned_data["backup_file"]
+        name = (file.name or "").lower()
+        if not name.endswith((".sql", ".sqlite3", ".db")):
+            raise ValidationError("Загрузите файл резервной копии в формате .sql, .sqlite3 или .db.")
+        if file.size <= 0:
+            raise ValidationError("Файл резервной копии пустой.")
+        max_size = 500 * 1024 * 1024
+        if file.size > max_size:
+            raise ValidationError("Файл слишком большой. Максимальный размер — 500 МБ.")
+        return file
+
+
 # ─────────────────────────────────────────────────────────────
 #  WMS-сущности: Склады, Поставщики
 # ─────────────────────────────────────────────────────────────

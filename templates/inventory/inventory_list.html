@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url_tags %}
 
 {% block title %}Инвентаризация · WMS{% endblock %}
 
@@ -65,9 +66,9 @@
         <table class="data-table__table">
           <thead>
             <tr>
-              <th>Номер</th>
-              <th>Зона</th>
-              <th>Статус</th>
+              {% include "partials/sortable_th.html" with key="number" label="Номер" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="zone" label="Зона" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="status" label="Статус" current=sort order=order %}
               <th class="data-table__actions"></th>
             </tr>
           </thead>

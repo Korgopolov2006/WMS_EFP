@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url_tags %}
 
 {% block title %}Остатки · Панель управления{% endblock %}
 
@@ -50,12 +51,12 @@
       <table class="data-table__table">
         <thead>
           <tr>
-            <th>Артикул</th>
-            <th>Наименование</th>
-            <th>Место хранения</th>
+            {% include "partials/sortable_th.html" with key="sku" label="Артикул" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="name" label="Наименование" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="location" label="Место хранения" current=sort order=order %}
             <th>Склад</th>
-            <th class="text-right">Доступно</th>
-            <th class="text-right">Зарезервировано</th>
+            {% include "partials/sortable_th.html" with key="qty" label="Доступно" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="reserved" label="Зарезервировано" current=sort order=order %}
             <th class="text-right">Всего</th>
           </tr>
         </thead>

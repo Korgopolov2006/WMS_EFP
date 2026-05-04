@@ -28,6 +28,24 @@ class WarehouseLayout(TimeStampedModel):
         help_text="True, если контур склада уже нарисован",
     )
 
+    # ── Точка «ворот» (нужна для анимации движений в 3D) ──
+    gate_x = models.FloatField(
+        "Координата ворот X",
+        null=True, blank=True,
+        help_text="Если не задано — берётся середина первой грани контура",
+    )
+    gate_z = models.FloatField("Координата ворот Z", null=True, blank=True)
+
+    @property
+    def gate_point(self):
+        """Возвращает (x, z) для точки ворот: явное значение или середина первой грани."""
+        if self.gate_x is not None and self.gate_z is not None:
+            return (float(self.gate_x), float(self.gate_z))
+        if self.floor_points and len(self.floor_points) >= 2:
+            (x1, z1), (x2, z2) = self.floor_points[0], self.floor_points[1]
+            return ((x1 + x2) / 2.0, (z1 + z2) / 2.0)
+        return (0.0, 0.0)
+
     class Meta:
         verbose_name = "Геометрия склада"
         verbose_name_plural = "Геометрии складов"

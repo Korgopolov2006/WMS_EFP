@@ -131,7 +131,7 @@ class SyntheticPartsDriver(PartsImportDriver):
         Генерирует запчасти, опираясь на VehicleModel из БД.
         Если models не задан — берёт все из catalog.
         """
-        from catalog.models import VehicleMake, VehicleModel
+        from catalog.models import VehicleModel
 
         per_model = per_model_limit or self.per_model_default
 

@@ -23,6 +23,12 @@ class AuditLog(models.Model):
         BACKUP_DELETE = "BACKUP_DELETE", "Удаление резервной копии"
         PASSWORD_RESET = "PASSWORD_RESET", "Сброс пароля"
         VIEW = "VIEW", "Просмотр"
+        # ── 3D-склад: layout-операции ──
+        LAYOUT_CREATE = "LAYOUT_CREATE", "Создание объекта 3D"
+        LAYOUT_UPDATE = "LAYOUT_UPDATE", "Изменение объекта 3D"
+        LAYOUT_DELETE = "LAYOUT_DELETE", "Удаление объекта 3D"
+        LAYOUT_BULK_CREATE = "LAYOUT_BULK_CREATE", "Массовое создание объектов 3D"
+        LAYOUT_ROLLBACK = "LAYOUT_ROLLBACK", "Откат изменения 3D"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

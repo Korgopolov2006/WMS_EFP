@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url_tags %}
 
 {% block title %}Пользователи · Панель управления{% endblock %}
 
@@ -15,6 +16,28 @@
       <p class="page__subtitle">Управление учётными записями сотрудников</p>
     </div>
     <div class="page__actions">
+      {# Меню массовых действий #}
+      <div class="menu-pop" data-menu-pop>
+        <button type="button" class="btn btn--ghost" data-menu-toggle aria-haspopup="menu" aria-expanded="false"
+                id="btn-user-bulk-actions" disabled>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          Действия
+          <span id="user-bulk-counter" class="badge badge--neutral" style="margin-left:6px;font-size:10px;padding:1px 6px;">0</span>
+        </button>
+        <div class="menu-pop__panel" role="menu">
+          <button type="button" class="menu-pop__item" data-bulk="set_role">Сменить роль…</button>
+          <button type="button" class="menu-pop__item" data-bulk="unblock"
+                  style="color:var(--success);">Разблокировать</button>
+          <hr style="margin:4px 0;border:none;border-top:1px solid var(--border);">
+          <button type="button" class="menu-pop__item" data-bulk="block"
+                  style="color:var(--danger);">Заблокировать…</button>
+        </div>
+      </div>
+
       <a class="btn btn--primary" href="{% url 'admin_panel:user_create' %}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -22,6 +45,69 @@
         Создать пользователя
       </a>
     </div>
+
+    {# Скрытая форма для отправки bulk-action #}
+    <form id="user-bulk-form" method="post" action="{% url 'admin_panel:user_bulk' %}" style="display:none;">
+      {% csrf_token %}
+      <input type="hidden" name="action" id="user-bulk-action">
+      <input type="hidden" name="ids" id="user-bulk-ids">
+      <input type="hidden" name="role" id="user-bulk-role">
+      <input type="hidden" name="reason" id="user-bulk-reason">
+    </form>
+
+    {# Модалка: блокировка с причиной #}
+    <dialog id="block-dialog"
+            style="border:1px solid var(--border);border-radius:var(--r-lg);padding:0;
+                   max-width:480px;width:100%;background:var(--surface);color:var(--text);
+                   box-shadow:var(--shadow-lg);">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+        <h3 style="margin:0;font-size:15px;color:var(--text);">Блокировка пользователей</h3>
+      </div>
+      <div style="padding:16px 20px;">
+        <p style="font-size:13px;color:var(--text-2);margin:0 0 12px;">
+          Будет заблокировано: <strong id="block-count">0</strong>.
+          Пользователи получат уведомление с указанной причиной.
+        </p>
+        <label class="field" style="width:100%;">
+          <span class="field__label">Причина блокировки (необязательно)</span>
+          <textarea id="block-reason" class="input" rows="3"
+                    placeholder="Например: нарушение регламента"></textarea>
+        </label>
+      </div>
+      <div style="padding:14px 20px;background:var(--surface-2);border-top:1px solid var(--border);
+                  display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn--ghost" id="block-cancel">Отмена</button>
+        <button type="button" class="btn" id="block-apply"
+                style="background:var(--danger);color:#fff;border-color:var(--danger);">
+          Заблокировать
+        </button>
+      </div>
+    </dialog>
+
+    {# Модалка: смена роли #}
+    <dialog id="role-dialog"
+            style="border:1px solid var(--border);border-radius:var(--r-lg);padding:0;
+                   max-width:420px;width:100%;background:var(--surface);color:var(--text);
+                   box-shadow:var(--shadow-lg);">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+        <h3 style="margin:0;font-size:15px;color:var(--text);">Сменить роль</h3>
+      </div>
+      <div style="padding:16px 20px;">
+        <p style="font-size:13px;color:var(--text-2);margin:0 0 12px;">
+          Будет применено к <strong id="role-count">0</strong> пользователям.
+        </p>
+        <select id="role-select" class="input" style="width:100%;">
+          {% for code, label in role_choices %}
+            <option value="{{ code }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="padding:14px 20px;background:var(--surface-2);border-top:1px solid var(--border);
+                  display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn--ghost" id="role-cancel">Отмена</button>
+        <button type="button" class="btn btn--primary" id="role-apply">Применить</button>
+      </div>
+    </dialog>
   </header>
 
   <div class="data-table" data-density="normal">
@@ -61,11 +147,7 @@
 
       <div class="data-table__toolbar-spacer"></div>
 
-      <div class="data-table__density" role="group" aria-label="Плотность">
-        <button type="button" data-density-set="compact"     aria-pressed="false" title="Компактно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="7" x2="13" y2="7"/><line x1="3" y1="10" x2="13" y2="10"/><line x1="3" y1="12" x2="13" y2="12"/></svg></button>
-        <button type="button" data-density-set="normal"      aria-pressed="true"  title="Обычно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="5" x2="13" y2="5"/><line x1="3" y1="9" x2="13" y2="9"/><line x1="3" y1="13" x2="13" y2="13"/></svg></button>
-        <button type="button" data-density-set="comfortable" aria-pressed="false" title="Просторно"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="12" x2="13" y2="12"/></svg></button>
-      </div>
+      {% include "partials/density_switch.html" %}
     </form>
 
     <div class="data-table__scroll">
@@ -73,18 +155,30 @@
         <table class="data-table__table">
           <thead>
             <tr>
-              <th>Логин</th>
-              <th>Имя</th>
-              <th>Email</th>
-              <th>Роль</th>
-              <th>Дата регистрации</th>
-              <th>Статус</th>
-              <th class="data-table__actions"></th>
+              <th style="width:36px;">
+                <label class="row" style="gap:4px;align-items:center;cursor:pointer;font-size:11px;font-weight:500;color:var(--text-3);"
+                       title="Выделить всех на странице">
+                  <input type="checkbox" id="user-select-all">
+                  <span>Все</span>
+                </label>
+              </th>
+              {% include "partials/sortable_th.html" with key="username" label="Логин" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="name" label="Имя" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="email" label="Email" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="role" label="Роль" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="joined" label="Дата регистрации" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="active" label="Статус" current=sort order=order %}
+              <th class="data-table__actions users-table__actions-heading">Действия</th>
             </tr>
           </thead>
           <tbody>
             {% for u in users %}
               <tr>
+                <td>
+                  {% if u != request.user %}
+                    <input type="checkbox" class="js-user-pick" value="{{ u.pk }}">
+                  {% endif %}
+                </td>
                 <td>
                   <div class="row" style="gap:8px;align-items:center;">
                     <span class="sidebar__logo"
@@ -110,18 +204,28 @@
                     <span class="badge badge--danger">Заблокирован</span>
                   {% endif %}
                 </td>
-                <td class="data-table__actions">
-                  <a class="btn btn--ghost btn--sm" href="{% url 'admin_panel:user_detail' u.pk %}">Открыть</a>
-                  <a class="btn btn--ghost btn--sm" href="{% url 'admin_panel:user_edit' u.pk %}">Изменить</a>
-                  {% if u != request.user %}
-                    <form method="post" action="{% url 'admin_panel:user_toggle_active' u.pk %}" style="display:inline;">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn--ghost btn--sm"
-                              style="{% if u.is_active %}color:var(--warning);{% else %}color:var(--success);{% endif %}">
-                        {% if u.is_active %}Заблокировать{% else %}Активировать{% endif %}
-                      </button>
-                    </form>
-                  {% endif %}
+                <td class="data-table__actions users-table__actions-cell">
+                  <div class="users-table__actions-grid">
+                    <a class="btn btn--ghost btn--sm users-table__action" href="{% url 'admin_panel:user_detail' u.pk %}"
+                       title="Открыть карточку пользователя">Открыть</a>
+                    <a class="btn btn--ghost btn--sm users-table__action" href="{% url 'admin_panel:user_edit' u.pk %}"
+                       title="Редактировать данные пользователя">Изменить</a>
+                    {% if u != request.user %}
+                      <form method="post" action="{% url 'admin_panel:user_toggle_active' u.pk %}"
+                            class="users-table__action-form"
+                            onsubmit="return onToggleSubmit(this, {% if u.is_active %}true{% else %}false{% endif %}, '{{ u.username|escapejs }}');">
+                        {% csrf_token %}
+                        <input type="hidden" name="reason" value="">
+                        <button type="submit" class="btn btn--ghost btn--sm users-table__action"
+                                title="{% if u.is_active %}Заблокировать доступ пользователю{% else %}Восстановить доступ пользователю{% endif %}"
+                                style="{% if u.is_active %}color:var(--warning);{% else %}color:var(--success);{% endif %}">
+                          {% if u.is_active %}Заблокировать{% else %}Активировать{% endif %}
+                        </button>
+                      </form>
+                    {% else %}
+                      <span class="users-table__action users-table__action--empty" aria-hidden="true"></span>
+                    {% endif %}
+                  </div>
                 </td>
               </tr>
             {% endfor %}
@@ -155,4 +259,102 @@
     </div>
   </div>
 </div>
+
+<script>
+(function () {
+  const all      = document.getElementById("user-select-all");
+  const counter  = document.getElementById("user-bulk-counter");
+  const bulkBtn  = document.getElementById("btn-user-bulk-actions");
+  const items    = () => document.querySelectorAll(".js-user-pick");
+
+  const form     = document.getElementById("user-bulk-form");
+  const fAction  = document.getElementById("user-bulk-action");
+  const fIds     = document.getElementById("user-bulk-ids");
+  const fRole    = document.getElementById("user-bulk-role");
+  const fReason  = document.getElementById("user-bulk-reason");
+
+  const blockDlg = document.getElementById("block-dialog");
+  const blockCnt = document.getElementById("block-count");
+  const blockTxt = document.getElementById("block-reason");
+  const roleDlg  = document.getElementById("role-dialog");
+  const roleCnt  = document.getElementById("role-count");
+  const roleSel  = document.getElementById("role-select");
+
+  function selected() {
+    return [...items()].filter(cb => cb.checked).map(cb => cb.value);
+  }
+  function refresh() {
+    const ids = selected();
+    if (counter) counter.textContent = ids.length;
+    if (bulkBtn) bulkBtn.disabled = ids.length === 0;
+  }
+  if (all) all.addEventListener("change", () => {
+    items().forEach(cb => cb.checked = all.checked);
+    refresh();
+  });
+  items().forEach(cb => cb.addEventListener("change", refresh));
+  refresh();
+
+  function submitBulk(action, extras) {
+    fAction.value = action;
+    fIds.value    = selected().join(",");
+    fRole.value   = (extras && extras.role)   || "";
+    fReason.value = (extras && extras.reason) || "";
+    form.submit();
+  }
+
+  document.querySelectorAll("[data-bulk]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const ids = selected();
+      if (!ids.length) { alert("Выберите пользователей."); return; }
+      const action = btn.dataset.bulk;
+      if (action === "unblock") {
+        if (confirm(`Разблокировать ${ids.length} пользователей?`)) submitBulk("unblock");
+        return;
+      }
+      if (action === "block") {
+        blockCnt.textContent = ids.length;
+        blockTxt.value = "";
+        blockDlg.showModal();
+        return;
+      }
+      if (action === "set_role") {
+        roleCnt.textContent = ids.length;
+        roleDlg.showModal();
+        return;
+      }
+    });
+  });
+
+  document.getElementById("block-cancel").addEventListener("click", () => blockDlg.close());
+  document.getElementById("block-apply").addEventListener("click", () => {
+    blockDlg.close();
+    submitBulk("block", { reason: blockTxt.value });
+  });
+  document.getElementById("role-cancel").addEventListener("click", () => roleDlg.close());
+  document.getElementById("role-apply").addEventListener("click", () => {
+    const v = roleSel.value;
+    if (!v) { alert("Выберите роль."); return; }
+    roleDlg.close();
+    submitBulk("set_role", { role: v });
+  });
+  blockDlg.addEventListener("click", (e) => { if (e.target === blockDlg) blockDlg.close(); });
+  roleDlg.addEventListener("click",  (e) => { if (e.target === roleDlg)  roleDlg.close();  });
+})();
+
+// Одиночный toggle: при блокировке запрашиваем причину; при разблокировке — confirm.
+function onToggleSubmit(form, isActive, username) {
+  if (isActive) {
+    const reason = prompt(
+      `Заблокировать пользователя «${username}»?\n\nУкажите причину (необязательно):`,
+      ""
+    );
+    if (reason === null) return false;  // Cancel
+    form.querySelector('input[name="reason"]').value = reason || "";
+    return true;
+  }
+  return confirm(`Активировать пользователя «${username}»?`);
+}
+</script>
 {% endblock %}

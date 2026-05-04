@@ -32,7 +32,7 @@ jobs:
 
       - name: Ruff format check
         run: ruff format --check .
-        continue-on-error: true  # не блокирует merge: формат рекомендательный
+        continue-on-error: true 
 
   tests:
     name: Tests (pytest + coverage)

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url_tags %}
 
 {% block title %}Задачи подбора · WMS{% endblock %}
 
@@ -66,10 +67,12 @@
         <table class="data-table__table">
           <thead>
             <tr>
-              <th>Заказ</th>
-              <th>Клиент</th>
-              <th>Тип зоны</th>
-              <th>Статус</th>
+              {% include "partials/sortable_th.html" with key="order" label="Заказ" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="customer" label="Клиент" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="zone" label="Тип зоны" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="status" label="Статус" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="priority" label="Важность" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="due" label="Срок" current=sort order=order %}
               <th class="data-table__actions"></th>
             </tr>
           </thead>
@@ -82,6 +85,16 @@
                 <td>
                   {% include "partials/status_badge.html" with c=task.status label=task.get_status_display %}
                 </td>
+                <td>
+                  {% if task.priority == "URGENT" %}
+                    <span class="badge badge--danger">{{ task.get_priority_display }}</span>
+                  {% elif task.priority == "HIGH" %}
+                    <span class="badge badge--warning">{{ task.get_priority_display }}</span>
+                  {% else %}
+                    <span class="muted">{{ task.get_priority_display }}</span>
+                  {% endif %}
+                </td>
+                <td class="muted">{% if task.due_date %}{{ task.due_date|date:"d.m.Y H:i" }}{% else %}—{% endif %}</td>
                 <td class="data-table__actions">
                   <a class="btn btn--ghost btn--sm" href="{% url 'picking_task_detail' task.pk %}">Открыть</a>
                 </td>

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db.models import DecimalField, Sum, Value
 from django.db.models.functions import Coalesce
 from django.core.paginator import Paginator
@@ -333,6 +335,37 @@ def receiving_add_line(request: HttpRequest, pk: int) -> HttpResponse:
         else:
             messages.error(request, "Ошибка в строке приёмки.")
     return redirect("receiving_detail", pk=obj.pk)
+
+
+@role_required(Roles.STOREKEEPER, Roles.ADMIN)
+def receiving_update_line_qty(request: HttpRequest, pk: int, line_id: int) -> HttpResponse:
+    receiving = get_object_or_404(
+        Receiving.objects.select_related("warehouse").filter(_receiving_visibility_q(request.user)).distinct(),
+        pk=pk,
+    )
+    if request.method != "POST":
+        return redirect("receiving_detail", pk=receiving.pk)
+
+    if receiving.status not in {ReceivingStatus.DRAFT, ReceivingStatus.IN_PROGRESS}:
+        messages.error(request, "Фактическое количество можно менять только в черновике или документе в работе.")
+        return redirect("receiving_detail", pk=receiving.pk)
+
+    line = get_object_or_404(ReceivingLine, pk=line_id, receiving=receiving)
+    raw_qty = (request.POST.get("qty_received") or "").strip().replace(",", ".")
+    try:
+        qty_received = ReceivingLineForm._validate_piece_qty(
+            Decimal(raw_qty),
+            "Принятое количество",
+            allow_zero=True,
+        )
+    except (InvalidOperation, ValidationError) as exc:
+        messages.error(request, exc.messages[0] if hasattr(exc, "messages") else "Укажите корректное фактическое количество.")
+        return redirect("receiving_detail", pk=receiving.pk)
+
+    line.qty_received = qty_received
+    line.save(update_fields=["qty_received"])
+    messages.success(request, f"Фактическое количество обновлено: {line.product.internal_sku} — {qty_received} шт.")
+    return redirect("receiving_detail", pk=receiving.pk)
 
 
 @role_required(Roles.STOREKEEPER, Roles.ADMIN)

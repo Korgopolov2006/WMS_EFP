@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url_tags %}
 
 {% block title %}Склады · Панель управления{% endblock %}
 
@@ -70,12 +71,12 @@
       <table class="data-table__table">
         <thead>
           <tr>
-            <th>Код</th>
-            <th>Название</th>
-            <th>Филиал</th>
+            {% include "partials/sortable_th.html" with key="code" label="Код" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="name" label="Название" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="branch" label="Филиал" current=sort order=order %}
             <th>Размеры, м</th>
-            <th>Статус</th>
-            <th style="width:120px;">Действия</th>
+            {% include "partials/sortable_th.html" with key="active" label="Статус" current=sort order=order %}
+            <th style="width:120px;text-align:right;">Действия</th>
           </tr>
         </thead>
         <tbody>

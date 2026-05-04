@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from catalog.models import Product
 from inventory.models import Stock
@@ -28,11 +29,23 @@ class OrderStatus(models.TextChoices):
     CANCELLED = "CANCELLED", "Отменён"
 
 
+class OrderPriority(models.TextChoices):
+    LOW = "LOW", "Низкая"
+    NORMAL = "NORMAL", "Обычная"
+    HIGH = "HIGH", "Важная"
+    URGENT = "URGENT", "Срочная"
+
+
 class Order(TimeStampedModel):
     number = models.CharField("Номер заказа", max_length=32, unique=True, db_index=True)
     customer_name = models.CharField("Клиент", max_length=255)
     customer_phone = models.CharField("Телефон", max_length=32, blank=True)
     customer_email = models.EmailField("Email", blank=True)
+    note = models.TextField(
+        "Комментарий к заказу",
+        blank=True,
+        help_text="Важные нюансы для сборщика или сотрудника отгрузки.",
+    )
 
     status = models.CharField(
         "Статус",
@@ -40,6 +53,20 @@ class Order(TimeStampedModel):
         choices=OrderStatus.choices,
         default=OrderStatus.DRAFT,
         db_index=True,
+    )
+    priority = models.CharField(
+        "Важность заказа",
+        max_length=16,
+        choices=OrderPriority.choices,
+        default=OrderPriority.NORMAL,
+        db_index=True,
+    )
+    shipping_due_at = models.DateTimeField(
+        "Срок отгрузки",
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Дата и время, к которым заказ желательно отгрузить.",
     )
 
     source = models.CharField("Источник", max_length=32, default="MANUAL", help_text="MANUAL, POS, ONLINE, API")
@@ -78,6 +105,29 @@ class Order(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.number} — {self.customer_name}"
+
+    @staticmethod
+    def generate_next_number() -> str:
+        today = timezone.localdate()
+        prefix = f"ORD-{today:%Y%m%d}-"
+        last_number = (
+            Order.objects.filter(number__startswith=prefix)
+            .order_by("-number")
+            .values_list("number", flat=True)
+            .first()
+        )
+        next_index = 1
+        if last_number:
+            try:
+                next_index = int(last_number.rsplit("-", 1)[-1]) + 1
+            except (TypeError, ValueError):
+                next_index = 1
+
+        while True:
+            candidate = f"{prefix}{next_index:04d}"
+            if not Order.objects.filter(number=candidate).exists():
+                return candidate
+            next_index += 1
 
 
 class OrderLine(models.Model):
@@ -144,6 +194,14 @@ class PickingTask(TimeStampedModel):
         default=PickingTaskStatus.PENDING,
         db_index=True,
     )
+    priority = models.CharField(
+        "Важность",
+        max_length=16,
+        choices=OrderPriority.choices,
+        default=OrderPriority.NORMAL,
+        db_index=True,
+    )
+    due_date = models.DateTimeField("Срок выполнения", null=True, blank=True, db_index=True)
 
     zone_type_code = models.CharField(
         "Тип зоны",

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from datetime import date, timedelta
 from decimal import Decimal
+from math import sqrt
 
+from django.db import transaction
 from django.db.models import Sum, Count, Avg, Max, F, DecimalField
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, TruncDate
 from django.utils import timezone
 
 from accounts.constants import Roles
@@ -15,7 +18,13 @@ from picking.models import OrderLine, OrderStatus
 from picking.models import Order, PickingTask, PickingTaskStatus
 from receiving.models import Receiving, ReceivingStatus
 from inventory.models import Inventory, InventoryStatus
-from reports.models import PickingError
+from reports.models import (
+    ABCXYZAnalysis,
+    AnalogVsOriginalReport,
+    DeadStockReport,
+    DemandForecast,
+    PickingError,
+)
 from tasks.models import Task, TaskStatus
 
 
@@ -56,6 +65,74 @@ def calculate_xyz_class(products_data: list[dict], threshold_x: float = 0.2, thr
             result[item["product_id"]] = "Z"
 
     return result
+
+
+def build_abc_xyz_products(period_start: date, period_end: date) -> list[dict]:
+    sales_data = (
+        OrderLine.objects.filter(
+            order__status=OrderStatus.SHIPPED,
+            order__shipped_at__date__gte=period_start,
+            order__shipped_at__date__lte=period_end,
+        )
+        .values("product_id", "product__internal_sku", "product__name")
+        .annotate(
+            total_qty=Coalesce(Sum("qty_picked"), Decimal("0.00")),
+            total_amount=Coalesce(
+                Sum(F("qty_picked") * F("price"), output_field=DecimalField(max_digits=16, decimal_places=2)),
+                Decimal("0.00"),
+            ),
+        )
+        .order_by("-total_amount")
+    )
+
+    products_data = [
+        {
+            "product_id": item["product_id"],
+            "product_sku": item["product__internal_sku"],
+            "product_name": item["product__name"],
+            "qty": item["total_qty"] or Decimal("0.00"),
+            "amount": item["total_amount"] or Decimal("0.00"),
+        }
+        for item in sales_data
+    ]
+
+    day_sales = (
+        OrderLine.objects.filter(
+            order__status=OrderStatus.SHIPPED,
+            order__shipped_at__date__gte=period_start,
+            order__shipped_at__date__lte=period_end,
+        )
+        .annotate(day=TruncDate("order__shipped_at"))
+        .values("product_id", "day")
+        .annotate(day_qty=Sum("qty_picked"))
+    )
+    qty_by_product_day: dict[int, dict[date, float]] = defaultdict(dict)
+    for row in day_sales:
+        qty_by_product_day[row["product_id"]][row["day"]] = float(row["day_qty"] or 0)
+
+    period_len = max((period_end - period_start).days + 1, 1)
+    for item in products_data:
+        product_id = item["product_id"]
+        daily_values = [
+            qty_by_product_day.get(product_id, {}).get(period_start + timedelta(days=offset), 0.0)
+            for offset in range(period_len)
+        ]
+        mean = sum(daily_values) / period_len
+        if mean <= 0:
+            item["coefficient_variation"] = 1.0
+            continue
+        variance = sum((val - mean) ** 2 for val in daily_values) / period_len
+        item["coefficient_variation"] = sqrt(variance) / mean
+
+    abc_classes = calculate_abc_class(products_data)
+    xyz_classes = calculate_xyz_class(products_data)
+
+    for item in products_data:
+        item["abc_class"] = abc_classes.get(item["product_id"], "-")
+        item["xyz_class"] = xyz_classes.get(item["product_id"], "-")
+        item["abc_xyz"] = f"{item['abc_class']}{item['xyz_class']}"
+
+    return products_data
 
 
 def find_dead_stock(days_threshold: int = 90) -> list[dict]:
@@ -354,3 +431,117 @@ def calculate_staff_efficiency(period_days: int = 30, role: str = "") -> list[di
 
     rows.sort(key=lambda x: (x["efficiency_score"], x["completed_total"]), reverse=True)
     return rows
+
+
+def _to_decimal(value) -> Decimal:
+    return Decimal(str(value or "0"))
+
+
+@transaction.atomic
+def generate_report_snapshots(
+    *,
+    period_days: int = 30,
+    dead_stock_days: int = 90,
+    forecast_days: int = 7,
+    calculated_by: User | None = None,
+) -> dict:
+    """
+    Сохраняет текущие аналитические расчёты в модели отчётов.
+
+    Интерактивные страницы отчётов считают данные на лету, а эта функция
+    создаёт управляемый снимок: его можно запускать кнопкой из UI или по cron.
+    """
+    today = timezone.localdate()
+    period_end = today
+    period_start = today - timedelta(days=period_days)
+    forecast_start = today + timedelta(days=1)
+    forecast_end = today + timedelta(days=forecast_days)
+
+    abc_rows = build_abc_xyz_products(period_start, period_end)
+    ABCXYZAnalysis.objects.filter(period_start=period_start, period_end=period_end).delete()
+    ABCXYZAnalysis.objects.bulk_create([
+        ABCXYZAnalysis(
+            product_id=row["product_id"],
+            period_start=period_start,
+            period_end=period_end,
+            total_sales_qty=_to_decimal(row["qty"]),
+            total_sales_amount=_to_decimal(row["amount"]),
+            abc_class=row.get("abc_class", ""),
+            xyz_class=row.get("xyz_class", ""),
+            coefficient_variation=_to_decimal(row.get("coefficient_variation")),
+        )
+        for row in abc_rows
+    ])
+
+    dead_stock_rows = find_dead_stock(dead_stock_days)
+    DeadStockReport.objects.all().delete()
+    DeadStockReport.objects.bulk_create([
+        DeadStockReport(
+            product=item["product"],
+            stock=item.get("stock"),
+            qty_available=_to_decimal(item.get("qty_available")),
+            days_without_movement=item.get("days_without_movement") or 0,
+            last_movement_date=item.get("last_movement_date"),
+            estimated_value=_to_decimal(item.get("estimated_value")),
+        )
+        for item in dead_stock_rows
+    ])
+
+    analog_rows = analyze_analogs_vs_originals(period_start, period_end)
+    AnalogVsOriginalReport.objects.filter(period_start=period_start, period_end=period_end).delete()
+    AnalogVsOriginalReport.objects.bulk_create([
+        AnalogVsOriginalReport(
+            period_start=period_start,
+            period_end=period_end,
+            original_product=item["original_product"],
+            analog_product=item["analog_product"],
+            original_sales_qty=_to_decimal(item.get("original_sales_qty")),
+            analog_sales_qty=_to_decimal(item.get("analog_sales_qty")),
+            original_sales_amount=_to_decimal(item.get("original_sales_amount")),
+            analog_sales_amount=_to_decimal(item.get("analog_sales_amount")),
+            substitution_rate=_to_decimal(item.get("substitution_rate")),
+        )
+        for item in analog_rows
+    ])
+
+    forecast_rows = calculate_demand_forecast(period_days=period_days, forecast_days=forecast_days)
+    DemandForecast.objects.filter(
+        forecast_date=today,
+        period_start=forecast_start,
+        period_end=forecast_end,
+    ).delete()
+    DemandForecast.objects.bulk_create([
+        DemandForecast(
+            product_id=item["product_id"],
+            forecast_date=today,
+            period_start=forecast_start,
+            period_end=forecast_end,
+            forecasted_qty=_to_decimal(item.get("forecast_qty")),
+            confidence_level=Decimal("70.00") if item.get("historical_orders", 0) else Decimal("30.00"),
+            seasonal_factor=Decimal("1.00"),
+            trend_factor=Decimal("0.00"),
+            historical_sales_qty=_to_decimal(item.get("historical_qty")),
+            historical_period_start=period_start,
+            historical_period_end=period_end,
+            calculated_by=calculated_by if calculated_by and calculated_by.is_authenticated else None,
+            notes=f"Автогенерация: история {period_days} дн., прогноз {forecast_days} дн.",
+        )
+        for item in forecast_rows
+    ])
+
+    staff_rows = calculate_staff_efficiency(period_days=period_days)
+    picking_summary = get_picking_errors_summary(period_start, period_end)
+
+    return {
+        "period_start": period_start,
+        "period_end": period_end,
+        "period_days": period_days,
+        "dead_stock_days": dead_stock_days,
+        "forecast_days": forecast_days,
+        "abc_xyz": len(abc_rows),
+        "dead_stock": len(dead_stock_rows),
+        "analogs": len(analog_rows),
+        "demand_forecast": len(forecast_rows),
+        "staff_efficiency": len(staff_rows),
+        "picking_errors": picking_summary.get("total_errors", 0),
+    }

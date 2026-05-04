@@ -20,6 +20,8 @@ extend-exclude = [
     "static/js/vendor",
     "_export_smoke",
     "2Диплом",
+    "locustfile.py",
+    "locustfile*.py",
 ]
 
 [tool.ruff.lint]

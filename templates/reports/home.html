@@ -16,6 +16,33 @@
     </div>
   </header>
 
+  <section class="card mb-3">
+    <div class="card__header">
+      <h2 class="h3" style="margin:0;">Автогенерация отчётов</h2>
+      <p class="muted" style="font-size:13px;margin:6px 0 0;">
+        Система пересчитает ключевые отчёты и сохранит актуальные снимки для ABC-XYZ, мёртвых остатков,
+        аналогов и прогноза спроса.
+      </p>
+    </div>
+    <form method="post" action="{% url 'reports_autogenerate' %}" class="card__body"
+          style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end;">
+      {% csrf_token %}
+      <label class="field">
+        <span class="field__label">Период анализа, дней</span>
+        <input class="input" type="number" name="period" min="7" max="365" value="30">
+      </label>
+      <label class="field">
+        <span class="field__label">Мёртвый остаток от, дней</span>
+        <input class="input" type="number" name="dead_stock_days" min="1" max="3650" value="90">
+      </label>
+      <label class="field">
+        <span class="field__label">Прогноз вперёд, дней</span>
+        <input class="input" type="number" name="forecast_days" min="1" max="90" value="7">
+      </label>
+      <button class="btn btn--primary" type="submit">Сгенерировать автоматически</button>
+    </form>
+  </section>
+
   <div class="grid grid--3">
 
     <a href="{% url 'report_abc_xyz' %}" class="card"

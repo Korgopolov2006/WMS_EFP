@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url_tags %}
 
 {% block title %}Остатки · WMS{% endblock %}
 
@@ -23,15 +24,18 @@
                placeholder="SKU, название, OEM, место" class="input" autofocus>
       </label>
 
-      <label class="field">
-        <input type="number" name="product_id" value="{{ product_id|default:'' }}"
-               placeholder="ID товара" class="input" style="max-width:140px;">
+      <label class="field" style="min-width:220px;">
+        <input type="search" name="product" value="{{ product_query|default:'' }}"
+               placeholder="Товар: SKU, OEM, штрихкод" class="input">
       </label>
 
-      <label class="field">
-        <input type="number" name="location_id" value="{{ location_id|default:'' }}"
-               placeholder="ID места" class="input" style="max-width:140px;">
+      <label class="field" style="min-width:190px;">
+        <input type="search" name="location" value="{{ location_query|default:'' }}"
+               placeholder="Место: A01, полка, зона" class="input">
       </label>
+
+      {% if product_id %}<input type="hidden" name="product_id" value="{{ product_id }}">{% endif %}
+      {% if location_id %}<input type="hidden" name="location_id" value="{{ location_id }}">{% endif %}
 
       <button type="submit" class="btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -40,7 +44,7 @@
         Найти
       </button>
 
-      {% if q or product_id or location_id %}
+      {% if q or product_query or location_query or product_id or location_id %}
         <a class="btn btn--ghost" href="{% url 'stock_list' %}">Сбросить</a>
       {% endif %}
 
@@ -60,14 +64,14 @@
         <table class="data-table__table">
           <thead>
             <tr>
-              <th>SKU</th>
-              <th>Название</th>
-              <th>OEM</th>
-              <th>Место</th>
-              <th>Зона</th>
-              <th class="data-table__num">Доступно</th>
-              <th class="data-table__num">Резерв</th>
-              <th>Партия</th>
+              {% include "partials/sortable_th.html" with key="sku" label="SKU" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="name" label="Название" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="oem" label="OEM" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="location" label="Место" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="zone" label="Зона" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="qty" label="Доступно" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="reserved" label="Резерв" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="batch" label="Партия" current=sort order=order %}
               <th class="data-table__actions"></th>
             </tr>
           </thead>
@@ -107,7 +111,7 @@
             <path d="M20 7l-8-4-8 4 8 4 8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 17l8 4 8-4"/>
           </svg>
           <p class="muted mb-2">Остатков не найдено</p>
-          {% if q or product_id or location_id %}
+          {% if q or product_query or location_query or product_id or location_id %}
             <a class="btn btn--ghost btn--sm" href="{% url 'stock_list' %}">Очистить фильтры</a>
           {% endif %}
         </div>

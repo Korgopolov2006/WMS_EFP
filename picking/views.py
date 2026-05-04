@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Case, IntegerField, Q, Value, When
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -16,7 +16,7 @@ from catalog.models import Product
 from tasks.models import TaskType
 
 from .forms import OrderForm, OrderLineForm
-from .models import Order, OrderLine, OrderStatus, PickingTask, PickingTaskStatus
+from .models import Order, OrderLine, OrderPriority, OrderStatus, PickingTask, PickingTaskStatus
 from .services import (
     OrderService,
     PickingService,
@@ -29,6 +29,17 @@ from .services import (
 def _paginate(request: HttpRequest, items, per_page: int = 5):
     paginator = Paginator(items, per_page)
     return paginator.get_page(request.GET.get("page"))
+
+
+def _priority_order():
+    return Case(
+        When(priority=OrderPriority.URGENT, then=Value(0)),
+        When(priority=OrderPriority.HIGH, then=Value(1)),
+        When(priority=OrderPriority.NORMAL, then=Value(2)),
+        When(priority=OrderPriority.LOW, then=Value(3)),
+        default=Value(4),
+        output_field=IntegerField(),
+    )
 
 
 def _normalize_oem(value: str) -> str:
@@ -361,7 +372,24 @@ def picking_task_list(request: HttpRequest) -> HttpResponse:
     elif request.user.role == Roles.LOADER:
         qs = qs.filter(zone_type_code__in=["SHELF", "FLOOR"])
 
-    qs = qs.order_by("-id")
+    from core.sorting import apply_ordering
+    qs, sort, order = apply_ordering(qs, request, {
+        "id":       "id",
+        "order":    "order__number",
+        "customer": "order__customer_name",
+        "zone":     "zone_type_code",
+        "status":   "status",
+        "priority": "priority",
+        "due":      "due_date",
+        "assignee": "assigned_to__username",
+        "created":  "created_at",
+    }, default="priority", default_order="asc")
+    if sort == "priority":
+        priority_expr = _priority_order()
+        if order == "desc":
+            priority_expr = priority_expr.desc()
+        qs = qs.order_by(priority_expr, "due_date", "-created_at")
+
     page_obj = _paginate(request, qs, per_page=5)
 
     return render(
@@ -374,6 +402,8 @@ def picking_task_list(request: HttpRequest) -> HttpResponse:
             "zone_type": zone_type,
             "statuses": PickingTaskStatus.choices,
             "page_obj": page_obj,
+            "sort": sort,
+            "order": order,
         },
     )
 

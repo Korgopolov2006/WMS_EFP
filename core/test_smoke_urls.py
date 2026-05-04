@@ -7,7 +7,10 @@ Smoke-тесты ключевых URL.
 Используем RequestFactory + прямой вызов view-функций — обходим
 проблему `RecursionError` в Django Test Client при сложных шаблонах.
 """
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
+from django.http import HttpResponse
 from django.test import RequestFactory, TestCase, signals as django_signals
 from django.urls import reverse
 
@@ -67,6 +70,67 @@ class TestAuthenticatedSmoke(TestCase):
     def test_dashboard_renders(self):
         from core.views import dashboard
         self.assertEqual(self._call(dashboard, "/"), 200)
+
+    def test_dashboard_my_tasks_counts_only_assigned_user(self):
+        from accounts.constants import Roles
+        from core.views import dashboard
+        from tasks.models import Task, TaskStatus, TaskType
+
+        current_user = User.objects.create_user(
+            username="dashboard_owner",
+            email="dashboard_owner@t.ru",
+            password="Pass1!ABCDEFGH",
+            role=Roles.STOREKEEPER,
+        )
+        other_user = User.objects.create_user(
+            username="dashboard_other",
+            email="dashboard_other@t.ru",
+            password="Pass1!ABCDEFGH",
+            role=Roles.STOREKEEPER,
+        )
+
+        Task.objects.create(
+            task_type=TaskType.RECEIVING,
+            title="Моя ожидающая задача",
+            status=TaskStatus.PENDING,
+            assigned_to=current_user,
+            created_by=self.user,
+        )
+        Task.objects.create(
+            task_type=TaskType.RECEIVING,
+            title="Чужая ожидающая задача",
+            status=TaskStatus.PENDING,
+            assigned_to=other_user,
+            created_by=self.user,
+        )
+        Task.objects.create(
+            task_type=TaskType.INVENTORY,
+            title="Моя задача в работе",
+            status=TaskStatus.IN_PROGRESS,
+            assigned_to=current_user,
+            created_by=self.user,
+        )
+        Task.objects.create(
+            task_type=TaskType.INVENTORY,
+            title="Чужая задача в работе",
+            status=TaskStatus.IN_PROGRESS,
+            assigned_to=other_user,
+            created_by=self.user,
+        )
+
+        captured_context = {}
+
+        def fake_render(_request, _template, context):
+            captured_context.update(context)
+            return HttpResponse("ok")
+
+        request = self.factory.get("/")
+        request.user = current_user
+        with patch("core.views.render", side_effect=fake_render):
+            self.assertEqual(dashboard(request).status_code, 200)
+
+        self.assertEqual(captured_context["today_summary"]["pending_tasks"], 1)
+        self.assertEqual(captured_context["today_summary"]["in_progress_tasks"], 1)
 
     # ── Inventory ──────────────────────────────────────────
     def test_stock_list(self):

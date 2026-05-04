@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url_tags %}
 
 {% block title %}Журнал аудита · Панель управления{% endblock %}
 
@@ -68,11 +69,11 @@
         <table class="data-table__table">
           <thead>
             <tr>
-              <th>Дата / время</th>
-              <th>Пользователь</th>
-              <th>Действие</th>
-              <th>Ресурс</th>
-              <th>IP</th>
+              {% include "partials/sortable_th.html" with key="time" label="Дата / время" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="user" label="Пользователь" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="action" label="Действие" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="resource" label="Ресурс" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="ip" label="IP" current=sort order=order %}
             </tr>
           </thead>
           <tbody>

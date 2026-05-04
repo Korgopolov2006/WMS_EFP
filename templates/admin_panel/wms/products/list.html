@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url_tags %}
 
 {% block title %}Товары · Панель управления{% endblock %}
 
@@ -31,6 +32,65 @@
         </svg>
         Печать выбранных
       </a>
+
+      {# Меню массовых действий #}
+      <div class="menu-pop" data-menu-pop>
+        <button type="button" class="btn btn--ghost" data-menu-toggle aria-haspopup="menu" aria-expanded="false"
+                id="btn-bulk-actions" disabled>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          Действия
+          <span id="bulk-counter" class="badge badge--neutral" style="margin-left:6px;font-size:10px;padding:1px 6px;">0</span>
+        </button>
+        <div class="menu-pop__panel" role="menu">
+          <button type="button" class="menu-pop__item" data-bulk="set_category">
+            Сменить категорию…
+          </button>
+          <button type="button" class="menu-pop__item" data-bulk="set_brand">
+            Сменить бренд…
+          </button>
+          <hr style="margin:4px 0;border:none;border-top:1px solid var(--border);">
+          <button type="button" class="menu-pop__item" data-bulk="delete"
+                  style="color:var(--danger);">
+            Удалить выбранные
+          </button>
+        </div>
+      </div>
+
+      {# Скрытые формы для отправки bulk-действий #}
+      <form id="bulk-form" method="post" action="{% url 'admin_panel:wms_product_bulk' %}" style="display:none;">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="bulk-action">
+        <input type="hidden" name="ids" id="bulk-ids">
+        <input type="hidden" name="category" id="bulk-category">
+        <input type="hidden" name="brand" id="bulk-brand">
+      </form>
+
+      {# Модалка выбора категории/бренда #}
+      <dialog id="bulk-pick-dialog"
+              style="border:1px solid var(--border);border-radius:var(--r-lg);padding:0;
+                     max-width:420px;width:100%;background:var(--surface);color:var(--text);
+                     box-shadow:var(--shadow-lg);">
+        <form method="dialog" id="bulk-pick-form">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+            <h3 id="bulk-pick-title" style="margin:0;font-size:15px;color:var(--text);">Выбор</h3>
+          </div>
+          <div style="padding:16px 20px;">
+            <p style="font-size:13px;color:var(--text-2);margin:0 0 12px;">
+              Будет применено к <strong id="bulk-pick-count">0</strong> выбранным товарам.
+            </p>
+            <select id="bulk-pick-select" class="input" style="width:100%;"></select>
+          </div>
+          <div style="padding:14px 20px;background:var(--surface-2);border-top:1px solid var(--border);
+                      display:flex;gap:10px;justify-content:flex-end;">
+            <button type="button" class="btn btn--ghost" id="bulk-pick-cancel">Отмена</button>
+            <button type="button" class="btn btn--primary" id="bulk-pick-apply">Применить</button>
+          </div>
+        </form>
+      </dialog>
       <a class="btn btn--ghost" href="{% url 'catalog_admin_home' %}" target="_blank">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
           <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
@@ -82,13 +142,19 @@
       <table class="data-table__table">
         <thead>
           <tr>
-            <th style="width:32px;"><input type="checkbox" id="select-all" title="Выбрать все"></th>
-            <th>Артикул</th>
-            <th>Наименование</th>
-            <th>Бренд</th>
-            <th>Категория</th>
-            <th>OEM</th>
-            <th>Штрихкод</th>
+            <th style="width:36px;">
+              <label class="row" style="gap:4px;align-items:center;cursor:pointer;font-size:11px;font-weight:500;color:var(--text-3);"
+                     title="Выделить все товары на этой странице">
+                <input type="checkbox" id="select-all">
+                <span>Все</span>
+              </label>
+            </th>
+            {% include "partials/sortable_th.html" with key="sku" label="Артикул" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="name" label="Наименование" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="brand" label="Бренд" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="category" label="Категория" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="oem" label="OEM" current=sort order=order %}
+            {% include "partials/sortable_th.html" with key="barcode" label="Штрихкод" current=sort order=order %}
             <th class="data-table__actions">Коды</th>
           </tr>
         </thead>
@@ -121,18 +187,106 @@
     (function () {
       const all = document.getElementById("select-all");
       const items = () => document.querySelectorAll(".js-product-pick");
+      const counter = document.getElementById("bulk-counter");
+      const bulkBtn = document.getElementById("btn-bulk-actions");
+
+      function selectedIds() {
+        return [...items()].filter(cb => cb.checked).map(cb => cb.value);
+      }
+      function refresh() {
+        const ids = selectedIds();
+        if (counter) counter.textContent = ids.length;
+        if (bulkBtn) bulkBtn.disabled = ids.length === 0;
+      }
       if (all) all.addEventListener("change", () => {
         items().forEach(cb => cb.checked = all.checked);
+        refresh();
       });
+      items().forEach(cb => cb.addEventListener("change", refresh));
+      refresh();
 
-      const bulk = document.getElementById("btn-bulk-labels");
-      if (bulk) bulk.addEventListener("click", (e) => {
+      const printBtn = document.getElementById("btn-bulk-labels");
+      if (printBtn) printBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        const ids = [...items()].filter(cb => cb.checked).map(cb => cb.value);
+        const ids = selectedIds();
         if (!ids.length) { alert("Выберите товары галочками."); return; }
         const url = "{% url 'catalog_labels_bulk' %}?ids=" + ids.join(",");
         window.open(url, "_blank");
       });
+
+      // ── Bulk-actions ────────────────────────────────────
+      const bulkForm     = document.getElementById("bulk-form");
+      const bulkAction   = document.getElementById("bulk-action");
+      const bulkIds      = document.getElementById("bulk-ids");
+      const bulkCategory = document.getElementById("bulk-category");
+      const bulkBrand    = document.getElementById("bulk-brand");
+      const dialog       = document.getElementById("bulk-pick-dialog");
+      const dlgTitle     = document.getElementById("bulk-pick-title");
+      const dlgCount     = document.getElementById("bulk-pick-count");
+      const dlgSelect    = document.getElementById("bulk-pick-select");
+      const dlgCancel    = document.getElementById("bulk-pick-cancel");
+      const dlgApply     = document.getElementById("bulk-pick-apply");
+
+      const CATEGORIES = [
+        {% for c in categories %}{ id: "{{ c.pk }}", name: "{{ c.name|escapejs }}" }{% if not forloop.last %},{% endif %}{% endfor %}
+      ];
+      const BRANDS = [
+        {% for b in brands %}{ id: "{{ b.pk }}", name: "{{ b.name|escapejs }}" }{% if not forloop.last %},{% endif %}{% endfor %}
+      ];
+
+      function fillSelect(items) {
+        dlgSelect.innerHTML = items.map(it =>
+          `<option value="${it.id}">${it.name}</option>`
+        ).join("");
+      }
+
+      function submitBulk(action, extra) {
+        const ids = selectedIds();
+        bulkAction.value = action;
+        bulkIds.value = ids.join(",");
+        bulkCategory.value = (extra && extra.category) || "";
+        bulkBrand.value    = (extra && extra.brand)    || "";
+        bulkForm.submit();
+      }
+
+      let pendingAction = null;
+
+      document.querySelectorAll("[data-bulk]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const ids = selectedIds();
+          if (!ids.length) { alert("Выберите товары галочками."); return; }
+          const action = btn.dataset.bulk;
+
+          if (action === "delete") {
+            if (confirm(`Удалить ${ids.length} выбранных товаров? Это действие необратимо.`)) {
+              submitBulk("delete");
+            }
+            return;
+          }
+          // set_category / set_brand
+          pendingAction = action;
+          dlgCount.textContent = ids.length;
+          if (action === "set_category") {
+            dlgTitle.textContent = "Сменить категорию";
+            fillSelect(CATEGORIES);
+          } else {
+            dlgTitle.textContent = "Сменить бренд";
+            fillSelect(BRANDS);
+          }
+          dialog.showModal();
+        });
+      });
+
+      if (dlgCancel) dlgCancel.addEventListener("click", () => dialog.close());
+      if (dlgApply)  dlgApply.addEventListener("click", () => {
+        const val = dlgSelect.value;
+        if (!val) { alert("Выберите значение."); return; }
+        dialog.close();
+        if (pendingAction === "set_category") submitBulk("set_category", { category: val });
+        else if (pendingAction === "set_brand") submitBulk("set_brand", { brand: val });
+      });
+      dialog.addEventListener("click", (e) => { if (e.target === dialog) dialog.close(); });
     })();
     </script>
 

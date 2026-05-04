@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load url_tags %}
 
 {% block title %}История движений · WMS{% endblock %}
 
@@ -67,16 +68,16 @@
         <table class="data-table__table">
           <thead>
             <tr>
-              <th>Дата</th>
-              <th>Тип</th>
-              <th>SKU</th>
-              <th>Товар</th>
-              <th class="data-table__num">Кол-во</th>
+              {% include "partials/sortable_th.html" with key="date" label="Дата" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="type" label="Тип" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="sku" label="SKU" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="name" label="Товар" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="qty" label="Кол-во" current=sort order=order %}
               <th>Откуда</th>
               <th>Куда</th>
               <th>Документ</th>
-              <th>Пользователь</th>
-              <th>Статус</th>
+              {% include "partials/sortable_th.html" with key="user" label="Пользователь" current=sort order=order %}
+              {% include "partials/sortable_th.html" with key="status" label="Статус" current=sort order=order %}
             </tr>
           </thead>
           <tbody>

@@ -84,6 +84,13 @@
             <div class="kv__v muted">{{ task.created_at|date:"d.m.Y H:i" }}</div>
           </div>
 
+          {% if task.due_date %}
+            <div class="kv">
+              <div class="kv__k">Срок выполнения</div>
+              <div class="kv__v muted">{{ task.due_date|date:"d.m.Y H:i" }}</div>
+            </div>
+          {% endif %}
+
           {% if task.started_at %}
             <div class="kv">
               <div class="kv__k">Начато</div>
@@ -143,6 +150,14 @@
                     <a href="{% url 'order_detail' task.order.pk %}">{{ task.order.number }}</a>
                   </div>
                 </div>
+                {% if task.order.note %}
+                  <div class="toast toast--warning">
+                    <div>
+                      <div class="toast__title">Комментарий к заказу</div>
+                      <div class="hint">{{ task.order.note|linebreaksbr }}</div>
+                    </div>
+                  </div>
+                {% endif %}
               {% endif %}
               {% if task.picking_task %}
                 <div class="kv">

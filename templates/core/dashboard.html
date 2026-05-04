@@ -197,7 +197,12 @@
       </div>
       {% if today_summary.next_action %}
         <div class="card__footer">
-          <a class="btn btn--primary btn--block" href="{{ today_summary.next_action.url }}">
+          <a class="btn btn--primary btn--block"
+             href="{{ today_summary.next_action.url }}"
+             {% if today_summary.next_action.is_task_queue %}
+               data-next-task-button
+               data-next-task-url="{{ today_summary.next_action.url }}?modal=1"
+             {% endif %}>
             {{ today_summary.next_action.button|default:"Открыть" }}
           </a>
         </div>
@@ -223,5 +228,81 @@
       </div>
     </section>
   {% endif %}
+
+  <div id="no-task-modal" class="modal-backdrop" hidden style="display:none;" aria-hidden="true">
+    <article class="modal" role="dialog" aria-modal="true" aria-labelledby="no-task-modal-title">
+      <div class="card__header">
+        <h2 id="no-task-modal-title" class="h3">Задач пока нет</h2>
+      </div>
+      <div class="card__body">
+        <p id="no-task-modal-message" class="muted">
+          На данный момент задач для вашей роли нет. Можно проверить позже или создать задачу вручную.
+        </p>
+      </div>
+      <div class="card__footer row row--wrap">
+        <button type="button" class="btn btn--primary" data-no-task-close>Понятно</button>
+        <a class="btn btn--ghost" href="{% url 'task_create' %}">Создать задачу себе</a>
+      </div>
+    </article>
+  </div>
 </div>
+
+<script>
+  (function initNextTaskModal() {
+    const button = document.querySelector('[data-next-task-button]');
+    const modal = document.getElementById('no-task-modal');
+    const message = document.getElementById('no-task-modal-message');
+    if (!button || !modal) return;
+
+    function openModal(text) {
+      if (message && text) message.textContent = text;
+      modal.hidden = false;
+      modal.style.display = 'grid';
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeModal() {
+      modal.hidden = true;
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    modal.querySelectorAll('[data-no-task-close]').forEach(close => {
+      close.addEventListener('click', closeModal);
+    });
+    modal.addEventListener('click', event => {
+      if (event.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !modal.hidden) closeModal();
+    });
+
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      const url = button.dataset.nextTaskUrl || button.href;
+      button.setAttribute('aria-busy', 'true');
+      fetch(url, {
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.redirect_url) {
+            window.location.href = data.redirect_url;
+            return;
+          }
+          openModal(data.message || 'На данный момент задачи отсутствуют.');
+        })
+        .catch(() => {
+          window.location.href = button.href;
+        })
+        .finally(() => {
+          button.removeAttribute('aria-busy');
+        });
+    });
+  })();
+</script>
 {% endblock %}

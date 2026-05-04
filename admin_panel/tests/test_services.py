@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
 from admin_panel.models import AuditLog
@@ -18,6 +19,7 @@ from admin_panel.services import (
     generate_secure_password,
     log_action,
     reset_user_password,
+    upload_backup_file,
     validate_password_complexity,
 )
 
@@ -541,6 +543,20 @@ class TestBackupServices(TestCase):
 
         self.assertIsInstance(result, list)
 
+    def test_upload_backup_file_saves_file_and_record(self):
+        from admin_panel.models import BackupRecord
+
+        uploaded = SimpleUploadedFile("external-demo.sql", b"-- demo dump --")
+
+        with patch("admin_panel.services.BACKUP_DIR", self.backup_dir):
+            record = upload_backup_file(uploaded, actor=self.admin, notes="От коллеги")
+
+        self.assertTrue(record.filename.startswith("backup_uploaded_"))
+        self.assertTrue(record.filename.endswith(".sql"))
+        self.assertEqual(record.notes, "От коллеги")
+        self.assertTrue((self.backup_dir / record.filename).exists())
+        self.assertTrue(BackupRecord.objects.filter(filename=record.filename).exists())
+
     # ── delete_backup ─────────────────────────────────────────
 
     def test_delete_removes_file_and_db_record(self):
@@ -597,7 +613,11 @@ class TestBackupServices(TestCase):
         with patch("admin_panel.services.BACKUP_DIR", self.backup_dir):
             restore_database_backup("restore_me.sql", actor=self.admin)
 
-        mock_run.assert_called_once()
+        # Должно быть >=1 вызовов: основной psql -f и пост-resync sequences
+        self.assertGreaterEqual(mock_run.call_count, 1)
+        # Первый вызов — restore SQL
+        first_args = mock_run.call_args_list[0].args[0]
+        self.assertIn("-f", first_args)
 
     @patch("admin_panel.services.subprocess.run")
     def test_restore_creates_audit_log(self, mock_run):

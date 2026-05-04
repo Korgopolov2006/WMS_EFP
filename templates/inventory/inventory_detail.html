@@ -16,30 +16,180 @@
   <div class="card card--glass card--lg" style="margin-top:14px;">
     <div class="card__header">
       <h3 class="h3">Добавить строку</h3>
-      <p class="muted">Шаги: 1) найдите товар по названию/SKU/OEM, 2) укажите код места, 3) внесите фактическое количество.</p>
+      <p class="muted">Начните вводить товар — система покажет учётный остаток, предполагаемое место, QR и штрихкод. Фактическое количество можно сразу поправить руками.</p>
     </div>
-    <form method="post" class="form stack">
+    <form method="post" class="form stack" id="inventory-line-form">
       {% csrf_token %}
       <input type="hidden" name="add_line" value="1">
+      <input type="hidden" name="product_id" id="inventory-product-id">
+      <input type="hidden" name="location_id" id="inventory-location-id">
       <div class="row row--wrap" style="gap:10px;">
         <div class="field" style="min-width:260px;">
           <div class="field__label">Товар (название / SKU / OEM)</div>
-          <input type="text" class="form__input" name="product_query" placeholder="Например: фильтр, DMO-SMALL-001, OEM-123" required>
+          <input type="text" class="form__input" name="product_query" id="inventory-product-query"
+                 placeholder="Например: фильтр, DMO-SMALL-001, OEM-123" autocomplete="off" required>
+          <div class="hint">Можно ввести SKU, OEM, штрихкод или часть названия.</div>
         </div>
         <div class="field" style="min-width:180px;">
           <div class="field__label">Код места хранения</div>
-          <input type="text" class="form__input" name="location_code" placeholder="Например: A01" required>
+          <input type="text" class="form__input" name="location_code" id="inventory-location-code"
+                 placeholder="Заполнится автоматически" required>
         </div>
         <div class="field" style="min-width:120px;">
           <div class="field__label">Фактически, шт</div>
-          <input type="number" class="form__input" name="qty_actual" min="0" step="1" required>
+          <input type="number" class="form__input" name="qty_actual" id="inventory-qty-actual" min="0" step="1" required>
         </div>
         <div style="display:flex;align-items:flex-end;">
-          <button type="submit" class="btn btn--primary">Добавить</button>
+          <button type="submit" class="btn btn--primary">Сохранить строку</button>
         </div>
       </div>
+      <div id="inventory-product-helper" class="card" style="display:none;padding:12px;border-style:dashed;"></div>
     </form>
   </div>
+
+  <script>
+    (function initInventoryProductHelper() {
+      const hintUrl = "{% url 'inventory_product_hint' inventory.pk %}";
+      const queryInput = document.getElementById('inventory-product-query');
+      const productIdInput = document.getElementById('inventory-product-id');
+      const locationIdInput = document.getElementById('inventory-location-id');
+      const locationCodeInput = document.getElementById('inventory-location-code');
+      const qtyActualInput = document.getElementById('inventory-qty-actual');
+      const helper = document.getElementById('inventory-product-helper');
+      if (!queryInput || !helper) return;
+
+      let timer = null;
+      let products = [];
+
+      function esc(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function setLocation(product, location) {
+        if (!location) return;
+        locationIdInput.value = location.id;
+        locationCodeInput.value = location.code;
+        qtyActualInput.value = location.qty_book;
+        renderProduct(product, location);
+      }
+
+      function selectProduct(product, location) {
+        productIdInput.value = product.id;
+        queryInput.value = `${product.sku} · ${product.name}`;
+        setLocation(product, location || product.primary_location);
+      }
+
+      function renderProduct(product, activeLocation) {
+        const locations = product.locations || [];
+        const locationButtons = locations.length
+          ? locations.map(location => `
+              <button type="button" class="btn btn--ghost btn--sm" data-location-id="${location.id}">
+                ${esc(location.code)} · по учёту ${esc(location.qty_book)} шт
+              </button>
+            `).join('')
+          : '<span class="muted">По этому товару нет остатков в зоне инвентаризации. Можно указать место вручную.</span>';
+
+        helper.style.display = '';
+        helper.innerHTML = `
+          <div class="row row--between row--wrap" style="gap:14px;align-items:flex-start;">
+            <div style="min-width:260px;flex:1;">
+              <div class="hint">Выбранный товар</div>
+              <div class="kv__v">${esc(product.sku)} — ${esc(product.name)}</div>
+              <div class="hint">
+                OEM: ${esc(product.oem || '—')} · Штрихкод: ${esc(product.barcode || '—')} · Всего по учёту: ${esc(product.total_qty)} шт
+              </div>
+              <div class="hint" style="margin-top:6px;">
+                Предполагаемое место: <strong>${esc(activeLocation ? activeLocation.code : 'не найдено')}</strong>
+                ${activeLocation ? `· ожидаемо ${esc(activeLocation.qty_book)} шт` : ''}
+              </div>
+              <div class="row row--wrap" style="gap:6px;margin-top:10px;">${locationButtons}</div>
+            </div>
+            <div class="row row--wrap" style="gap:10px;align-items:flex-start;">
+              <div style="text-align:center;">
+                <div class="hint">QR</div>
+                <img src="${esc(product.qr_url)}" alt="QR ${esc(product.sku)}" style="width:92px;height:92px;background:#fff;border-radius:8px;padding:6px;">
+              </div>
+              <div style="text-align:center;">
+                <div class="hint">Штрихкод</div>
+                <img src="${esc(product.barcode_url)}" alt="Штрихкод ${esc(product.sku)}" style="width:180px;max-width:100%;height:64px;background:#fff;border-radius:8px;padding:6px;object-fit:contain;">
+                <div><a class="hint" href="${esc(product.label_url)}" target="_blank">Открыть этикетку ↗</a></div>
+              </div>
+            </div>
+          </div>
+        `;
+        helper.querySelectorAll('[data-location-id]').forEach(button => {
+          button.addEventListener('click', () => {
+            const selected = locations.find(location => String(location.id) === String(button.dataset.locationId));
+            setLocation(product, selected);
+          });
+        });
+      }
+
+      function renderSuggestions() {
+        if (!products.length) {
+          helper.style.display = '';
+          helper.innerHTML = '<div class="muted">Ничего не найдено. Попробуйте SKU, OEM, штрихкод или более точное название.</div>';
+          return;
+        }
+
+        helper.style.display = '';
+        helper.innerHTML = `
+          <div class="hint" style="margin-bottom:8px;">Выберите товар — место и учётное количество подставятся автоматически.</div>
+          <div class="stack stack--sm">
+            ${products.map((product, index) => `
+              <button type="button" class="row row--between row--wrap" data-product-index="${index}"
+                      style="width:100%;gap:10px;text-align:left;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--surface);color:inherit;">
+                <span>
+                  <strong>${esc(product.sku)}</strong> — ${esc(product.name)}
+                  <span class="hint" style="display:block;">OEM: ${esc(product.oem || '—')} · ${esc(product.primary_location ? product.primary_location.code : 'место не найдено')} · по учёту ${esc(product.primary_location ? product.primary_location.qty_book : product.total_qty)} шт</span>
+                </span>
+                <span class="badge badge--success">Выбрать</span>
+              </button>
+            `).join('')}
+          </div>
+        `;
+        helper.querySelectorAll('[data-product-index]').forEach(button => {
+          button.addEventListener('click', () => {
+            const product = products[Number(button.dataset.productIndex)];
+            selectProduct(product);
+          });
+        });
+      }
+
+      function loadHints() {
+        const query = queryInput.value.trim();
+        productIdInput.value = '';
+        if (query.length < 2) {
+          helper.style.display = 'none';
+          return;
+        }
+        helper.style.display = '';
+        helper.innerHTML = '<div class="muted">Ищу товар и остатки…</div>';
+        fetch(`${hintUrl}?q=${encodeURIComponent(query)}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+          .then(response => response.json())
+          .then(data => {
+            products = data.products || [];
+            if (products.length === 1) {
+              selectProduct(products[0]);
+            } else {
+              renderSuggestions();
+            }
+          })
+          .catch(() => {
+            helper.innerHTML = '<div class="muted">Не удалось загрузить подсказки. Можно заполнить товар и место вручную.</div>';
+          });
+      }
+
+      queryInput.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(loadHints, 300);
+      });
+    })();
+  </script>
 
   <div class="card card--glass card--lg" style="margin-top:14px;">
     <div class="card__header">

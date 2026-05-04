@@ -84,8 +84,29 @@
             <div class="field">
               <div class="field__label">{{ field.label }}</div>
               {{ field }}
+              {% if field.name == "qty_received" %}
+                <div class="hint" style="margin-top:4px;">
+                  Это фактическое количество: сколько реально приняли сейчас. Можно поставить меньше ожидаемого или 0.
+                </div>
+              {% endif %}
               {% if field.errors %}
                 <div class="hint" style="color: rgba(255,80,120,.9)">{{ field.errors }}</div>
+              {% endif %}
+              {% if field.name == "storage_location" and receiving.warehouse %}
+                {# ── Помощник: выбор 3D-стеллажа с индикатором заполненности ── #}
+                <div class="field__hint" style="margin-top:6px;">
+                  <details class="rcv-3d-helper">
+                    <summary style="cursor:pointer;color:var(--brand);">📦 Выбрать на 3D-стеллаже</summary>
+                    <div id="rcv-3d-helper-body" style="margin-top:8px;">
+                      <div id="rcv-3d-loading" class="hint">Загрузка списка стеллажей…</div>
+                      <div id="rcv-3d-list" class="rcv-3d-list" hidden></div>
+                      <a href="{% url 'warehouse_3d:view' receiving.warehouse.id %}" target="_blank"
+                         class="hint" style="display:inline-block;margin-top:6px;">
+                        Открыть 3D-склад в новой вкладке ↗
+                      </a>
+                    </div>
+                  </details>
+                </div>
               {% endif %}
             </div>
           {% endfor %}
@@ -181,6 +202,123 @@
         if (productSelect.value && !locationSelect.value) {
           applySuggestedLocation();
         }
+      })();
+
+      // ─── Интеграция с 3D-складом: список стеллажей с индикатором ───
+      (function init3dHelper() {
+        {% if receiving.warehouse %}
+        const warehouseId = {{ receiving.warehouse.id }};
+        const url = "{% url 'warehouse_3d:objects_for_receiving' receiving.warehouse.id %}";
+        const helperBody = document.getElementById('rcv-3d-helper-body');
+        const loadingEl = document.getElementById('rcv-3d-loading');
+        const listEl = document.getElementById('rcv-3d-list');
+        const locationSelect = document.getElementById('id_storage_location');
+        if (!helperBody || !listEl) return;
+
+        let items = [];
+        let loaded = false;
+
+        function locFillBadgeForOption(locId) {
+          // вернёт {pct, status} для конкретного storage_location_id
+          const item = items.find(i => i.storage_location_id === locId);
+          return item || null;
+        }
+
+        function statusColor(status) {
+          return status === 'full' ? '#dc2626'
+               : status === 'warn' ? '#eab308'
+               : '#16a34a';
+        }
+
+        function escapeAttr(value) {
+          return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        }
+
+        function render() {
+          if (!items.length) {
+            listEl.innerHTML = '<div class="hint">На этом складе пока нет 3D-объектов с привязкой к местам хранения.</div>';
+            listEl.hidden = false;
+            loadingEl.hidden = true;
+            return;
+          }
+          // Группируем по типу
+          const byType = {};
+          items.forEach(it => {
+            if (!byType[it.type]) byType[it.type] = [];
+            byType[it.type].push(it);
+          });
+          let html = '';
+          Object.keys(byType).forEach(t => {
+            html += `<div class="rcv-3d-group"><div class="rcv-3d-group__head">${byType[t][0].type_label}</div>`;
+            byType[t].forEach(it => {
+              const pctNum = Math.round(it.pct * 100);
+              const color = statusColor(it.status);
+              const nameLabel = it.name ? ` · ${it.name}` : '';
+              const tooltip = `${it.code}${nameLabel} → ${it.storage_location_code}. ${pctNum}% — примерная заполненность 3D-объекта по текущим остаткам: зелёный значит место почти свободно, жёлтый — близко к заполнению, красный — почти нет места.`;
+              html += `
+                <button type="button" class="rcv-3d-item" data-loc="${it.storage_location_id}"
+                        title="${escapeAttr(tooltip)}">
+                  <span class="rcv-3d-item__code">${it.code}</span>
+                  <span class="rcv-3d-item__loc">${it.name || it.storage_location_code}</span>
+                  <span class="rcv-3d-item__bar"><i style="width:${pctNum}%;background:${color}"></i></span>
+                  <span class="rcv-3d-item__pct" style="color:${color};">${pctNum}%</span>
+                </button>`;
+            });
+            html += '</div>';
+          });
+          listEl.innerHTML = html;
+          listEl.hidden = false;
+          loadingEl.hidden = true;
+          listEl.querySelectorAll('.rcv-3d-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const locId = btn.dataset.loc;
+              if (!locationSelect) return;
+              const opt = Array.from(locationSelect.options).find(o => o.value === locId);
+              if (opt) {
+                locationSelect.value = locId;
+                locationSelect.dataset.autofilled = '0';
+                listEl.querySelectorAll('.rcv-3d-item').forEach(x => x.classList.remove('is-active'));
+                btn.classList.add('is-active');
+              }
+            });
+          });
+        }
+
+        function load() {
+          if (loaded) return;
+          loaded = true;
+          fetch(url, { headers: {'X-Requested-With': 'XMLHttpRequest'} })
+            .then(r => r.json())
+            .then(d => { items = d.items || []; render(); annotateExistingLines(); })
+            .catch(() => { loadingEl.textContent = 'Не удалось загрузить список 3D-объектов'; });
+        }
+
+        // Подгружаем при первом раскрытии
+        const summary = helperBody.parentElement.querySelector('summary');
+        if (summary) summary.addEventListener('click', load);
+
+        // Аннотация уже добавленных строк
+        function annotateExistingLines() {
+          document.querySelectorAll('[data-rcv-line-loc]').forEach(el => {
+            const locId = parseInt(el.dataset.rcvLineLoc);
+            const item = locFillBadgeForOption(locId);
+            if (item) {
+              const pct = Math.round(item.pct * 100);
+              const color = statusColor(item.status);
+              const nameTxt = item.name ? ` (${item.name})` : '';
+              const tooltip = `${item.code}${nameTxt}: ${pct}% — примерная заполненность 3D-объекта по текущим остаткам. Зелёный = место свободно, жёлтый = заполнено заметно, красный = почти нет места.`;
+              el.innerHTML = `<span class="rcv-line-3d-badge" style="border-color:${color};color:${color};" title="${escapeAttr(tooltip)}">📦 ${item.code}${nameTxt} · ${pct}%</span>`;
+            }
+          });
+        }
+
+        // Сразу подгружаем — чтобы аннотировать существующие строки
+        load();
+        {% endif %}
       })();
     </script>
   </section>
@@ -312,11 +450,23 @@
                     Ожидаемо: {{ line.qty_expected }} · Принято: {{ line.qty_received }}
                     {% if line.storage_location %}
                       · Место: {{ line.storage_location }}
+                      <span data-rcv-line-loc="{{ line.storage_location_id }}"></span>
                     {% endif %}
                   </div>
                 </div>
                 {% if user_role == "STOREKEEPER" or user.is_superuser or user_role == "ADMIN" %}
                   <div class="row row--wrap">
+                    {% if receiving.status == "DRAFT" or receiving.status == "IN_PROGRESS" %}
+                      <form method="post" action="{% url 'receiving_update_line_qty' receiving.pk line.pk %}" class="row row--wrap" style="gap:6px;align-items:center;">
+                        {% csrf_token %}
+                        <label class="hint" style="display:flex;gap:6px;align-items:center;">
+                          Факт:
+                          <input type="number" name="qty_received" value="{{ line.qty_received|floatformat:0 }}" min="0" step="1"
+                                 class="form__input" style="width:84px;padding:6px 8px;">
+                        </label>
+                        <button type="submit" class="btn btn--ghost" style="font-size:12px;">Сохранить факт</button>
+                      </form>
+                    {% endif %}
                     <button type="button" class="btn btn--ghost" onclick="checkLineOnEFP('{{ line.product.oem_number|default:"" }}')" style="font-size:12px;">Проверить на EFP</button>
                   </div>
                 {% endif %}

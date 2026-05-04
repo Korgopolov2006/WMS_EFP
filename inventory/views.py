@@ -6,8 +6,9 @@ from decimal import Decimal, InvalidOperation
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from accounts.constants import Roles
@@ -30,18 +31,43 @@ def _paginate(request: HttpRequest, items, per_page: int = 5):
     return paginator.get_page(request.GET.get("page"))
 
 
+def _format_decimal(value) -> str:
+    value = value or Decimal("0")
+    if value == value.to_integral_value():
+        return str(value.quantize(Decimal("1")))
+    return str(value.normalize())
+
+
 @role_required(Roles.ADMIN, Roles.STOREKEEPER)
 def stock_list(request: HttpRequest) -> HttpResponse:
     q = (request.GET.get("q") or "").strip()
+    product_query = (request.GET.get("product") or request.GET.get("product_query") or "").strip()
+    location_query = (request.GET.get("location") or request.GET.get("location_query") or "").strip()
     product_id = request.GET.get("product_id", "").strip()
     location_id = request.GET.get("location_id", "").strip()
 
     qs = Stock.objects.select_related("product", "storage_location", "storage_location__zone").all()
 
+    # Старые ID-параметры оставляем для совместимости со ссылками/интеграциями,
+    # но в интерфейсе показываем понятные фильтры по товару и месту.
     if product_id.isdigit():
         qs = qs.filter(product_id=int(product_id))
     if location_id.isdigit():
         qs = qs.filter(storage_location_id=int(location_id))
+    if product_query:
+        qs = qs.filter(
+            Q(product__internal_sku__icontains=product_query)
+            | Q(product__name__icontains=product_query)
+            | Q(product__oem_number__icontains=product_query)
+            | Q(product__barcode__icontains=product_query)
+        )
+    if location_query:
+        qs = qs.filter(
+            Q(storage_location__code__icontains=location_query)
+            | Q(storage_location__name__icontains=location_query)
+            | Q(storage_location__zone__code__icontains=location_query)
+            | Q(storage_location__zone__name__icontains=location_query)
+        )
     if q:
         qs = qs.filter(
             Q(product__internal_sku__icontains=q)
@@ -51,7 +77,17 @@ def stock_list(request: HttpRequest) -> HttpResponse:
             | Q(storage_location__code__icontains=q)
         )
 
-    qs = qs.order_by("-qty_available", "product__name")
+    from core.sorting import apply_ordering
+    qs, sort, order = apply_ordering(qs, request, {
+        "sku":      "product__internal_sku",
+        "name":     "product__name",
+        "oem":      "product__oem_number",
+        "location": "storage_location__code",
+        "zone":     "storage_location__zone__name",
+        "qty":      "qty_available",
+        "reserved": "qty_reserved",
+        "batch":    "batch_no",
+    }, default="qty", default_order="desc")
 
     export_resp = dispatch_export(
         request, qs, _STOCK_EXPORT_COLUMNS,
@@ -68,9 +104,13 @@ def stock_list(request: HttpRequest) -> HttpResponse:
         {
             "items": page_obj.object_list,
             "q": q,
+            "product_query": product_query,
+            "location_query": location_query,
             "product_id": product_id,
             "location_id": location_id,
             "page_obj": page_obj,
+            "sort": sort,
+            "order": order,
         },
     )
 
@@ -125,7 +165,17 @@ def inventory_list(request: HttpRequest) -> HttpResponse:
             | Q(created_by__username__icontains=q)
         )
 
-    qs = qs.order_by("-id")
+    from core.sorting import apply_ordering
+    qs, sort, order = apply_ordering(qs, request, {
+        "number":   "number",
+        "zone":     "zone__name",
+        "status":   "status",
+        "creator":  "created_by__username",
+        "created":  "created_at",
+        "started":  "started_at",
+        "completed": "completed_at",
+    }, default="created", default_order="desc")
+
     page_obj = _paginate(request, qs, per_page=5)
 
     return render(
@@ -136,6 +186,8 @@ def inventory_list(request: HttpRequest) -> HttpResponse:
             "q": q,
             "status": status,
             "page_obj": page_obj,
+            "sort": sort,
+            "order": order,
         },
     )
 
@@ -269,6 +321,64 @@ def inventory_detail(request: HttpRequest, pk: int) -> HttpResponse:
     )
 
 
+@role_required(Roles.ADMIN, Roles.STOREKEEPER)
+def inventory_product_hint(request: HttpRequest, pk: int) -> JsonResponse:
+    inventory = get_object_or_404(Inventory.objects.select_related("zone"), pk=pk)
+    query = (request.GET.get("q") or "").strip()
+    if len(query) < 2:
+        return JsonResponse({"products": []})
+
+    products = (
+        Product.objects.select_related("brand", "category")
+        .filter(
+            Q(internal_sku__icontains=query)
+            | Q(oem_number__icontains=query)
+            | Q(barcode__icontains=query)
+            | Q(name__icontains=query)
+        )
+        .order_by("internal_sku")[:8]
+    )
+
+    items = []
+    for product in products:
+        stock_qs = Stock.objects.select_related("storage_location", "storage_location__zone").filter(product=product)
+        if inventory.zone_id:
+            stock_qs = stock_qs.filter(storage_location__zone=inventory.zone)
+        stocks = list(stock_qs.order_by("-qty_available", "storage_location__code")[:8])
+        total_qty = sum((stock.qty_available for stock in stocks), Decimal("0"))
+        locations = [
+            {
+                "id": stock.storage_location_id,
+                "code": stock.storage_location.code,
+                "name": stock.storage_location.name,
+                "zone": stock.storage_location.zone.code,
+                "qty_book": _format_decimal(stock.qty_available),
+            }
+            for stock in stocks
+        ]
+        primary_location = locations[0] if locations else None
+
+        items.append(
+            {
+                "id": product.pk,
+                "sku": product.internal_sku,
+                "name": product.name,
+                "oem": product.oem_number,
+                "barcode": product.barcode or product.internal_sku,
+                "brand": product.brand.name if product.brand_id else "",
+                "category": product.category.name if product.category_id else "",
+                "total_qty": _format_decimal(total_qty),
+                "primary_location": primary_location,
+                "locations": locations,
+                "barcode_url": reverse("catalog_barcode_image", args=[product.internal_sku]),
+                "qr_url": reverse("catalog_qr_image", args=[product.internal_sku]),
+                "label_url": reverse("catalog_label", args=[product.internal_sku]),
+            }
+        )
+
+    return JsonResponse({"products": items})
+
+
 def _parse_date(value: str):
     """YYYY-MM-DD → datetime в локальной TZ или None."""
     value = (value or "").strip()
@@ -316,7 +426,16 @@ def movement_list(request: HttpRequest) -> HttpResponse:
             | Q(ref_id__icontains=q)
         )
 
-    qs = qs.order_by("-created_at", "-id")
+    from core.sorting import apply_ordering
+    qs, sort, order = apply_ordering(qs, request, {
+        "date":     "created_at",
+        "type":     "movement_type",
+        "status":   "status",
+        "sku":      "product__internal_sku",
+        "name":     "product__name",
+        "qty":      "quantity",
+        "user":     "user__username",
+    }, default="date", default_order="desc")
 
     export_resp = dispatch_export(
         request, qs, _MOVEMENT_EXPORT_COLUMNS,
@@ -340,6 +459,8 @@ def movement_list(request: HttpRequest) -> HttpResponse:
             "location_id": location_id,
             "user_id": user_id,
             "movement_types": MovementType.choices,
+            "sort": sort,
+            "order": order,
         },
     )
 

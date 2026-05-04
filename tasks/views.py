@@ -5,10 +5,11 @@ from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import models
-from django.db.models import Q
+from django.db.models import Case, IntegerField, Q, Value, When
 from django.db.models import Count
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
@@ -16,7 +17,8 @@ from accounts.constants import Roles
 from accounts.permissions import role_required
 from picking.models import Order, OrderStatus, PickingTask, PickingTaskStatus
 from receiving.models import ReceivingStatus
-from .models import Task, TaskStatus, TaskType
+from .forms import ManualTaskForm
+from .models import Task, TaskPriority, TaskStatus, TaskType
 from .services import TaskService
 
 
@@ -27,6 +29,17 @@ def _paginate(request: HttpRequest, items, per_page: int = 5):
 
 def _is_admin_user(user) -> bool:
     return bool(user.is_superuser or user.role == Roles.ADMIN)
+
+
+def _task_priority_order():
+    return Case(
+        When(priority=TaskPriority.URGENT, then=Value(0)),
+        When(priority=TaskPriority.HIGH, then=Value(1)),
+        When(priority=TaskPriority.NORMAL, then=Value(2)),
+        When(priority=TaskPriority.LOW, then=Value(3)),
+        default=Value(4),
+        output_field=IntegerField(),
+    )
 
 
 def _can_start_task(task: Task, user) -> bool:
@@ -226,36 +239,76 @@ def tasks_monitoring_api(request: HttpRequest) -> JsonResponse:
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
+def task_create(request: HttpRequest) -> HttpResponse:
+    """Ручное создание задачи начальником или сотрудником для себя."""
+    from django.contrib import messages
+
+    if request.method == "POST":
+        form = ManualTaskForm(request.POST, user=request.user)
+        if form.is_valid():
+            task = form.save(commit=False)
+            task.created_by = request.user
+            task.save()
+            messages.success(request, f"Задача создана: {task.title}")
+            return redirect("task_detail", task_id=task.id)
+    else:
+        form = ManualTaskForm(user=request.user)
+
+    return render(
+        request,
+        "tasks/form.html",
+        {
+            "form": form,
+            "title": "Новая задача",
+            "is_admin_user": _is_admin_user(request.user),
+        },
+    )
+
+
+@login_required
 def next_task(request: HttpRequest) -> HttpResponse:
     """
     «Взять следующую задачу».
     1. Открытая мне (IN_PROGRESS) → её страница.
-    2. Иначе — самая приоритетная PENDING из доступных по роли;
-       если она ничья — назначить мне и открыть.
-    3. Если нечего взять → редирект на список задач с сообщением.
+    2. Иначе — самая приоритетная свободная PENDING из доступных по роли.
+    3. Если нечего взять → JSON для модального окна или редирект со всплывающим сообщением.
     """
     from django.contrib import messages
 
-    qs = TaskService.get_tasks_for_user(request.user)
+    wants_json = (
+        request.GET.get("modal") == "1"
+        or request.headers.get("x-requested-with") == "XMLHttpRequest"
+        or "application/json" in request.headers.get("accept", "")
+    )
+
+    qs = TaskService.get_tasks_for_user(request.user).filter(
+        Q(assigned_to=request.user) | Q(assigned_to__isnull=True)
+    )
 
     in_progress = qs.filter(
         status=TaskStatus.IN_PROGRESS, assigned_to=request.user,
-    ).order_by("-priority", "-created_at").first()
+    ).order_by(_task_priority_order(), "due_date", "-created_at").first()
     if in_progress:
+        if wants_json:
+            return JsonResponse({"success": True, "redirect_url": reverse("task_detail", args=[in_progress.id])})
         return redirect("task_detail", task_id=in_progress.id)
 
     pending = (
         qs.filter(status=TaskStatus.PENDING)
-        .order_by("-priority", "due_date", "-created_at")
+        .order_by(_task_priority_order(), "due_date", "-created_at")
         .first()
     )
-    if pending and pending.assigned_to_id is None:
+    if pending:
         TaskService.assign_task_to_user(pending, request.user)
+        if wants_json:
+            return JsonResponse({"success": True, "redirect_url": reverse("task_detail", args=[pending.id])})
         messages.success(request, f"Задача взята: {pending.title}")
         return redirect("task_detail", task_id=pending.id)
-    if pending:
-        return redirect("task_detail", task_id=pending.id)
 
+    message = "На данный момент задач для вашей роли нет. Можно проверить позже или создать задачу вручную."
+    if wants_json:
+        return JsonResponse({"success": False, "has_task": False, "message": message})
     messages.info(request, "Свободных задач сейчас нет.")
     return redirect("task_list")
 

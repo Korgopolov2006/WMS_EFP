@@ -15,6 +15,7 @@
       <p class="page__subtitle">Список задач для выполнения</p>
     </div>
     <div class="page__actions">
+      <a class="btn btn--primary" href="{% url 'task_create' %}">+ Создать задачу</a>
       {% if user.is_superuser or user_role == "ADMIN" %}
         <a class="btn btn--ghost" href="{% url 'task_list' %}?my_tasks=0">Все задачи</a>
       {% endif %}

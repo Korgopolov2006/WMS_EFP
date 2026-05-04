@@ -35,7 +35,6 @@ def role_redirect(request: HttpRequest) -> HttpResponse:
 def dashboard(request: HttpRequest) -> HttpResponse:
     """Дашборд с ролевым интерфейсом."""
     from tasks.models import Task, TaskStatus, TaskType
-    from tasks.services import TaskService
     from picking.models import PickingTask, PickingTaskStatus
     from receiving.models import Receiving, ReceivingStatus
     from inventory.models import Inventory, InventoryStatus
@@ -60,21 +59,9 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     else:
         effective_role = user.role
 
-    role_task_mapping = {
-        Roles.STOREKEEPER: [TaskType.RECEIVING, TaskType.INVENTORY, TaskType.STOCK_MOVEMENT, TaskType.PICKING],
-        Roles.SMALL_PARTS_PICKER: [TaskType.PICKING],
-        Roles.LOADER: [TaskType.PICKING, TaskType.SHIPPING],
-        Roles.SALES_MANAGER: [],
-        Roles.ANALYST: [],
-    }
-
-    if is_admin_mode:
-        dashboard_tasks = Task.objects.filter(task_type__in=role_task_mapping.get(effective_role, []))
-    else:
-        dashboard_tasks = TaskService.get_tasks_for_user(user)
-
-    pending_tasks = dashboard_tasks.filter(status=TaskStatus.PENDING).count() or 0
-    in_progress_tasks = dashboard_tasks.filter(status=TaskStatus.IN_PROGRESS).count() or 0
+    personal_tasks = Task.objects.filter(assigned_to=user)
+    pending_tasks = personal_tasks.filter(status=TaskStatus.PENDING).count() or 0
+    in_progress_tasks = personal_tasks.filter(status=TaskStatus.IN_PROGRESS).count() or 0
     total_active_tasks = pending_tasks + in_progress_tasks
     progress_percent = int((in_progress_tasks * 100) / total_active_tasks) if total_active_tasks else 0
 
@@ -100,6 +87,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "description": "Открывает уже начатую вами задачу либо назначает первую свободную из очереди.",
         "url": reverse("next_task"),
         "button": "Взять задачу",
+        "is_task_queue": True,
     }
 
     dashboard_cards = []
@@ -152,6 +140,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "description": "Берёт следующую задачу по приоритету и открывает её страницу.",
             "url": reverse("next_task"),
             "button": "Взять задачу",
+            "is_task_queue": True,
         }
 
     if effective_role == Roles.SMALL_PARTS_PICKER:
@@ -178,6 +167,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "description": "Назначает на вас первую свободную задачу подбора и открывает её.",
             "url": reverse("next_task"),
             "button": "Взять задачу",
+            "is_task_queue": True,
         }
 
     if effective_role == Roles.LOADER:
@@ -219,6 +209,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             "description": "Берёт ближайшую задачу подбора или отгрузки.",
             "url": reverse("next_task"),
             "button": "Взять задачу",
+            "is_task_queue": True,
         }
 
     if effective_role == Roles.SALES_MANAGER:

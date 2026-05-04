@@ -16,6 +16,7 @@ urlpatterns = [
     path("users/<int:pk>/edit/", views.user_edit, name="user_edit"),
     path("users/<int:pk>/delete/", views.user_delete, name="user_delete"),
     path("users/<int:pk>/toggle-active/", views.user_toggle_active, name="user_toggle_active"),
+    path("users/bulk/", views.user_bulk_action, name="user_bulk"),
     path("users/<int:pk>/reset-password/", views.user_reset_password, name="user_reset_password"),
 
     # ── Журнал аудита ──────────────────────────────────────
@@ -24,6 +25,7 @@ urlpatterns = [
     # ── Резервные копии ────────────────────────────────────
     path("backups/", views.backup_list, name="backup_list"),
     path("backups/create/", views.backup_create, name="backup_create"),
+    path("backups/upload/", views.backup_upload, name="backup_upload"),
     path("backups/<str:filename>/download/", views.backup_download, name="backup_download"),
     path("backups/<str:filename>/delete/", views.backup_delete_view, name="backup_delete"),
     path("backups/<str:filename>/restore/", views.backup_restore, name="backup_restore"),
@@ -48,6 +50,7 @@ urlpatterns = [
 
     # ── Товары ─────────────────────────────────────────────
     path("products/", views.wms_product_list, name="wms_product_list"),
+    path("products/bulk/", views.wms_product_bulk_action, name="wms_product_bulk"),
 
     # ── Заказы ─────────────────────────────────────────────
     path("orders/", views.wms_order_list, name="wms_order_list"),

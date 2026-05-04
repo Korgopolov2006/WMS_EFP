@@ -50,6 +50,57 @@
     </form>
   </article>
 
+  {# ── Загрузка готового файла резервной копии ── #}
+  <article class="card" style="margin-bottom:24px;">
+    <div class="card__header">
+      <h2 class="h3">Загрузить резервную копию</h2>
+    </div>
+    <form method="post" action="{% url 'admin_panel:backup_upload' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="card__body">
+        <div class="toast toast--warning" style="margin-bottom:16px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <div class="toast__body">
+            Выберите готовый backup-файл с другого компьютера. После загрузки он появится в списке ниже,
+            и его можно будет восстановить через кнопку <strong>Восстановить</strong>.
+          </div>
+        </div>
+        <div class="grid grid--2" style="align-items:start;">
+          <div class="field">
+            <span class="field__label">{{ upload_form.backup_file.label }}</span>
+            <div class="file-picker" data-file-picker>
+              {{ upload_form.backup_file }}
+              <label class="file-picker__button" for="{{ upload_form.backup_file.id_for_label }}">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span>Прикрепить backup</span>
+              </label>
+              <span class="file-picker__name" data-file-picker-name>Backup не прикреплён</span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="field__label">{{ upload_form.notes.label }}</span>
+            {{ upload_form.notes }}
+          </div>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button type="submit" class="btn btn--primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Загрузить файл
+        </button>
+      </div>
+    </form>
+  </article>
+
   {# ── Список резервных копий ── #}
   <div class="data-table" data-density="normal">
     <div class="data-table__scroll">
@@ -77,14 +128,28 @@
                 <td class="num muted">{{ backup.size_human }}</td>
                 <td class="muted">{{ backup.created_at|date:"d.m.Y H:i" }}</td>
                 <td class="muted">{{ backup.created_by.username|default:"system" }}</td>
-                <td class="muted">{{ backup.notes|default:"—"|truncatechars:40 }}</td>
+                <td class="muted">
+                  {% if backup.notes %}
+                    <span title="{{ backup.notes }}">{{ backup.notes|truncatechars:40 }}</span>
+                    {% if backup.notes|length > 40 %}
+                      <button type="button" class="btn btn--ghost btn--sm"
+                              data-notes="{{ backup.notes|escape }}"
+                              data-filename="{{ backup.filename }}"
+                              onclick="showNotesModal(this)"
+                              style="padding:2px 6px;margin-left:4px;font-size:11px;"
+                              title="Показать полностью">
+                        ⋯
+                      </button>
+                    {% endif %}
+                  {% else %}—{% endif %}
+                </td>
                 <td class="data-table__actions">
                   <a class="btn btn--ghost btn--sm"
                      href="{% url 'admin_panel:backup_download' backup.filename %}">
                     Скачать
                   </a>
 
-                  {# Восстановление — с двойным подтверждением #}
+                  {# Восстановление — модальное подтверждение с опцией wipe #}
                   <button type="button" class="btn btn--ghost btn--sm"
                           style="color:var(--warning);"
                           onclick="showRestoreConfirm('{{ backup.filename }}')">
@@ -139,6 +204,19 @@
     </div>
     <p style="font-size:13px;color:var(--text-2);">Файл: <code id="restore-filename" style="font-size:12px;"></code></p>
     <p style="font-size:13px;color:var(--text-2);">Вы уверены, что хотите продолжить?</p>
+
+    <label class="row" style="gap:8px;align-items:flex-start;margin-top:14px;padding:10px;
+                              background:var(--surface-2);border:1px solid var(--border);
+                              border-radius:var(--r);cursor:pointer;">
+      <input type="checkbox" id="restore-wipe" form="restore-form" name="wipe_first" value="yes"
+             style="margin-top:3px;flex-shrink:0;">
+      <span style="font-size:12px;color:var(--text-2);line-height:1.4;">
+        <strong style="color:var(--text);">Очистить базу перед восстановлением</strong><br>
+        TRUNCATE всех таблиц и сброс sequences. Включайте, если backup был сделан
+        в старой версии и при восстановлении возникает ошибка
+        <code style="font-size:11px;">duplicate key value violates pkey</code>.
+      </span>
+    </label>
   </div>
   <div style="padding:16px 24px;background:var(--surface-2);border-top:1px solid var(--border);display:flex;gap:12px;justify-content:flex-end;">
     <button type="button" class="btn btn--ghost" onclick="document.getElementById('restore-dialog').close()">
@@ -155,15 +233,61 @@
   </div>
 </dialog>
 
+{# ── Модальное окно: полный текст комментария ── #}
+<dialog id="notes-dialog"
+        style="border:1px solid var(--border);border-radius:var(--r-lg);padding:0;
+               max-width:560px;width:100%;background:var(--surface);color:var(--text);
+               box-shadow:var(--shadow-lg);">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);
+              display:flex;justify-content:space-between;align-items:center;gap:12px;">
+    <h3 style="margin:0;font-size:15px;color:var(--text);">Комментарий к резервной копии</h3>
+    <button type="button" class="btn btn--ghost btn--sm"
+            onclick="document.getElementById('notes-dialog').close()" aria-label="Закрыть">×</button>
+  </div>
+  <div style="padding:16px 20px;">
+    <p style="font-size:12px;color:var(--text-3);margin:0 0 8px;">
+      Файл: <code id="notes-filename" style="font-size:11px;"></code>
+    </p>
+    <pre id="notes-body"
+         style="white-space:pre-wrap;word-wrap:break-word;font-family:inherit;
+                font-size:13px;line-height:1.5;color:var(--text);
+                background:var(--surface-2);border:1px solid var(--border);
+                border-radius:var(--r);padding:12px;margin:0;
+                max-height:50vh;overflow-y:auto;"></pre>
+  </div>
+</dialog>
+
 <script>
 function showRestoreConfirm(filename) {
   const dialog = document.getElementById('restore-dialog');
   document.getElementById('restore-filename').textContent = filename;
-  document.getElementById('restore-form').action = '{% url "admin_panel:backup_restore" "PLACEHOLDER" %}'.replace('PLACEHOLDER', encodeURIComponent(filename));
+  document.getElementById('restore-wipe').checked = false;
+  document.getElementById('restore-form').action =
+    '{% url "admin_panel:backup_restore" "PLACEHOLDER" %}'.replace('PLACEHOLDER', encodeURIComponent(filename));
+  dialog.showModal();
+}
+function showNotesModal(btn) {
+  const dialog = document.getElementById('notes-dialog');
+  document.getElementById('notes-filename').textContent = btn.dataset.filename || '';
+  document.getElementById('notes-body').textContent = btn.dataset.notes || '';
   dialog.showModal();
 }
 document.getElementById('restore-dialog').addEventListener('click', function(e) {
   if (e.target === this) this.close();
+});
+document.getElementById('notes-dialog').addEventListener('click', function(e) {
+  if (e.target === this) this.close();
+});
+document.querySelectorAll('[data-file-picker]').forEach(function(picker) {
+  const input = picker.querySelector('input[type="file"]');
+  const name = picker.querySelector('[data-file-picker-name]');
+  if (!input || !name) return;
+
+  input.addEventListener('change', function() {
+    const selectedName = input.files && input.files.length ? input.files[0].name : '';
+    name.textContent = selectedName || 'Backup не прикреплён';
+    name.classList.toggle('is-selected', Boolean(selectedName));
+  });
 });
 </script>
 {% endblock %}

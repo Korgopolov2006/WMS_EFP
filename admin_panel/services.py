@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import connections
+from django.utils.text import get_valid_filename
 from django.utils import timezone
 
 if TYPE_CHECKING:
@@ -365,6 +366,10 @@ def create_database_backup(
             "--no-password",
             "--format=plain",
             "--encoding=UTF8",
+            # --clean + --if-exists: восстановление сначала дропает существующие таблицы,
+            # благодаря этому psql -f не падает на «duplicate key value violates pkey».
+            "--clean",
+            "--if-exists",
             "-f", str(backup_path),
         ]
         try:
@@ -381,6 +386,9 @@ def create_database_backup(
             raise RuntimeError(f"pg_dump завершился с ошибкой: {result.stderr[:500]}")
 
     size = backup_path.stat().st_size if backup_path.exists() else 0
+    # Защита от расхождения PK-sequence (часто после restore старого backup-а):
+    # синхронизируем sequence перед INSERT, чтобы не получить duplicate key.
+    _sync_pk_sequence(BackupRecord)
     record = BackupRecord.objects.create(
         filename=filename,
         size_bytes=size,
@@ -393,6 +401,50 @@ def create_database_backup(
     if created_by:
         log_action(
             actor=created_by,
+            action=AuditLog.ActionType.BACKUP_CREATE,
+            resource_type="BackupRecord",
+            resource_id=str(record.pk),
+            resource_str=filename,
+        )
+
+    return record
+
+
+def upload_backup_file(uploaded_file, *, actor=None, notes: str = "") -> BackupRecord:
+    """Сохраняет загруженный пользователем файл backup-а в BACKUP_DIR."""
+    from .models import AuditLog, BackupRecord
+
+    original_name = get_valid_filename(Path(uploaded_file.name or "backup.sql").name)
+    suffix = Path(original_name).suffix.lower()
+    if suffix not in _BACKUP_EXTS:
+        raise ValueError("Недопустимый формат файла резервной копии.")
+
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    base_name = Path(original_name).stem[:80] or "uploaded"
+    filename = f"backup_uploaded_{ts}_{base_name}{suffix}"
+    path = _safe_backup_path(filename)
+
+    index = 1
+    while path.exists() or BackupRecord.objects.filter(filename=filename).exists():
+        filename = f"backup_uploaded_{ts}_{base_name}_{index}{suffix}"
+        path = _safe_backup_path(filename)
+        index += 1
+
+    with path.open("wb") as destination:
+        for chunk in uploaded_file.chunks():
+            destination.write(chunk)
+
+    record = BackupRecord.objects.create(
+        filename=filename,
+        size_bytes=path.stat().st_size,
+        created_by=actor,
+        notes=notes.strip(),
+        is_auto=False,
+    )
+
+    if actor:
+        log_action(
+            actor=actor,
             action=AuditLog.ActionType.BACKUP_CREATE,
             resource_type="BackupRecord",
             resource_id=str(record.pk),
@@ -455,11 +507,82 @@ def delete_backup(filename: str, actor=None) -> None:
         )
 
 
-def restore_database_backup(filename: str, actor=None) -> None:
+def _sync_pk_sequence(model_cls) -> None:
+    """
+    Синхронизирует PostgreSQL-sequence для PK с реальным MAX(id).
+    Решает проблему `duplicate key value violates pkey` после restore
+    старого backup'а: в БД есть строки с id=N, но sequence был перезаписан
+    в backup-е более старым значением.
+
+    На SQLite — no-op (там нет sequences в этом смысле).
+    """
+    db_engine = settings.DATABASES["default"].get("ENGINE", "")
+    if "postgresql" not in db_engine.lower():
+        return
+    table = model_cls._meta.db_table
+    pk_col = model_cls._meta.pk.column
+    try:
+        with connections["default"].cursor() as cur:
+            cur.execute(
+                "SELECT setval(pg_get_serial_sequence(%s, %s), "
+                "COALESCE((SELECT MAX(" + pk_col + ") FROM " + table + "), 0) + 1, false)",
+                [table, pk_col],
+            )
+    except Exception:
+        logger.exception("Не удалось синхронизировать sequence для %s", table)
+
+
+_PG_WIPE_SQL = """
+DO $$
+DECLARE r RECORD;
+BEGIN
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname='public') LOOP
+        EXECUTE 'TRUNCATE TABLE public.' || quote_ident(r.tablename) || ' RESTART IDENTITY CASCADE';
+    END LOOP;
+END $$;
+"""
+
+# Синхронизация всех sequences с реальным MAX(id) — выполняется после restore.
+# Решает рассогласование, когда backup без --clean содержит INSERT'ы с явными id,
+# но не сбрасывает sequences. Применяется ко всем serial-колонкам схемы public.
+_PG_RESYNC_SEQUENCES_SQL = """
+DO $$
+DECLARE
+    s RECORD;
+    max_val BIGINT;
+BEGIN
+    FOR s IN (
+        SELECT n.nspname AS schema_name,
+               c.relname AS seq_name,
+               t.relname AS table_name,
+               a.attname AS column_name
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        JOIN pg_depend d ON d.objid = c.oid AND d.deptype = 'a'
+        JOIN pg_class t ON t.oid = d.refobjid
+        JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = d.refobjsubid
+        WHERE c.relkind = 'S' AND n.nspname = 'public'
+    ) LOOP
+        EXECUTE format('SELECT COALESCE(MAX(%I), 0) FROM %I.%I',
+                       s.column_name, s.schema_name, s.table_name) INTO max_val;
+        EXECUTE format('SELECT setval(%L, %s, false)',
+                       quote_ident(s.schema_name) || '.' || quote_ident(s.seq_name),
+                       max_val + 1);
+    END LOOP;
+END $$;
+"""
+
+
+def restore_database_backup(filename: str, actor=None, wipe_first: bool = False) -> None:
     """
     Восстанавливает БД из резервной копии.
-    PostgreSQL — psql -f ...; SQLite — замена файла БД (с закрытием соединений).
-    ВНИМАНИЕ: операция необратима!
+
+    Args:
+        filename:    имя файла backup в BACKUP_DIR
+        actor:       пользователь (для аудита)
+        wipe_first:  для PostgreSQL — выполнить TRUNCATE по всем public-таблицам
+                     ДО применения SQL. Нужно для старых backup'ов, сделанных
+                     без `--clean`, иначе psql падает на дублях PK.
     """
     from .models import AuditLog
 
@@ -486,18 +609,42 @@ def restore_database_backup(filename: str, actor=None) -> None:
         if password:
             env["PGPASSWORD"] = str(password)
 
-        cmd = [
+        psql_base = [
             psql,
             "-h", str(db.get("HOST", "localhost")),
             "-p", str(db.get("PORT", "5432")),
             "-U", str(db.get("USER", "postgres")),
             "-d", str(db.get("NAME", "")),
             "--no-password",
-            "-f", str(path),
         ]
+
+        # Шаг 1: при необходимости очищаем БД (TRUNCATE всех public-таблиц)
+        if wipe_first:
+            try:
+                wipe_result = subprocess.run(
+                    psql_base + ["-v", "ON_ERROR_STOP=1", "-c", _PG_WIPE_SQL],
+                    env=env, capture_output=True, text=True, timeout=120,
+                )
+            except FileNotFoundError as exc:
+                logger.exception("psql (wipe) не запустился")
+                raise RuntimeError(
+                    f"Не удалось запустить psql: {exc}. Проверьте установку PostgreSQL."
+                ) from exc
+            if wipe_result.returncode != 0:
+                logger.error(
+                    "psql wipe returncode=%s stderr=%s",
+                    wipe_result.returncode, wipe_result.stderr,
+                )
+                raise RuntimeError(
+                    f"Не удалось очистить БД перед восстановлением: "
+                    f"{wipe_result.stderr[:500]}"
+                )
+
+        # Шаг 2: применяем SQL backup-а
         try:
             result = subprocess.run(
-                cmd, env=env, capture_output=True, text=True, timeout=600
+                psql_base + ["-f", str(path)],
+                env=env, capture_output=True, text=True, timeout=600,
             )
         except FileNotFoundError as exc:
             logger.exception("psql не запустился")
@@ -507,6 +654,16 @@ def restore_database_backup(filename: str, actor=None) -> None:
         if result.returncode != 0:
             logger.error("psql returncode=%s stderr=%s", result.returncode, result.stderr)
             raise RuntimeError(f"psql завершился с ошибкой: {result.stderr[:500]}")
+
+        # Шаг 3: синхронизируем все sequences с MAX(id), чтобы последующие INSERT'ы
+        # (например, новые backup-ы) не падали с duplicate key.
+        try:
+            subprocess.run(
+                psql_base + ["-c", _PG_RESYNC_SEQUENCES_SQL],
+                env=env, capture_output=True, text=True, timeout=60,
+            )
+        except Exception:
+            logger.exception("Не удалось синхронизировать sequences после restore")
 
     logger.info("Восстановлена резервная копия %s", filename)
 

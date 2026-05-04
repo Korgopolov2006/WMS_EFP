@@ -9,6 +9,7 @@ __pycache__/
 db.sqlite3
 .env
 .env.*
+!.env.docker.example
 .idea/
 .vscode/
 .pytest_cache/
@@ -21,6 +22,8 @@ celerybeat-schedule
 # docs/local notes
 *.md
 !README.md
+!DOCKER_SETUP.md
+!ORDER_WORKFLOW_BY_ROLES.md
 
 # windows junk
 *.lnk

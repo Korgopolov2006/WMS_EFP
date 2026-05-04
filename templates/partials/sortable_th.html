@@ -1,0 +1,39 @@
+{% comment %}
+Кликабельный заголовок для сортировки.
+
+Параметры:
+  key     — ключ сортировки (тот же что в SORT_MAP во view)
+  label   — текст заголовка
+  current — текущий активный sort-ключ (передавать sort из контекста)
+  order   — текущий порядок (asc|desc)
+
+Все остальные GET-параметры сохраняются (фильтры, поиск, страница).
+Состояние:
+  ▲ — asc по этой колонке
+  ▼ — desc по этой колонке
+  ↕ — не активна (но кликабельна)
+{% endcomment %}
+{% load url_tags %}
+{% with active=current|default:"" cur_order=order|default:"asc" %}
+  {% if active == key %}
+    {% if cur_order == "desc" %}
+      <th class="is-sortable is-sorted-desc">
+        <a href="?{% querystring_replace request sort=key order='asc' %}">
+          {{ label }} <span class="data-table__sort-arrow">▼</span>
+        </a>
+      </th>
+    {% else %}
+      <th class="is-sortable is-sorted-asc">
+        <a href="?{% querystring_replace request sort=key order='desc' %}">
+          {{ label }} <span class="data-table__sort-arrow">▲</span>
+        </a>
+      </th>
+    {% endif %}
+  {% else %}
+    <th class="is-sortable">
+      <a href="?{% querystring_replace request sort=key order='asc' %}">
+        {{ label }} <span class="data-table__sort-arrow">↕</span>
+      </a>
+    </th>
+  {% endif %}
+{% endwith %}
