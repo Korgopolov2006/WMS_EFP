@@ -1,0 +1,415 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1550" viewBox="0 0 2100 1550">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#333"/></marker>
+<style>text{font-family:Arial, sans-serif;} .box-title{font-size:14px;font-weight:700;} .box-text{font-size:12px;} .label{font-size:11px;fill:#333;} .section{font-size:16px;font-weight:700;fill:#333;}</style>
+</defs>
+<rect x="0" y="0" width="100%" height="100%" fill="white"/>
+<text x="1050" y="42" text-anchor="middle" font-size="22" font-weight="700">Detailed Class Diagram WMS</text>
+<text x="1050" y="68" text-anchor="middle" font-size="14">clean aligned version with key model relations</text>
+<text class="section" x="182.5" y="112" text-anchor="middle">Accounts</text>
+<text class="section" x="477.5" y="112" text-anchor="middle">Warehouse</text>
+<text class="section" x="772.5" y="112" text-anchor="middle">Catalog</text>
+<text class="section" x="1067.5" y="112" text-anchor="middle">Operations</text>
+<text class="section" x="1362.5" y="112" text-anchor="middle">Orders and Tasks</text>
+<text class="section" x="1657.5" y="112" text-anchor="middle">Reports</text>
+<path d="M 182.5 282 L 182.5 340" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="164.5" y="293.0" width="36" height="16" fill="white"/>
+<text class="label" x="182.5" y="306.0" text-anchor="middle">1:N</text>
+<path d="M 182.5 458 L 182.5 505" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="164.5" y="463.5" width="36" height="16" fill="white"/>
+<text class="label" x="182.5" y="476.5" text-anchor="middle">1:N</text>
+<path d="M 182.5 623 L 182.5 670" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="164.5" y="628.5" width="36" height="16" fill="white"/>
+<text class="label" x="182.5" y="641.5" text-anchor="middle">1:N</text>
+<path d="M 477.5 268 L 477.5 340" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="459.5" y="286.0" width="36" height="16" fill="white"/>
+<text class="label" x="477.5" y="299.0" text-anchor="middle">1:N</text>
+<path d="M 477.5 472 L 477.5 670" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="459.5" y="553.0" width="36" height="16" fill="white"/>
+<text class="label" x="477.5" y="566.0" text-anchor="middle">1:N</text>
+<path d="M 477.5 788 L 477.5 835" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="459.5" y="793.5" width="36" height="16" fill="white"/>
+<text class="label" x="477.5" y="806.5" text-anchor="middle">1:N</text>
+<path d="M 477.5 977 L 477.5 1205" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="459.5" y="1073.0" width="36" height="16" fill="white"/>
+<text class="label" x="477.5" y="1086.0" text-anchor="middle">1:N</text>
+<path d="M 772.5 780 L 772.5 820" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="754.5" y="782.0" width="36" height="16" fill="white"/>
+<text class="label" x="772.5" y="795.0" text-anchor="middle">1:N</text>
+<path d="M 772.5 938 L 772.5 985" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="754.5" y="943.5" width="36" height="16" fill="white"/>
+<text class="label" x="772.5" y="956.5" text-anchor="middle">1:N</text>
+<path d="M 1067.5 295 L 1067.5 340" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1049.5" y="299.5" width="36" height="16" fill="white"/>
+<text class="label" x="1067.5" y="312.5" text-anchor="middle">1:N</text>
+<path d="M 1067.5 482 L 1067.5 530" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1049.5" y="488.0" width="36" height="16" fill="white"/>
+<text class="label" x="1067.5" y="501.0" text-anchor="middle">1:N</text>
+<path d="M 1067.5 642 L 1067.5 720" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1049.5" y="663.0" width="36" height="16" fill="white"/>
+<text class="label" x="1067.5" y="676.0" text-anchor="middle">1:N</text>
+<path d="M 1067.5 852 L 1067.5 910" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1049.5" y="863.0" width="36" height="16" fill="white"/>
+<text class="label" x="1067.5" y="876.0" text-anchor="middle">1:N</text>
+<path d="M 1067.5 1227 L 1067.5 1290" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1049.5" y="1240.5" width="36" height="16" fill="white"/>
+<text class="label" x="1067.5" y="1253.5" text-anchor="middle">1:N</text>
+<path d="M 1362.5 295 L 1362.5 340" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1344.5" y="299.5" width="36" height="16" fill="white"/>
+<text class="label" x="1362.5" y="312.5" text-anchor="middle">1:N</text>
+<path d="M 1362.5 472 L 1362.5 530" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1344.5" y="483.0" width="36" height="16" fill="white"/>
+<text class="label" x="1362.5" y="496.0" text-anchor="middle">1:N</text>
+<path d="M 1362.5 662 L 1362.5 720" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1344.5" y="673.0" width="36" height="16" fill="white"/>
+<text class="label" x="1362.5" y="686.0" text-anchor="middle">1:N</text>
+<path d="M 1362.5 852 L 1362.5 910" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1344.5" y="863.0" width="36" height="16" fill="white"/>
+<text class="label" x="1362.5" y="876.0" text-anchor="middle">1:N</text>
+<path d="M 1362.5 1273 L 1362.5 1320" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1344.5" y="1278.5" width="36" height="16" fill="white"/>
+<text class="label" x="1362.5" y="1291.5" text-anchor="middle">1:N</text>
+<path d="M 310 216.0 L 325 735 L 55 735.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="212.0" y="544.0" width="36" height="16" fill="white"/>
+<text class="label" x="230.0" y="557.0" text-anchor="middle">1:N</text>
+<path d="M 605 406.0 L 640 405 L 940 222.5" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="710.3333333333334" y="326.5" width="36" height="16" fill="white"/>
+<text class="label" x="728.3333333333334" y="339.5" text-anchor="middle">1:N</text>
+<path d="M 605 406.0 L 640 250 L 350 1099.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="7,5"/>
+<rect x="513.6666666666666" y="567.0" width="36" height="16" fill="white"/>
+<text class="label" x="531.6666666666666" y="580.0" text-anchor="middle">1:1</text>
+<path d="M 605 564.0 L 640 565 L 350 729.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="513.6666666666666" y="601.3333333333334" width="36" height="16" fill="white"/>
+<text class="label" x="531.6666666666666" y="614.3333333333334" text-anchor="middle">1:N</text>
+<path d="M 605 906.0 L 915 905 L 940 786.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="802.0" y="847.6666666666666" width="36" height="16" fill="white"/>
+<text class="label" x="820.0" y="860.6666666666666" text-anchor="middle">1:N</text>
+<path d="M 605 906.0 L 620 1270 L 350 1270.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="7,5"/>
+<rect x="507.0" y="1130.6666666666667" width="36" height="16" fill="white"/>
+<text class="label" x="525.0" y="1143.6666666666667" text-anchor="middle">1:N</text>
+<path d="M 900 192.5 L 930 192 L 930 490 L 645 531.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="833.25" y="333.375" width="36" height="16" fill="white"/>
+<text class="label" x="851.25" y="346.375" text-anchor="middle">1:N</text>
+<path d="M 900 325.0 L 930 325 L 930 520 L 645 531.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="833.25" y="407.25" width="36" height="16" fill="white"/>
+<text class="label" x="851.25" y="420.25" text-anchor="middle">1:N</text>
+<path d="M 900 531.0 L 925 545 L 940 411.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="903.6666666666666" y="477.6666666666667" width="36" height="16" fill="white"/>
+<text class="label" x="921.6666666666666" y="490.6666666666667" text-anchor="middle">1:N</text>
+<path d="M 900 531.0 L 925 785 L 940 786.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="903.6666666666666" y="682.6666666666666" width="36" height="16" fill="white"/>
+<text class="label" x="921.6666666666666" y="695.6666666666666" text-anchor="middle">1:N</text>
+<path d="M 900 531.0 L 1225 405 L 1235 406.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1102.0" y="429.3333333333333" width="36" height="16" fill="white"/>
+<text class="label" x="1120.0" y="442.3333333333333" text-anchor="middle">1:N</text>
+<path d="M 900 531.0 L 1520 205 L 1530 209.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1298.6666666666667" y="297.0" width="36" height="16" fill="white"/>
+<text class="label" x="1316.6666666666667" y="310.0" text-anchor="middle">1:N</text>
+<path d="M 900 531.0 L 1520 395 L 1530 396.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1298.6666666666667" y="422.6666666666667" width="36" height="16" fill="white"/>
+<text class="label" x="1316.6666666666667" y="435.6666666666667" text-anchor="middle">1:N</text>
+<path d="M 900 531.0 L 1520 972 L 1530 982.5" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1298.6666666666667" y="810.5" width="36" height="16" fill="white"/>
+<text class="label" x="1316.6666666666667" y="823.5" text-anchor="middle">1:N</text>
+<path d="M 1195 786.0 L 1520 575 L 1530 579.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1397.0" y="628.6666666666666" width="36" height="16" fill="white"/>
+<text class="label" x="1415.0" y="641.6666666666666" text-anchor="middle">1:N</text>
+<path d="M 1490 406.0 L 1520 755 L 1530 772.5" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1495.3333333333333" y="626.5" width="36" height="16" fill="white"/>
+<text class="label" x="1513.3333333333333" y="639.5" text-anchor="middle">1:N</text>
+<path d="M 1490 976.0 L 1520 780 L 1530 772.5" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="1495.3333333333333" y="824.8333333333334" width="36" height="16" fill="white"/>
+<text class="label" x="1513.3333333333333" y="837.8333333333334" text-anchor="middle">1:N</text>
+<path d="M 900 531.0 L 930 1045 L 645 1044.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="807.0" y="855.3333333333334" width="36" height="16" fill="white"/>
+<text class="label" x="825.0" y="868.3333333333334" text-anchor="middle">1:N</text>
+<path d="M 900 531.0 L 930 1235 L 645 1236.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="807.0" y="982.6666666666666" width="36" height="16" fill="white"/>
+<text class="label" x="825.0" y="995.6666666666666" text-anchor="middle">N:M</text>
+<path d="M 1195 222.5 L 1220 1220 L 1235 1194.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="7,5"/>
+<rect x="1198.6666666666667" y="860.8333333333334" width="36" height="16" fill="white"/>
+<text class="label" x="1216.6666666666667" y="873.8333333333334" text-anchor="middle">1:N</text>
+<path d="M 1195 1171.0 L 1220 1195 L 1235 1194.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="7,5"/>
+<rect x="1198.6666666666667" y="1168.6666666666667" width="36" height="16" fill="white"/>
+<text class="label" x="1216.6666666666667" y="1181.6666666666667" text-anchor="middle">1:N</text>
+<path d="M 1490 222.5 L 1220 1125 L 1235 1194.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="7,5"/>
+<rect x="1297.0" y="829.1666666666666" width="36" height="16" fill="white"/>
+<text class="label" x="1315.0" y="842.1666666666666" text-anchor="middle">1:N</text>
+<path d="M 1490 786.0 L 1220 1160 L 1235 1194.0" fill="none" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)" stroke-dasharray="7,5"/>
+<rect x="1297.0" y="1028.6666666666667" width="36" height="16" fill="white"/>
+<text class="label" x="1315.0" y="1041.6666666666667" text-anchor="middle">1:N</text>
+<rect x="55" y="150" width="255" height="132" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="55" y="150" width="255" height="30" fill="#d9e8fc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="182.5" y="170" text-anchor="middle">User</text>
+<text class="box-text" x="67" y="198">+ username</text>
+<text class="box-text" x="67" y="213">+ email</text>
+<text class="box-text" x="67" y="228">+ role</text>
+<text class="box-text" x="67" y="243">+ branches</text>
+<text class="box-text" x="67" y="258">+ is_admin()</text>
+<rect x="55" y="340" width="255" height="118" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="55" y="340" width="255" height="30" fill="#d9e8fc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="182.5" y="360" text-anchor="middle">ApiToken</text>
+<text class="box-text" x="67" y="388">+ name</text>
+<text class="box-text" x="67" y="403">+ token</text>
+<text class="box-text" x="67" y="418">+ is_active</text>
+<text class="box-text" x="67" y="433">+ user</text>
+<rect x="55" y="505" width="255" height="118" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="55" y="505" width="255" height="30" fill="#d9e8fc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="182.5" y="525" text-anchor="middle">Notification</text>
+<text class="box-text" x="67" y="553">+ user</text>
+<text class="box-text" x="67" y="568">+ title</text>
+<text class="box-text" x="67" y="583">+ message</text>
+<text class="box-text" x="67" y="598">+ is_read</text>
+<rect x="55" y="670" width="255" height="130" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="55" y="670" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="182.5" y="690" text-anchor="middle">WarehouseAccess</text>
+<text class="box-text" x="67" y="718">+ user</text>
+<text class="box-text" x="67" y="733">+ warehouse</text>
+<text class="box-text" x="67" y="748">+ access_level</text>
+<text class="box-text" x="67" y="763">+ Unique(user, warehouse)</text>
+<rect x="350" y="150" width="255" height="118" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="350" y="150" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="477.5" y="170" text-anchor="middle">Branch</text>
+<text class="box-text" x="362" y="198">+ code</text>
+<text class="box-text" x="362" y="213">+ name</text>
+<text class="box-text" x="362" y="228">+ address</text>
+<text class="box-text" x="362" y="243">+ is_active</text>
+<rect x="350" y="340" width="255" height="132" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="350" y="340" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="477.5" y="360" text-anchor="middle">Warehouse</text>
+<text class="box-text" x="362" y="388">+ branch</text>
+<text class="box-text" x="362" y="403">+ code</text>
+<text class="box-text" x="362" y="418">+ name</text>
+<text class="box-text" x="362" y="433">+ width_m</text>
+<text class="box-text" x="362" y="448">+ length_m</text>
+<rect x="350" y="505" width="255" height="118" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="350" y="505" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="477.5" y="525" text-anchor="middle">StorageZoneType</text>
+<text class="box-text" x="362" y="553">+ code</text>
+<text class="box-text" x="362" y="568">+ name</text>
+<text class="box-text" x="362" y="583">+ sort_order</text>
+<rect x="350" y="670" width="255" height="118" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="350" y="670" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="477.5" y="690" text-anchor="middle">StorageZone</text>
+<text class="box-text" x="362" y="718">+ warehouse</text>
+<text class="box-text" x="362" y="733">+ zone_type</text>
+<text class="box-text" x="362" y="748">+ code</text>
+<text class="box-text" x="362" y="763">+ name</text>
+<rect x="350" y="835" width="255" height="142" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="350" y="835" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="477.5" y="855" text-anchor="middle">StorageLocation</text>
+<text class="box-text" x="362" y="883">+ zone</text>
+<text class="box-text" x="362" y="898">+ code</text>
+<text class="box-text" x="362" y="913">+ aisle</text>
+<text class="box-text" x="362" y="928">+ rack</text>
+<text class="box-text" x="362" y="943">+ shelf</text>
+<text class="box-text" x="362" y="958">+ level</text>
+<rect x="350" y="1040" width="255" height="118" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="350" y="1040" width="255" height="30" fill="#d5f5f6" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="477.5" y="1060" text-anchor="middle">WarehouseLayout</text>
+<text class="box-text" x="362" y="1088">+ warehouse</text>
+<text class="box-text" x="362" y="1103">+ floor_points</text>
+<text class="box-text" x="362" y="1118">+ gate_x</text>
+<text class="box-text" x="362" y="1133">+ gate_z</text>
+<rect x="350" y="1205" width="255" height="130" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="350" y="1205" width="255" height="30" fill="#d5f5f6" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="477.5" y="1225" text-anchor="middle">StorageObject</text>
+<text class="box-text" x="362" y="1253">+ warehouse</text>
+<text class="box-text" x="362" y="1268">+ storage_location</text>
+<text class="box-text" x="362" y="1283">+ object_type</text>
+<text class="box-text" x="362" y="1298">+ position_x/y/z</text>
+<rect x="645" y="150" width="255" height="85" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="645" y="150" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="772.5" y="170" text-anchor="middle">Brand</text>
+<text class="box-text" x="657" y="198">+ name</text>
+<rect x="645" y="275" width="255" height="100" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="645" y="275" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="772.5" y="295" text-anchor="middle">Category</text>
+<text class="box-text" x="657" y="323">+ name</text>
+<text class="box-text" x="657" y="338">+ parent</text>
+<rect x="645" y="445" width="255" height="172" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="645" y="445" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="772.5" y="465" text-anchor="middle">Product</text>
+<text class="box-text" x="657" y="493">+ internal_sku</text>
+<text class="box-text" x="657" y="508">+ name</text>
+<text class="box-text" x="657" y="523">+ oem_number</text>
+<text class="box-text" x="657" y="538">+ analog_number</text>
+<text class="box-text" x="657" y="553">+ barcode</text>
+<text class="box-text" x="657" y="568">+ brand</text>
+<text class="box-text" x="657" y="583">+ category</text>
+<text class="box-text" x="657" y="598">+ save()</text>
+<rect x="645" y="695" width="255" height="85" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="645" y="695" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="772.5" y="715" text-anchor="middle">VehicleMake</text>
+<text class="box-text" x="657" y="743">+ name</text>
+<rect x="645" y="820" width="255" height="118" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="645" y="820" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="772.5" y="840" text-anchor="middle">VehicleModel</text>
+<text class="box-text" x="657" y="868">+ make</text>
+<text class="box-text" x="657" y="883">+ name</text>
+<text class="box-text" x="657" y="898">+ Unique(make, name)</text>
+<rect x="645" y="985" width="255" height="118" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="645" y="985" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="772.5" y="1005" text-anchor="middle">ProductApplicability</text>
+<text class="box-text" x="657" y="1033">+ product</text>
+<text class="box-text" x="657" y="1048">+ vehicle_model</text>
+<text class="box-text" x="657" y="1063">+ Unique(product, model)</text>
+<rect x="645" y="1170" width="255" height="132" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="645" y="1170" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="772.5" y="1190" text-anchor="middle">ProductCrossReference</text>
+<text class="box-text" x="657" y="1218">+ from_product</text>
+<text class="box-text" x="657" y="1233">+ to_product</text>
+<text class="box-text" x="657" y="1248">+ relation_type</text>
+<text class="box-text" x="657" y="1263">+ Unique(from, to, type)</text>
+<rect x="940" y="150" width="255" height="145" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="940" y="150" width="255" height="30" fill="#d5e8d4" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1067.5" y="170" text-anchor="middle">Receiving</text>
+<text class="box-text" x="952" y="198">+ number</text>
+<text class="box-text" x="952" y="213">+ supplier_name</text>
+<text class="box-text" x="952" y="228">+ warehouse</text>
+<text class="box-text" x="952" y="243">+ status</text>
+<text class="box-text" x="952" y="258">+ created_by</text>
+<text class="box-text" x="952" y="273">+ save()</text>
+<rect x="940" y="340" width="255" height="142" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="940" y="340" width="255" height="30" fill="#d5e8d4" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1067.5" y="360" text-anchor="middle">ReceivingLine</text>
+<text class="box-text" x="952" y="388">+ receiving</text>
+<text class="box-text" x="952" y="403">+ product</text>
+<text class="box-text" x="952" y="418">+ qty_expected</text>
+<text class="box-text" x="952" y="433">+ qty_received</text>
+<text class="box-text" x="952" y="448">+ storage_location</text>
+<rect x="940" y="530" width="255" height="112" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="940" y="530" width="255" height="30" fill="#d5e8d4" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1067.5" y="550" text-anchor="middle">ReceivingSerial</text>
+<text class="box-text" x="952" y="578">+ line</text>
+<text class="box-text" x="952" y="593">+ serial_number</text>
+<text class="box-text" x="952" y="608">+ Unique(line, serial)</text>
+<rect x="940" y="720" width="255" height="132" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="940" y="720" width="255" height="30" fill="#f8cecc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1067.5" y="740" text-anchor="middle">Stock</text>
+<text class="box-text" x="952" y="768">+ product</text>
+<text class="box-text" x="952" y="783">+ storage_location</text>
+<text class="box-text" x="952" y="798">+ qty_available</text>
+<text class="box-text" x="952" y="813">+ qty_reserved</text>
+<text class="box-text" x="952" y="828">+ batch_no</text>
+<rect x="940" y="910" width="255" height="145" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="940" y="910" width="255" height="30" fill="#f8cecc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1067.5" y="930" text-anchor="middle">StockMovement</text>
+<text class="box-text" x="952" y="958">+ movement_type</text>
+<text class="box-text" x="952" y="973">+ product</text>
+<text class="box-text" x="952" y="988">+ quantity</text>
+<text class="box-text" x="952" y="1003">+ from_location</text>
+<text class="box-text" x="952" y="1018">+ to_location</text>
+<text class="box-text" x="952" y="1033">+ user</text>
+<rect x="940" y="1115" width="255" height="112" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="940" y="1115" width="255" height="30" fill="#f8cecc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1067.5" y="1135" text-anchor="middle">Inventory</text>
+<text class="box-text" x="952" y="1163">+ number</text>
+<text class="box-text" x="952" y="1178">+ zone</text>
+<text class="box-text" x="952" y="1193">+ status</text>
+<text class="box-text" x="952" y="1208">+ created_by</text>
+<rect x="940" y="1290" width="255" height="145" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="940" y="1290" width="255" height="30" fill="#f8cecc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1067.5" y="1310" text-anchor="middle">InventoryLine</text>
+<text class="box-text" x="952" y="1338">+ inventory</text>
+<text class="box-text" x="952" y="1353">+ product</text>
+<text class="box-text" x="952" y="1368">+ storage_location</text>
+<text class="box-text" x="952" y="1383">+ qty_book</text>
+<text class="box-text" x="952" y="1398">+ qty_actual</text>
+<text class="box-text" x="952" y="1413">+ save()</text>
+<rect x="1235" y="150" width="255" height="145" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1235" y="150" width="255" height="30" fill="#e1d5e7" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1362.5" y="170" text-anchor="middle">Order</text>
+<text class="box-text" x="1247" y="198">+ number</text>
+<text class="box-text" x="1247" y="213">+ customer_name</text>
+<text class="box-text" x="1247" y="228">+ status</text>
+<text class="box-text" x="1247" y="243">+ priority</text>
+<text class="box-text" x="1247" y="258">+ created_by</text>
+<text class="box-text" x="1247" y="273">+ generate_next_number()</text>
+<rect x="1235" y="340" width="255" height="132" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1235" y="340" width="255" height="30" fill="#e1d5e7" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1362.5" y="360" text-anchor="middle">OrderLine</text>
+<text class="box-text" x="1247" y="388">+ order</text>
+<text class="box-text" x="1247" y="403">+ product</text>
+<text class="box-text" x="1247" y="418">+ qty_ordered</text>
+<text class="box-text" x="1247" y="433">+ qty_picked</text>
+<text class="box-text" x="1247" y="448">+ price</text>
+<rect x="1235" y="530" width="255" height="132" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1235" y="530" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1362.5" y="550" text-anchor="middle">Backorder</text>
+<text class="box-text" x="1247" y="578">+ order</text>
+<text class="box-text" x="1247" y="593">+ product</text>
+<text class="box-text" x="1247" y="608">+ qty_ordered</text>
+<text class="box-text" x="1247" y="623">+ qty_fulfilled</text>
+<text class="box-text" x="1247" y="638">+ status</text>
+<rect x="1235" y="720" width="255" height="132" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1235" y="720" width="255" height="30" fill="#e1d5e7" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1362.5" y="740" text-anchor="middle">PickingTask</text>
+<text class="box-text" x="1247" y="768">+ order</text>
+<text class="box-text" x="1247" y="783">+ status</text>
+<text class="box-text" x="1247" y="798">+ priority</text>
+<text class="box-text" x="1247" y="813">+ zone_type_code</text>
+<text class="box-text" x="1247" y="828">+ assigned_to</text>
+<rect x="1235" y="910" width="255" height="132" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1235" y="910" width="255" height="30" fill="#e1d5e7" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1362.5" y="930" text-anchor="middle">PickingLine</text>
+<text class="box-text" x="1247" y="958">+ task</text>
+<text class="box-text" x="1247" y="973">+ order_line</text>
+<text class="box-text" x="1247" y="988">+ stock</text>
+<text class="box-text" x="1247" y="1003">+ qty_picked</text>
+<text class="box-text" x="1247" y="1018">+ scanned_oem</text>
+<rect x="1235" y="1115" width="255" height="158" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1235" y="1115" width="255" height="30" fill="#eeeeee" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1362.5" y="1135" text-anchor="middle">Task</text>
+<text class="box-text" x="1247" y="1163">+ task_type</text>
+<text class="box-text" x="1247" y="1178">+ status</text>
+<text class="box-text" x="1247" y="1193">+ priority</text>
+<text class="box-text" x="1247" y="1208">+ receiving</text>
+<text class="box-text" x="1247" y="1223">+ inventory</text>
+<text class="box-text" x="1247" y="1238">+ order</text>
+<text class="box-text" x="1247" y="1253">+ picking_task</text>
+<rect x="1235" y="1320" width="255" height="100" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1235" y="1320" width="255" height="30" fill="#eeeeee" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1362.5" y="1340" text-anchor="middle">TaskComment</text>
+<text class="box-text" x="1247" y="1368">+ task</text>
+<text class="box-text" x="1247" y="1383">+ author</text>
+<text class="box-text" x="1247" y="1398">+ text</text>
+<rect x="1530" y="150" width="255" height="118" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1530" y="150" width="255" height="30" fill="#fff2cc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1657.5" y="170" text-anchor="middle">ProductChangeLog</text>
+<text class="box-text" x="1542" y="198">+ product</text>
+<text class="box-text" x="1542" y="213">+ changed_by</text>
+<text class="box-text" x="1542" y="228">+ action</text>
+<text class="box-text" x="1542" y="243">+ changed_fields</text>
+<rect x="1530" y="330" width="255" height="132" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1530" y="330" width="255" height="30" fill="#f4cccc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1657.5" y="350" text-anchor="middle">ABCXYZAnalysis</text>
+<text class="box-text" x="1542" y="378">+ product</text>
+<text class="box-text" x="1542" y="393">+ period_start</text>
+<text class="box-text" x="1542" y="408">+ period_end</text>
+<text class="box-text" x="1542" y="423">+ abc_class</text>
+<text class="box-text" x="1542" y="438">+ xyz_class</text>
+<rect x="1530" y="520" width="255" height="118" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1530" y="520" width="255" height="30" fill="#f4cccc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1657.5" y="540" text-anchor="middle">DeadStockReport</text>
+<text class="box-text" x="1542" y="568">+ product</text>
+<text class="box-text" x="1542" y="583">+ stock</text>
+<text class="box-text" x="1542" y="598">+ qty_available</text>
+<text class="box-text" x="1542" y="613">+ days_without_movement</text>
+<rect x="1530" y="700" width="255" height="145" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1530" y="700" width="255" height="30" fill="#f4cccc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1657.5" y="720" text-anchor="middle">PickingError</text>
+<text class="box-text" x="1542" y="748">+ order_line</text>
+<text class="box-text" x="1542" y="763">+ picking_line</text>
+<text class="box-text" x="1542" y="778">+ expected_product</text>
+<text class="box-text" x="1542" y="793">+ actual_product</text>
+<text class="box-text" x="1542" y="808">+ detected_by</text>
+<rect x="1530" y="910" width="255" height="145" fill="white" stroke="#111" stroke-width="1.2"/>
+<rect x="1530" y="910" width="255" height="30" fill="#f4cccc" stroke="#111" stroke-width="1.2"/>
+<text class="box-title" x="1657.5" y="930" text-anchor="middle">DemandForecast</text>
+<text class="box-text" x="1542" y="958">+ product</text>
+<text class="box-text" x="1542" y="973">+ forecast_date</text>
+<text class="box-text" x="1542" y="988">+ forecasted_qty</text>
+<text class="box-text" x="1542" y="1003">+ confidence_level</text>
+<text class="box-text" x="1542" y="1018">+ calculated_by</text>
+</svg>

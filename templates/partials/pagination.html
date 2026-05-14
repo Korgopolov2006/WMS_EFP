@@ -1,22 +1,120 @@
-{% if page_obj and page_obj.paginator.num_pages > 1 %}
-  {% with page_key=page_param|default:"page" %}
-  <div class="row row--between row--wrap" style="margin-top:14px;">
-    <div class="hint">
-      Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }} • всего {{ page_obj.paginator.count }}
-    </div>
-    <div class="row row--wrap" style="gap:8px;">
-      {% if page_obj.has_previous %}
-        <a class="btn btn--ghost" href="?{% for k,v in request.GET.items %}{% if k != page_key %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}{{ page_key }}={{ page_obj.previous_page_number }}">← Назад</a>
-      {% else %}
-        <span class="btn btn--ghost btn--disabled">← Назад</span>
-      {% endif %}
+{% comment %}
+Универсальная пагинация: счётчик записей, селектор размера страницы,
+кнопки переключения страниц с иконками. Подключается через include
+partials/pagination.html. Контекст приходит из context-процессора
+core.context_processors.pagination_settings.
 
-      {% if page_obj.has_next %}
-        <a class="btn btn--ghost" href="?{% for k,v in request.GET.items %}{% if k != page_key %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}{{ page_key }}={{ page_obj.next_page_number }}">Вперёд →</a>
-      {% else %}
-        <span class="btn btn--ghost btn--disabled">Вперёд →</span>
-      {% endif %}
+Дополнительные параметры (опц.):
+  hide_info=True  — спрятать левый счётчик «Показано N–M из K»
+                    (например, когда в шаблоне есть свой счётчик)
+{% endcomment %}
+{% if page_obj %}
+{% with page_key=page_param|default:"page" pp_key=per_page_param|default:"per_page" current_pp=page_obj.paginator.per_page %}
+
+  <div class="pager" role="navigation" aria-label="Пагинация">
+
+    {# ─── Слева: счётчик записей ──────────────────────────────────── #}
+    {% if not hide_info %}
+      <div class="pager__info">
+        {% if page_obj.paginator.count > 0 %}
+          Показано <b>{{ page_obj.start_index }}–{{ page_obj.end_index }}</b>
+          из <b>{{ page_obj.paginator.count }}</b>
+        {% else %}
+          Нет записей
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {# ─── Селектор размера страницы (использует РЕАЛЬНОЕ значение из page_obj) ─── #}
+    <div class="pager__size">
+      <span class="pager__size-label">на&nbsp;странице:</span>
+      <form method="get" class="pager__size-form">
+        {% for k, v in request.GET.items %}
+          {% if k != pp_key and k != page_key %}
+            <input type="hidden" name="{{ k }}" value="{{ v }}">
+          {% endif %}
+        {% endfor %}
+        <select name="{{ pp_key }}"
+                class="pager__size-select"
+                aria-label="Количество записей на странице"
+                onchange="this.form.submit()">
+          {% for opt in per_page_options %}
+            <option value="{{ opt }}" {% if opt == current_pp %}selected{% endif %}>{{ opt }}</option>
+          {% endfor %}
+          {# Если текущее значение per_page не входит в стандартный набор — добавим его #}
+          {% if current_pp not in per_page_options %}
+            <option value="{{ current_pp }}" selected>{{ current_pp }}</option>
+          {% endif %}
+        </select>
+      </form>
     </div>
+
+    {# ─── Справа: переключение страниц ─────────────────────────────── #}
+    {% if page_obj.paginator.num_pages > 1 %}
+      <div class="pager__nav">
+        {# Первая страница #}
+        {% if page_obj.has_previous %}
+          <a class="pager__btn" aria-label="Первая страница" title="Первая страница"
+             href="?{% for k,v in request.GET.items %}{% if k != page_key %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}{{ page_key }}=1">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/>
+            </svg>
+          </a>
+          <a class="pager__btn" aria-label="Предыдущая страница" title="Предыдущая"
+             href="?{% for k,v in request.GET.items %}{% if k != page_key %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}{{ page_key }}={{ page_obj.previous_page_number }}">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </a>
+        {% else %}
+          <span class="pager__btn pager__btn--disabled" aria-disabled="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/>
+            </svg>
+          </span>
+          <span class="pager__btn pager__btn--disabled" aria-disabled="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </span>
+        {% endif %}
+
+        {# Текущая страница как «pill» #}
+        <span class="pager__current" aria-current="page"
+              aria-label="Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}">
+          {{ page_obj.number }}<span class="pager__current-of">/{{ page_obj.paginator.num_pages }}</span>
+        </span>
+
+        {# Следующая + последняя #}
+        {% if page_obj.has_next %}
+          <a class="pager__btn" aria-label="Следующая страница" title="Следующая"
+             href="?{% for k,v in request.GET.items %}{% if k != page_key %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}{{ page_key }}={{ page_obj.next_page_number }}">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </a>
+          <a class="pager__btn" aria-label="Последняя страница" title="Последняя"
+             href="?{% for k,v in request.GET.items %}{% if k != page_key %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}{{ page_key }}={{ page_obj.paginator.num_pages }}">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/>
+            </svg>
+          </a>
+        {% else %}
+          <span class="pager__btn pager__btn--disabled" aria-disabled="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </span>
+          <span class="pager__btn pager__btn--disabled" aria-disabled="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/>
+            </svg>
+          </span>
+        {% endif %}
+      </div>
+    {% endif %}
+
   </div>
-  {% endwith %}
+
+{% endwith %}
 {% endif %}

@@ -39,8 +39,8 @@ User = get_user_model()
 # ─────────────────────────────────────────────────────────────
 
 def _paginate(request: HttpRequest, qs, per_page: int = 25):
-    paginator = Paginator(qs, per_page)
-    return paginator.get_page(request.GET.get("page", 1))
+    from core.pagination import paginate_legacy
+    return paginate_legacy(request, qs, per_page=per_page)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -964,7 +964,7 @@ def wms_product_list(request: HttpRequest) -> HttpResponse:
         "category": "category__name",
         "oem":      "oem_number",
         "barcode":  "barcode",
-    }, default="internal_sku", default_order="asc")
+    }, default="sku", default_order="asc")
 
     export_resp = dispatch_export(
         request, qs, _PRODUCT_EXPORT_COLUMNS,
@@ -1146,7 +1146,7 @@ def wms_stock_list(request: HttpRequest) -> HttpResponse:
         "qty":      "qty_available",
         "reserved": "qty_reserved",
         "batch":    "batch_no",
-    }, default="product__internal_sku", default_order="asc")
+    }, default="sku", default_order="asc")
 
     page_obj = _paginate(request, qs, per_page=30)
     return render(request, "admin_panel/wms/stock/list.html", {

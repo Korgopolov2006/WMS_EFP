@@ -11,9 +11,9 @@ from accounts.constants import Roles
 # Create your views here.
 
 
-def _paginate(request: HttpRequest, items, per_page: int = 5, page_param: str = "page"):
-    paginator = Paginator(items, per_page)
-    return paginator.get_page(request.GET.get(page_param))
+def _paginate(request: HttpRequest, items, per_page: int = 10, page_param: str = "page"):
+    from core.pagination import paginate_legacy
+    return paginate_legacy(request, items, per_page=per_page, page_param=page_param)
 
 
 @login_required

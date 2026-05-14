@@ -1,0 +1,2 @@
+Error: 2������\���������_�������_WMS_django_extensions_ortho.dot: syntax error in line 30 near '>'
+Error: 2������\���������_�������_WMS_django_extensions_ortho.dot: syntax error in line 30 near '>'

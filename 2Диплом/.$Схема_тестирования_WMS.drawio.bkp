@@ -1,0 +1,93 @@
+<mxfile host="app.diagrams.net" modified="2026-05-12T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram name="Схема тестирования WMS" id="wms-testing-scheme">
+    <mxGraphModel dx="2400" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1200" background="#000000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="Схема тестирования WEB-приложения WMS&#xa;для управления складом автозапчастей" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="30" width="380" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="h_func" value="Тестирование&#xa;функциональной пригодности" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="170" width="250" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_unit" value="Модульное&#xa;тестирование" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="360" y="170" width="250" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_integration" value="Интеграционное&#xa;тестирование" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="680" y="170" width="250" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_ui" value="Тестирование&#xa;пользовательского интерфейса" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="170" width="250" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_reliable" value="Тестирование&#xa;надежности" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1320" y="170" width="250" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_security" value="Тестирование&#xa;безопасности" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1640" y="170" width="250" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="h_perf" value="Тестирование&#xa;производительности" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1960" y="170" width="250" height="65" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="f1" value="Проверка формы&#xa;создания заказа" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="20" y="300" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="f2" value="Проверка обязательности&#xa;телефона клиента" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="20" y="380" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="f3" value="Проверка автоматической&#xa;генерации номера заказа" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="20" y="460" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="f4" value="Проверка формы&#xa;поставщика" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="20" y="540" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="f5" value="Проверка количества&#xa;в строке приемки" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="20" y="620" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="f6" value="Проверка записи&#xa;движения товара" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="20" y="700" width="290" height="55" as="geometry"/></mxCell>
+
+        <mxCell id="u1" value="Проверка нормализации&#xa;OEM-номеров и артикулов" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="340" y="300" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="u2" value="Проверка валидации&#xa;товарных номеров" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="340" y="380" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="u3" value="Проверка генерации&#xa;штрихкодов и QR-кодов" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="340" y="460" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="u4" value="Проверка поиска товара&#xa;по штрихкоду, SKU и OEM" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="340" y="540" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="u5" value="Проверка формы&#xa;создания пользователя" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="340" y="620" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="u6" value="Проверка запрета&#xa;дублирующихся учетных записей" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="340" y="700" width="290" height="55" as="geometry"/></mxCell>
+
+        <mxCell id="i1" value="Проверка открытия&#xa;административного дашборда" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="660" y="300" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="i2" value="Проверка передачи stats&#xa;и recent_audit в контекст" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="660" y="380" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="i3" value="Проверка списка&#xa;складов в админ-панели" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="660" y="460" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="i4" value="Проверка поиска&#xa;и фильтрации складов" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="660" y="540" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="i5" value="Проверка совместной работы&#xa;моделей, views и шаблонов" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="660" y="620" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="i6" value="Проверка API&#xa;3D-склада" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="660" y="700" width="290" height="55" as="geometry"/></mxCell>
+
+        <mxCell id="ui1" value="Проверка существования&#xa;маршрута авторизации" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="980" y="300" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="ui2" value="Проверка открытия&#xa;основных страниц" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="980" y="380" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="ui3" value="Проверка отображения&#xa;остатков в интерфейсе" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="980" y="460" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="ui4" value="Проверка фильтров&#xa;списка остатков" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="980" y="540" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="ui5" value="Проверка счетчика&#xa;непрочитанных уведомлений" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="980" y="620" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="ui6" value="Проверка отметки&#xa;уведомлений прочитанными" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="980" y="700" width="290" height="55" as="geometry"/></mxCell>
+
+        <mxCell id="r1" value="Проверка обработки&#xa;ошибок отправки email" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1300" y="300" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="r2" value="Проверка восстановления&#xa;после ConnectionError" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1300" y="380" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="r3" value="Проверка обработки ошибки&#xa;сброса пароля" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1300" y="460" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="r4" value="Проверка подсказок товаров&#xa;при инвентаризации" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1300" y="540" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="r5" value="Проверка поведения&#xa;при некорректных данных" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1300" y="620" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="r6" value="Проверка управляемого&#xa;возврата после ошибки" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1300" y="700" width="290" height="55" as="geometry"/></mxCell>
+
+        <mxCell id="s1" value="Проверка прав&#xa;анонимного пользователя" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1620" y="300" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="s2" value="Проверка прав&#xa;администратора" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1620" y="380" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="s3" value="Проверка ограничений&#xa;ролей склада" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1620" y="460" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="s4" value="Проверка запрета доступа&#xa;неадминистратору" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1620" y="540" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="s5" value="Проверка перенаправления&#xa;неавторизованного пользователя" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1620" y="620" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="s6" value="Проверка защиты&#xa;от path traversal" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1620" y="700" width="290" height="55" as="geometry"/></mxCell>
+
+        <mxCell id="p1" value="Проверка сценариев&#xa;нагрузочного тестирования Locust" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1940" y="300" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="p2" value="Проверка запуска&#xa;нескольких пользовательских сценариев" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1940" y="380" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="p3" value="Проверка скорости&#xa;открытия основных страниц" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1940" y="460" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="p4" value="Проверка работы&#xa;фильтрации и пагинации" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1940" y="540" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="p5" value="Проверка использования&#xa;pytest и pytest-django" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1940" y="620" width="290" height="55" as="geometry"/></mxCell>
+        <mxCell id="p6" value="Проверка оценки&#xa;покрытия через coverage" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#ffffff;fontColor=#000000;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1940" y="700" width="290" height="55" as="geometry"/></mxCell>
+
+        <mxCell id="e_title_func" style="endArrow=none;html=1;strokeColor=#ffffff;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="title" target="h_func"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_title_unit" style="endArrow=none;html=1;strokeColor=#ffffff;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="title" target="h_unit"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_title_integration" style="endArrow=none;html=1;strokeColor=#ffffff;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="title" target="h_integration"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_title_ui" style="endArrow=none;html=1;strokeColor=#ffffff;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="title" target="h_ui"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_title_reliable" style="endArrow=none;html=1;strokeColor=#ffffff;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="title" target="h_reliable"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_title_security" style="endArrow=none;html=1;strokeColor=#ffffff;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="title" target="h_security"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e_title_perf" style="endArrow=none;html=1;strokeColor=#ffffff;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="title" target="h_perf"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

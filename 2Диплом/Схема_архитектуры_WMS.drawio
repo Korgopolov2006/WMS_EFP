@@ -1,0 +1,104 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.2.8 Chrome/140.0.7339.240 Electron/38.4.0 Safari/537.36" version="28.2.8">
+  <diagram name="Схема архитектуры WMS" id="wms-architecture">
+    <mxGraphModel dx="1678" dy="989" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="client" value="Клиентская часть&#xa;(WEB-браузер)&#xa;&#xa;HTML&#xa;CSS&#xa;JavaScript" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=16;fontStyle=1;align=center;verticalAlign=middle;spacing=10;" parent="1" vertex="1">
+          <mxGeometry x="110" y="285" width="250" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="django" value="Django-приложение&#xa;(Python)&#xa;&#xa;MVT&#xa;Views / Templates&#xa;REST API" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;spacing=8;" parent="1" vertex="1">
+          <mxGeometry x="500" y="285" width="260" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="db" value="СУБД PostgreSQL&#xa;&#xa;пользователи&#xa;товары&#xa;склады&#xa;остатки&#xa;заказы" style="shape=cylinder3d;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=15;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=15;fontStyle=1;align=center;spacing=5;" parent="1" vertex="1">
+          <mxGeometry x="850" y="285" width="230" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="redis" value="Redis&#xa;кэш и очередь сообщений" style="shape=cylinder3d;whiteSpace=wrap;boundedLbl=1;backgroundOutline=1;size=15;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=14;align=center;" parent="1" vertex="1">
+          <mxGeometry x="530" y="490" width="200" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="celery" value="Celery worker&#xa;фоновые задачи" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="880" y="490" width="200" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="external" value="Внешний сервис&#xa;EFP&#xa;&#xa;данные по&#xa;автозапчастям" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=15;fontStyle=1;align=center;verticalAlign=middle;spacing=8;" parent="1" vertex="1">
+          <mxGeometry x="1200" y="280" width="310" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_client_request" value="HTTP-запрос" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;fontSize=12;exitX=1.001;exitY=0.366;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="client" target="django" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="340" as="sourcePoint" />
+            <mxPoint x="500" y="340" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="450" y="362" />
+              <mxPoint x="450" y="362" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_client_response" value="HTML / JSON" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;fontSize=12;entryX=0.989;entryY=0.693;entryDx=0;entryDy=0;entryPerimeter=0;exitX=-0.001;exitY=0.935;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="django" target="client" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="500" y="430" as="sourcePoint" />
+            <mxPoint x="320" y="430" as="targetPoint" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_django_db_request" value="ORM-запрос" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;fontSize=12;" parent="1" source="django" target="db" edge="1">
+          <mxGeometry x="0.0032" relative="1" as="geometry">
+            <mxPoint x="760" y="340" as="sourcePoint" />
+            <mxPoint x="850" y="340" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="800" y="340" />
+              <mxPoint x="800" y="340" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_db_django_response" value="данные" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;fontSize=12;" parent="1" source="db" target="django" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="850" y="410" as="sourcePoint" />
+            <mxPoint x="760" y="410" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="810" y="380" />
+              <mxPoint x="810" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_django_redis" value="кэш / задача" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;fontSize=12;" parent="1" source="django" target="redis" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="625" y="440" as="sourcePoint" />
+            <mxPoint x="625" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_redis_celery" value="передача задания" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;fontSize=12;" parent="1" source="redis" target="celery" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="745" y="525" as="sourcePoint" />
+            <mxPoint x="870" y="525" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_celery_redis" value="статус выполнения" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;fontSize=12;" parent="1" source="celery" target="redis" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="870" y="560" as="sourcePoint" />
+            <mxPoint x="745" y="560" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_db_external_request" value="HTTP-запрос" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;fontSize=12;" parent="1" source="db" target="external" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1080" y="340" as="sourcePoint" />
+            <mxPoint x="1260" y="340" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1140" y="355" />
+              <mxPoint x="1140" y="355" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_external_db_response" value="ответ сервиса" style="endArrow=block;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;fontSize=12;" parent="1" source="external" target="db" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1260" y="410" as="sourcePoint" />
+            <mxPoint x="1080" y="410" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1130" y="410" />
+              <mxPoint x="1130" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

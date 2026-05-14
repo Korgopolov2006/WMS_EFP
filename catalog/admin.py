@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.db import models
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 
 from .models import (
     Branch,
@@ -126,8 +127,14 @@ class StorageLocationAdmin(admin.ModelAdmin):
             qty = Stock.objects.filter(storage_location=obj).aggregate(
                 total=models.Sum('qty_available')
             )['total'] or 0
-            return format_html('<span style="color: orange;">⚠ Есть товар ({:.0f} шт)</span>', qty)
-        return format_html('<span style="color: green;">✓ Свободно</span>')
+            # format_html передаёт args через conditional_escape (Decimal → SafeString),
+            # из-за чего {:.0f} ломается. Форматируем qty ДО передачи в шаблон.
+            return format_html(
+                '<span style="color: orange;">⚠ Есть товар ({} шт)</span>',
+                f"{qty:.0f}",
+            )
+        # Static markup — используем mark_safe (format_html без args deprecated в Django 6.0)
+        return mark_safe('<span style="color: green;">✓ Свободно</span>')
     has_stock_display.short_description = "Статус"
 
     def delete_model(self, request, obj):
@@ -243,7 +250,8 @@ class ToolAdmin(admin.ModelAdmin):
     )
 
     def is_in_use_display(self, obj):
+        # Static markup — mark_safe вместо format_html без args (deprecated в Django 6.0)
         if obj.is_in_use():
-            return format_html('<span style="color: orange;">В использовании</span>')
-        return format_html('<span style="color: green;">Свободен</span>')
+            return mark_safe('<span style="color: orange;">В использовании</span>')
+        return mark_safe('<span style="color: green;">Свободен</span>')
     is_in_use_display.short_description = "Статус использования"

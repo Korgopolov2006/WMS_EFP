@@ -22,9 +22,9 @@ from .models import Task, TaskPriority, TaskStatus, TaskType
 from .services import TaskService
 
 
-def _paginate(request: HttpRequest, items, per_page: int = 5):
-    paginator = Paginator(items, per_page)
-    return paginator.get_page(request.GET.get("page"))
+def _paginate(request: HttpRequest, items, per_page: int = 10):
+    from core.pagination import paginate_legacy
+    return paginate_legacy(request, items, per_page=per_page)
 
 
 def _is_admin_user(user) -> bool:

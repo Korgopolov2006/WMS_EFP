@@ -1,0 +1,480 @@
+Project WMS_Logical {
+  database_type: 'Logical data model'
+  Note: 'Логическая схема БД WMS: бизнес-сущности, основные атрибуты и связи без привязки к PostgreSQL.'
+}
+
+Table accounts_user [note: 'пользователь'] {
+  id integer [pk]
+  username string
+  first_name string
+  last_name string
+  email string
+  is_active boolean
+  role string
+}
+
+Table catalog_branch [note: 'Филиал'] {
+  id integer [pk]
+  code string
+  name string
+  address text
+  is_active boolean
+}
+
+Table catalog_warehouse [note: 'Склад'] {
+  id integer [pk]
+  branch_id integer [note: 'Связь с Филиал']
+  code string
+  name string
+  width_m decimal
+  length_m decimal
+  height_m decimal
+  is_active boolean
+}
+
+Table catalog_warehouseaccess [note: 'Доступ к складу'] {
+  id integer [pk]
+  user_id integer [note: 'Связь с пользователь']
+  warehouse_id integer [note: 'Связь с Склад']
+  access_level string
+}
+
+Table catalog_brand [note: 'Бренд'] {
+  id integer [pk]
+  name string
+}
+
+Table catalog_category [note: 'Категория'] {
+  id integer [pk]
+  name string
+  parent_id integer [note: 'Связь с Категория']
+}
+
+Table catalog_vehiclemake [note: 'Марка ТС'] {
+  id integer [pk]
+  name string
+}
+
+Table catalog_vehiclemodel [note: 'Модель ТС'] {
+  id integer [pk]
+  make_id integer [note: 'Связь с Марка ТС']
+  name string
+}
+
+Table catalog_storagezonetype [note: 'Тип складской зоны'] {
+  id integer [pk]
+  code string
+  name string
+  description text
+  sort_order integer
+}
+
+Table catalog_storagezone [note: 'Зона хранения'] {
+  id integer [pk]
+  warehouse_id integer [note: 'Связь с Склад']
+  code string
+  name string
+  zone_type_id integer [note: 'Связь с Тип складской зоны']
+  description text
+}
+
+Table catalog_storagelocation [note: 'Место хранения'] {
+  id integer [pk]
+  zone_id integer [note: 'Связь с Зона хранения']
+  code string
+  name string
+  aisle string
+  rack string
+  shelf string
+  level string
+  max_weight_kg decimal
+}
+
+Table catalog_product [note: 'Номенклатура (товар)'] {
+  id integer [pk]
+  internal_sku string
+  name string
+  oem_number string
+  analog_number string
+  barcode string
+  brand_id integer [note: 'Связь с Бренд']
+  category_id integer [note: 'Связь с Категория']
+  weight_kg decimal
+  length_cm decimal
+  width_cm decimal
+  height_cm decimal
+  packaging_type string
+  photo string
+}
+
+Table catalog_productapplicability [note: 'Применимость товара'] {
+  id integer [pk]
+  product_id integer [note: 'Связь с Номенклатура (товар)']
+  vehicle_model_id integer [note: 'Связь с Модель ТС']
+}
+
+Table catalog_productcrossreference [note: 'Перекрёстная ссылка'] {
+  id integer [pk]
+  from_product_id integer [note: 'Связь с Номенклатура (товар)']
+  to_product_id integer [note: 'Связь с Номенклатура (товар)']
+  relation_type string
+  note string
+}
+
+Table catalog_backorder [note: 'Отложенный заказ'] {
+  id integer [pk]
+  order_id integer [note: 'Связь с Заказ']
+  product_id integer [note: 'Связь с Номенклатура (товар)']
+  qty_ordered decimal
+  qty_fulfilled decimal
+  status string
+  expected_arrival_date date
+  fulfilled_at datetime
+}
+
+Table catalog_tool [note: 'Инструмент'] {
+  id integer [pk]
+  warehouse_id integer [note: 'Связь с Склад']
+  tool_type string
+  code string
+  name string
+  brand string
+  model string
+  is_available boolean
+  is_active boolean
+  current_user_id integer [note: 'Связь с пользователь']
+  checked_out_at datetime
+  expected_return_at datetime
+  last_maintenance_date date
+  next_maintenance_date date
+  maintenance_notes text
+}
+
+Table receiving_supplier [note: 'Поставщик'] {
+  id integer [pk]
+  code string
+  name string
+  is_active boolean
+}
+
+Table receiving_receiving [note: 'Приёмка'] {
+  id integer [pk]
+  number string
+  supplier_name string
+  supplier_doc_no string
+  warehouse_id integer [note: 'Связь с Склад']
+  status string
+  expected_at datetime
+  completed_at datetime
+}
+
+Table receiving_receivingline [note: 'Строка приёмки'] {
+  id integer [pk]
+  receiving_id integer [note: 'Связь с Приёмка']
+  product_id integer [note: 'Связь с Номенклатура (товар)']
+  supplier_sku string
+  qty_expected decimal
+  qty_received decimal
+  storage_location_id integer [note: 'Связь с Место хранения']
+  has_serial_numbers boolean
+}
+
+Table receiving_receivingserial [note: 'Серийный номер приёмки'] {
+  id integer [pk]
+  line_id integer [note: 'Связь с Строка приёмки']
+  serial_number string
+}
+
+Table inventory_stock [note: 'Остаток'] {
+  id integer [pk]
+  product_id integer [note: 'Связь с Номенклатура (товар)']
+  storage_location_id integer [note: 'Связь с Место хранения']
+  qty_available decimal
+  qty_reserved decimal
+  batch_no string
+  expiry_date date
+}
+
+Table inventory_inventory [note: 'Инвентаризация'] {
+  id integer [pk]
+  number string
+  zone_id integer [note: 'Связь с Зона хранения']
+  status string
+  started_at datetime
+  completed_at datetime
+}
+
+Table inventory_inventoryline [note: 'Строка инвентаризации'] {
+  id integer [pk]
+  inventory_id integer [note: 'Связь с Инвентаризация']
+  product_id integer [note: 'Связь с Номенклатура (товар)']
+  storage_location_id integer [note: 'Связь с Место хранения']
+  qty_book decimal
+  qty_actual decimal
+  discrepancy decimal
+}
+
+Table inventory_stockmovement [note: 'Движение товара'] {
+  id integer [pk]
+  movement_type string
+  status string
+  product_id integer [note: 'Связь с Номенклатура (товар)']
+  quantity decimal
+  from_location_id integer [note: 'Связь с Место хранения']
+  to_location_id integer [note: 'Связь с Место хранения']
+  batch_no string
+  reason string
+  comment text
+  ref_type string
+  ref_id string
+  user_id integer [note: 'Связь с пользователь']
+}
+
+Table picking_order [note: 'Заказ'] {
+  id integer [pk]
+  number string
+  customer_name string
+  customer_phone string
+  customer_email string
+  note text
+  status string
+  priority string
+  shipping_due_at datetime
+  confirmed_at datetime
+  picked_at datetime
+  shipped_at datetime
+  reserved_at_window boolean
+  window_number string
+  picked_by_id integer [note: 'Связь с пользователь']
+}
+
+Table picking_orderline [note: 'Строка заказа'] {
+  id integer [pk]
+  order_id integer [note: 'Связь с Заказ']
+  product_id integer [note: 'Связь с Номенклатура (товар)']
+  qty_ordered decimal
+  qty_picked decimal
+  price decimal
+}
+
+Table picking_pickingtask [note: 'Задача подбора'] {
+  id integer [pk]
+  order_id integer [note: 'Связь с Заказ']
+  status string
+  priority string
+  due_date datetime
+  zone_type_code string
+  assigned_to_id integer [note: 'Связь с пользователь']
+  started_at datetime
+  completed_at datetime
+}
+
+Table picking_pickingline [note: 'Строка подбора'] {
+  id integer [pk]
+  task_id integer [note: 'Связь с Задача подбора']
+  order_line_id integer [note: 'Связь с Строка заказа']
+  stock_id integer [note: 'Связь с Остаток']
+  qty_picked decimal
+  scanned_oem string
+}
+
+Table reports_abcxyzanalysis [note: 'ABC-XYZ анализ'] {
+  id integer [pk]
+  product_id integer [note: 'Связь с Номенклатура (товар)']
+  period_start date
+  period_end date
+  total_sales_qty decimal
+  total_sales_amount decimal
+  abc_class string
+  xyz_class string
+  coefficient_variation decimal
+}
+
+Table reports_deadstockreport [note: 'Мёртвый остаток'] {
+  id integer [pk]
+  product_id integer [note: 'Связь с Номенклатура (товар)']
+  stock_id integer [note: 'Связь с Остаток']
+  qty_available decimal
+  days_without_movement integer
+  last_movement_date date
+  estimated_value decimal
+  calculated_at datetime
+}
+
+Table reports_pickingerror [note: 'Ошибка подбора'] {
+  id integer [pk]
+  order_line_id integer [note: 'Связь с Строка заказа']
+  picking_line_id integer [note: 'Связь с Строка подбора']
+  error_type string
+  expected_product_id integer [note: 'Связь с Номенклатура (товар)']
+  actual_product_id integer [note: 'Связь с Номенклатура (товар)']
+  expected_qty decimal
+  actual_qty decimal
+  detected_by_id integer [note: 'Связь с пользователь']
+  detected_at datetime
+  resolved boolean
+  resolved_at datetime
+  resolved_by_id integer [note: 'Связь с пользователь']
+}
+
+Table reports_analogvsoriginalreport [note: 'Отчёт аналоги vs оригиналы'] {
+  id integer [pk]
+  period_start date
+  period_end date
+  original_product_id integer [note: 'Связь с Номенклатура (товар)']
+  analog_product_id integer [note: 'Связь с Номенклатура (товар)']
+  original_sales_qty decimal
+  analog_sales_qty decimal
+  original_sales_amount decimal
+  analog_sales_amount decimal
+  substitution_rate decimal
+  calculated_at datetime
+}
+
+Table reports_demandforecast [note: 'Прогноз спроса'] {
+  id integer [pk]
+  product_id integer [note: 'Связь с Номенклатура (товар)']
+  forecast_date date
+  period_start date
+  period_end date
+  forecasted_qty decimal
+  confidence_level decimal
+  seasonal_factor decimal
+  trend_factor decimal
+  historical_sales_qty decimal
+  historical_period_start date
+  historical_period_end date
+  calculated_at datetime
+  calculated_by_id integer [note: 'Связь с пользователь']
+}
+
+Table tasks_task [note: 'Задача'] {
+  id integer [pk]
+  task_type string
+  status string
+  priority string
+  title string
+  description text
+  receiving_id integer [note: 'Связь с Приёмка']
+  inventory_id integer [note: 'Связь с Инвентаризация']
+  order_id integer [note: 'Связь с Заказ']
+  picking_task_id integer [note: 'Связь с Задача подбора']
+  assigned_to_id integer [note: 'Связь с пользователь']
+  due_date datetime
+  started_at datetime
+  completed_at datetime
+  metadata json
+}
+
+Table tasks_taskcomment [note: 'Комментарий к задаче'] {
+  id integer [pk]
+  task_id integer [note: 'Связь с Задача']
+  author_id integer [note: 'Связь с пользователь']
+  text text
+}
+
+Table warehouse_3d_warehouselayout [note: 'Геометрия склада'] {
+  id integer [pk]
+  warehouse_id integer [note: 'Связь с Склад']
+  floor_points json
+  is_layout_defined boolean
+  gate_x float
+  gate_z float
+}
+
+Table warehouse_3d_storageobject [note: 'Объект хранения'] {
+  id integer [pk]
+  warehouse_id integer [note: 'Связь с Склад']
+  object_type string
+  code string
+  name string
+  position_x float
+  position_z float
+  position_y float
+  width float
+  depth float
+  height float
+  rotation_y float
+  is_active boolean
+  storage_location_id integer [note: 'Связь с Место хранения']
+}
+
+Table notifications_notification [note: 'Уведомление'] {
+  id integer [pk]
+  user_id integer [note: 'Связь с пользователь']
+  kind string
+  priority string
+  title string
+  body text
+  link string
+  dedup_key string
+  is_read boolean
+}
+
+Ref: catalog_warehouse.branch_id > catalog_branch.id
+Ref: catalog_warehouseaccess.user_id > accounts_user.id
+Ref: catalog_warehouseaccess.warehouse_id > catalog_warehouse.id
+Ref: catalog_category.parent_id > catalog_category.id
+Ref: catalog_vehiclemodel.make_id > catalog_vehiclemake.id
+Ref: catalog_storagezone.warehouse_id > catalog_warehouse.id
+Ref: catalog_storagezone.zone_type_id > catalog_storagezonetype.id
+Ref: catalog_storagelocation.zone_id > catalog_storagezone.id
+Ref: catalog_product.brand_id > catalog_brand.id
+Ref: catalog_product.category_id > catalog_category.id
+Ref: catalog_productapplicability.product_id > catalog_product.id
+Ref: catalog_productapplicability.vehicle_model_id > catalog_vehiclemodel.id
+Ref: catalog_productcrossreference.from_product_id > catalog_product.id
+Ref: catalog_productcrossreference.to_product_id > catalog_product.id
+Ref: catalog_backorder.order_id > picking_order.id
+Ref: catalog_backorder.product_id > catalog_product.id
+Ref: catalog_tool.warehouse_id > catalog_warehouse.id
+Ref: catalog_tool.current_user_id > accounts_user.id
+Ref: receiving_receiving.warehouse_id > catalog_warehouse.id
+Ref: receiving_receivingline.receiving_id > receiving_receiving.id
+Ref: receiving_receivingline.product_id > catalog_product.id
+Ref: receiving_receivingline.storage_location_id > catalog_storagelocation.id
+Ref: receiving_receivingserial.line_id > receiving_receivingline.id
+Ref: inventory_stock.product_id > catalog_product.id
+Ref: inventory_stock.storage_location_id > catalog_storagelocation.id
+Ref: inventory_inventory.zone_id > catalog_storagezone.id
+Ref: inventory_inventoryline.inventory_id > inventory_inventory.id
+Ref: inventory_inventoryline.product_id > catalog_product.id
+Ref: inventory_inventoryline.storage_location_id > catalog_storagelocation.id
+Ref: inventory_stockmovement.product_id > catalog_product.id
+Ref: inventory_stockmovement.from_location_id > catalog_storagelocation.id
+Ref: inventory_stockmovement.to_location_id > catalog_storagelocation.id
+Ref: inventory_stockmovement.user_id > accounts_user.id
+Ref: picking_order.picked_by_id > accounts_user.id
+Ref: picking_orderline.order_id > picking_order.id
+Ref: picking_orderline.product_id > catalog_product.id
+Ref: picking_pickingtask.order_id > picking_order.id
+Ref: picking_pickingtask.assigned_to_id > accounts_user.id
+Ref: picking_pickingline.task_id > picking_pickingtask.id
+Ref: picking_pickingline.order_line_id > picking_orderline.id
+Ref: picking_pickingline.stock_id > inventory_stock.id
+Ref: reports_abcxyzanalysis.product_id > catalog_product.id
+Ref: reports_deadstockreport.product_id > catalog_product.id
+Ref: reports_deadstockreport.stock_id > inventory_stock.id
+Ref: reports_pickingerror.order_line_id > picking_orderline.id
+Ref: reports_pickingerror.picking_line_id > picking_pickingline.id
+Ref: reports_pickingerror.expected_product_id > catalog_product.id
+Ref: reports_pickingerror.actual_product_id > catalog_product.id
+Ref: reports_pickingerror.detected_by_id > accounts_user.id
+Ref: reports_pickingerror.resolved_by_id > accounts_user.id
+Ref: reports_analogvsoriginalreport.original_product_id > catalog_product.id
+Ref: reports_analogvsoriginalreport.analog_product_id > catalog_product.id
+Ref: reports_demandforecast.product_id > catalog_product.id
+Ref: reports_demandforecast.calculated_by_id > accounts_user.id
+Ref: tasks_task.receiving_id > receiving_receiving.id
+Ref: tasks_task.inventory_id > inventory_inventory.id
+Ref: tasks_task.order_id > picking_order.id
+Ref: tasks_task.picking_task_id > picking_pickingtask.id
+Ref: tasks_task.assigned_to_id > accounts_user.id
+Ref: tasks_taskcomment.task_id > tasks_task.id
+Ref: tasks_taskcomment.author_id > accounts_user.id
+Ref: warehouse_3d_warehouselayout.warehouse_id - catalog_warehouse.id
+Ref: warehouse_3d_storageobject.warehouse_id > catalog_warehouse.id
+Ref: warehouse_3d_storageobject.storage_location_id > catalog_storagelocation.id
+Ref: notifications_notification.user_id > accounts_user.id
+Ref: accounts_user.id <> catalog_branch.id // Филиалы
+Ref: catalog_product.id <> catalog_vehiclemodel.id // Применимость

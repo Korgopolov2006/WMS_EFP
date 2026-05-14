@@ -26,9 +26,9 @@ from .services import (
 )
 
 
-def _paginate(request: HttpRequest, items, per_page: int = 5):
-    paginator = Paginator(items, per_page)
-    return paginator.get_page(request.GET.get("page"))
+def _paginate(request: HttpRequest, items, per_page: int = 10):
+    from core.pagination import paginate_legacy
+    return paginate_legacy(request, items, per_page=per_page)
 
 
 def _priority_order():

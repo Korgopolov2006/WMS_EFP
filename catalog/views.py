@@ -37,9 +37,9 @@ from .models import (
 from .models import ProductChangeLog
 
 
-def _paginate(request: HttpRequest, items, per_page: int = 5):
-    paginator = Paginator(items, per_page)
-    return paginator.get_page(request.GET.get("page"))
+def _paginate(request: HttpRequest, items, per_page: int = 10):
+    from core.pagination import paginate_legacy
+    return paginate_legacy(request, items, per_page=per_page)
 
 
 @role_required(Roles.ADMIN)
@@ -162,7 +162,7 @@ def vehicle_make_list(request: HttpRequest) -> HttpResponse:
             "items": page_obj.object_list,
             "q": q,
             "title": "Марки ТС",
-            "subtitle": "适用 — применимость (марка/модель ТС)",
+            "subtitle": "Применимость — марка/модель транспортного средства",
             "create_url": "catalog_vehicle_make_create",
             "page_obj": page_obj,
         },
@@ -210,7 +210,7 @@ def vehicle_model_list(request: HttpRequest) -> HttpResponse:
             "items": page_obj.object_list,
             "q": q,
             "title": "Модели ТС",
-            "subtitle": "适用 — применимость (марка/модель ТС)",
+            "subtitle": "Применимость — марка/модель транспортного средства",
             "create_url": "catalog_vehicle_model_create",
             "page_obj": page_obj,
         },

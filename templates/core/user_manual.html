@@ -5,188 +5,378 @@
 
 {% block extra_css %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'css/help-modal.css' %}?v=20260219-2">
+  <link rel="stylesheet" href="{% static 'css/help-modal.css' %}?v=20260514-3">
   <style>
+    .manual-page { color: var(--text); }
+    .manual-page h1, .manual-page h2, .manual-page h3,
+    .manual-page p, .manual-page li, .manual-page strong { color: var(--text); }
+    .manual-page .muted { color: var(--text-2); }
+
+    /* Шапка инструкции */
     .manual-hero {
       display: grid;
       gap: 14px;
-      grid-template-columns: 1.2fr .8fr;
-      margin-bottom: 16px;
+      grid-template-columns: 1.4fr .6fr;
+      margin-bottom: 18px;
     }
 
-    .manual-page {
+    /* Карточка роли */
+    .manual-role {
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      background: var(--surface);
+      padding: 18px;
+      margin-top: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .manual-role__title {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 4px;
+      color: var(--text);
+    }
+    .manual-role__scope {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.6;
+      margin: 0 0 14px;
+    }
+
+    /* Секции внутри роли */
+    .manual-section {
+      margin-top: 16px;
+    }
+    .manual-section h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    .manual-section ul {
+      margin: 0;
+      padding-left: 22px;
+      line-height: 1.7;
+    }
+    .manual-section ul li {
+      margin-bottom: 4px;
       color: var(--text);
     }
 
-    .manual-page h1,
-    .manual-page h2,
-    .manual-page h3,
-    .manual-page p,
-    .manual-page li {
+    /* Сценарий */
+    .manual-scenario {
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      background: var(--surface-2);
+      padding: 14px 16px;
+      margin-top: 10px;
+    }
+    .manual-scenario__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--brand);
+      margin: 0 0 6px;
+    }
+    .manual-scenario__when {
+      font-size: 13px;
+      color: var(--text-2);
+      margin: 0 0 10px;
+      font-style: italic;
+    }
+    .manual-scenario__label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--text-3);
+      margin: 10px 0 6px;
+    }
+    .manual-scenario__steps {
+      counter-reset: stepc;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .manual-scenario__steps li {
+      counter-increment: stepc;
+      position: relative;
+      padding: 6px 0 6px 32px;
+      line-height: 1.6;
       color: var(--text);
     }
-
-    .manual-page .muted {
-      color: var(--muted);
+    .manual-scenario__steps li::before {
+      content: counter(stepc);
+      position: absolute;
+      left: 0;
+      top: 6px;
+      width: 22px;
+      height: 22px;
+      background: var(--brand);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .manual-scenario__result {
+      margin: 12px 0 0;
+      padding: 8px 12px;
+      background: var(--success-soft);
+      border-left: 3px solid var(--success);
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    .manual-scenario__tips {
+      margin: 10px 0 0;
+      padding: 8px 12px;
+      background: var(--warning-soft);
+      border-left: 3px solid var(--warning);
+      border-radius: var(--r-sm);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .manual-scenario__tips ul {
+      margin: 4px 0 0;
+      padding-left: 20px;
     }
 
-    .manual-grid {
-      display: grid;
-      gap: 12px;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      margin-top: 12px;
+    /* Список страниц */
+    .manual-pages-list {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.7;
+    }
+    .manual-pages-list li {
+      color: var(--text);
+      padding: 3px 0;
+    }
+    .manual-pages-list strong {
+      color: var(--brand);
     }
 
+    /* Чего нельзя делать */
+    .manual-dont {
+      background: var(--danger-soft);
+      border-left: 4px solid var(--danger);
+      border-radius: var(--r-sm);
+      padding: 12px 16px;
+    }
+    .manual-dont ul {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.7;
+    }
+
+    /* Общий распорядок смены */
     .manual-workflow {
       display: grid;
       gap: 10px;
       margin-top: 12px;
     }
-
     .manual-step {
-      border-radius: 14px;
-      border: 1px solid var(--stroke);
-      background: var(--glass);
-      color: var(--text);
-      padding: 12px;
-      display: grid;
-      gap: 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      background: var(--surface);
+      padding: 12px 16px;
     }
-
-    .manual-list {
+    .manual-step__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--brand);
+      margin: 0 0 6px;
+    }
+    .manual-step__desc {
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.65;
       margin: 0;
-      padding-left: 18px;
-      display: grid;
-      gap: 4px;
     }
 
-    .manual-list li {
-      color: var(--text);
-    }
-
-    .manual-role-form {
-      display: grid;
-      gap: 10px;
-    }
-
+    /* Модал выбора роли для PDF */
+    .manual-role-form { display: grid; gap: 10px; }
     .manual-role-option {
       display: grid;
       gap: 4px;
-      border: 1px solid var(--stroke);
-      border-radius: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
       padding: 10px 12px;
-      background: rgba(13, 20, 40, 0.62);
+      background: var(--surface);
       cursor: pointer;
     }
-
-    .manual-role-option:hover {
-      border-color: rgba(111, 180, 255, 0.45);
-    }
-
-    .manual-role-option input {
-      margin-right: 8px;
-    }
-
-    .manual-role-option strong {
-      color: var(--text);
-    }
-
-    .manual-role-option small {
-      display: block;
-      color: var(--muted);
-      line-height: 1.35;
-    }
-
+    .manual-role-option:hover { border-color: var(--brand); }
+    .manual-role-option input { margin-right: 8px; }
+    .manual-role-option strong { color: var(--text); }
+    .manual-role-option small { display: block; color: var(--text-2); line-height: 1.45; }
     .manual-role-actions {
-      display: flex;
-      gap: 8px;
+      display: flex; gap: 8px;
       justify-content: flex-end;
       margin-top: 8px;
     }
 
-    @media (max-width: 980px) {
-      .manual-hero,
-      .manual-grid {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 900px) {
+      .manual-hero { grid-template-columns: 1fr; }
     }
   </style>
 {% endblock %}
 
 {% block content %}
-  <div class="manual-page">
+<div class="page manual-page">
+
+  {# ──────────────── Шапка ──────────────── #}
   <section class="manual-hero">
-    <div class="card card--glass card--lg">
-      <h1 class="h2">Инструкция по работе в WMS</h1>
-      <p class="muted">Практическая инструкция: что именно должен делать сотрудник в программе по своей роли.</p>
-      <div class="pillbar" style="margin-top:10px;">
-        <span class="pill">Роль: {{ request.user.get_role_display|default:request.user.role }}</span>
-        <span class="pill">Пользователь: {{ request.user.username }}</span>
+    <div class="card">
+      <div class="card__body">
+        <h1 class="h2" style="margin:0 0 6px;">Инструкция по работе в системе</h1>
+        <p class="muted" style="margin:0;">
+          Подробное пошаговое руководство для каждой роли. Прочитав этот документ,
+          даже сотрудник без опыта сможет полноценно работать в системе.
+        </p>
+        <div class="pillbar" style="margin-top:12px;">
+          <span class="badge badge--info">Роль: {{ request.user.get_role_display|default:request.user.role }}</span>
+          <span class="badge badge--neutral">Пользователь: {{ request.user.username }}</span>
+        </div>
       </div>
     </div>
-    <div class="card card--glass card--lg">
-      <h2 class="h3">Быстрые ссылки</h2>
-      <div class="stack stack--sm">
+
+    <div class="card">
+      <div class="card__body">
+        <h2 class="h3" style="margin:0 0 10px;">PDF-версия инструкции</h2>
+        <p class="muted" style="font-size:13px; margin:0 0 12px;">
+          Скачайте PDF, чтобы распечатать или открыть с телефона на складе.
+        </p>
         {% if allow_role_switch %}
-          <button id="open-manual-role-modal" type="button" class="btn btn--primary btn--block">Скачать инструкцию (PDF)</button>
+          <button id="open-manual-role-modal" type="button" class="btn btn--primary btn--block">
+            Скачать инструкцию
+          </button>
         {% else %}
-          <a class="btn btn--primary btn--block" href="{% url 'user_manual_download' %}?role={{ request.user.role }}">Скачать мою инструкцию (PDF)</a>
+          <a class="btn btn--primary btn--block" href="{% url 'user_manual_download' %}?role={{ request.user.role }}">
+            Скачать мою инструкцию
+          </a>
         {% endif %}
-        {% for label, url in quick_links %}
-          <a class="btn btn--ghost btn--block" href="{{ url }}">{{ label }}</a>
+      </div>
+    </div>
+  </section>
+
+  {# ──────────────── Карточки ролей ──────────────── #}
+  {% for card in role_cards %}
+    <article class="manual-role">
+      <h2 class="manual-role__title">{{ card.role }}</h2>
+      <p class="manual-role__scope">{{ card.scope }}</p>
+
+      {# Обязанности #}
+      <div class="manual-section">
+        <h3>Что входит в обязанности</h3>
+        <ul>
+          {% for item in card.responsibilities %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      {# Сценарии #}
+      <div class="manual-section">
+        <h3>Подробные сценарии работы</h3>
+        {% for scenario in card.scenarios %}
+          <div class="manual-scenario">
+            <p class="manual-scenario__title">{{ scenario.title }}</p>
+            <p class="manual-scenario__when">Когда применяется: {{ scenario.when }}</p>
+
+            <p class="manual-scenario__label">Что делать (по шагам)</p>
+            <ol class="manual-scenario__steps">
+              {% for step in scenario.steps %}
+                <li>{{ step }}</li>
+              {% endfor %}
+            </ol>
+
+            <div class="manual-scenario__result">
+              <strong>Результат:</strong> {{ scenario.result }}
+            </div>
+
+            {% if scenario.tips %}
+              <div class="manual-scenario__tips">
+                <strong>Полезные советы:</strong>
+                <ul>
+                  {% for tip in scenario.tips %}
+                    <li>{{ tip }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          </div>
         {% endfor %}
       </div>
-    </div>
-  </section>
 
-  <section class="card card--glass card--lg">
-    <h2 class="h3">{% if role_cards|length == 1 %}Ваш функционал{% else %}Функционал по ролям{% endif %}</h2>
-    <div class="manual-grid">
-      {% for card in role_cards %}
-        <article class="kv" style="height:100%;">
-          <div class="kv__k">{{ card.role }}</div>
-          <div class="kv__v">{{ card.scope }}</div>
-          <ul class="manual-list">
-            {% for action in card.actions %}
-              <li>{{ action }}</li>
-            {% endfor %}
-          </ul>
-        </article>
-      {% endfor %}
-    </div>
-  </section>
+      {# Страницы системы #}
+      <div class="manual-section">
+        <h3>Какие страницы понадобятся в работе</h3>
+        <ul class="manual-pages-list">
+          {% for page in card.pages %}
+            <li>{{ page }}</li>
+          {% endfor %}
+        </ul>
+      </div>
 
-  <section class="card card--glass card--lg" style="margin-top:14px;">
-    <h2 class="h3">Как работать в программе (по шагам)</h2>
+      {# Чего нельзя делать #}
+      {% if card.dont %}
+        <div class="manual-section">
+          <h3>Чего нельзя делать</h3>
+          <div class="manual-dont">
+            <ul>
+              {% for item in card.dont %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      {% endif %}
+    </article>
+  {% endfor %}
+
+  {# ──────────────── Универсальный распорядок ──────────────── #}
+  <section class="manual-role">
+    <h2 class="manual-role__title">Универсальный порядок работы в смене</h2>
+    <p class="manual-role__scope">
+      Эти шаги применимы ко всем ролям. Это «скелет» обычного рабочего дня в системе.
+    </p>
     <div class="manual-workflow">
       {% for step in workflow_steps %}
-        <article class="manual-step">
-          <div class="kv__v">{{ step.title }}</div>
-          <p class="muted">{{ step.desc }}</p>
-          <a class="btn btn--primary" href="{{ step.url }}">{{ step.cta }}</a>
-        </article>
+        <div class="manual-step">
+          <p class="manual-step__title">{{ step.title }}</p>
+          <p class="manual-step__desc">{{ step.desc }}</p>
+        </div>
       {% endfor %}
     </div>
   </section>
 
-  <section class="card card--glass card--lg" style="margin-top:14px;">
-    <h2 class="h3">Правила работы сотрудника</h2>
-    <ul class="manual-list">
+  {# ──────────────── Общие правила ──────────────── #}
+  <section class="manual-role">
+    <h2 class="manual-role__title">Общие правила работы</h2>
+    <p class="manual-role__scope">
+      Несколько простых правил, которых стоит придерживаться всем сотрудникам — это
+      сэкономит время и убережёт от типичных ошибок.
+    </p>
+    <ul class="manual-pages-list">
       {% for note in work_principles %}
         <li>{{ note }}</li>
       {% endfor %}
     </ul>
   </section>
 
+  {# ──────────────── Модал выбора роли для PDF ──────────────── #}
   {% if allow_role_switch %}
     <div id="manual-role-modal" class="help-modal" aria-hidden="true">
       <div class="help-modal__content">
         <div class="help-modal__header">
-          <h2 class="help-modal__title">Выберите роль для инструкции</h2>
+          <h2 class="help-modal__title">Выберите роль для PDF-инструкции</h2>
           <button type="button" class="help-modal__close" aria-label="Закрыть">&times;</button>
         </div>
         <div class="help-modal__body">
-          <p class="muted">Система сформирует отдельный PDF с шагами, обязанностями и ключевыми страницами для выбранной роли.</p>
+          <p class="muted">Система сформирует отдельный PDF под выбранную роль со всеми сценариями и шагами.</p>
           <form class="manual-role-form" action="{% url 'user_manual_download' %}" method="get">
             {% for role in role_choices %}
               <label class="manual-role-option">
@@ -206,47 +396,35 @@
       </div>
     </div>
   {% endif %}
-  </div>
+</div>
 
-  <script>
-    (function () {
-      const openBtn = document.getElementById("open-manual-role-modal");
-      const modal = document.getElementById("manual-role-modal");
-      if (!openBtn || !modal) {
-        return;
-      }
-      const closeBtn = modal.querySelector(".help-modal__close");
-      const cancelBtn = document.getElementById("manual-role-cancel");
+<script>
+  (function () {
+    const openBtn = document.getElementById("open-manual-role-modal");
+    const modal = document.getElementById("manual-role-modal");
+    if (!openBtn || !modal) return;
 
-      function openModal() {
-        modal.classList.add("help-modal--active");
-        modal.setAttribute("aria-hidden", "false");
-        document.body.style.overflow = "hidden";
-      }
+    const closeBtn = modal.querySelector(".help-modal__close");
+    const cancelBtn = document.getElementById("manual-role-cancel");
 
-      function closeModal() {
-        modal.classList.remove("help-modal--active");
-        modal.setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
-      }
+    function openModal() {
+      modal.classList.add("help-modal--active");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+    function closeModal() {
+      modal.classList.remove("help-modal--active");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
 
-      openBtn.addEventListener("click", openModal);
-      if (closeBtn) {
-        closeBtn.addEventListener("click", closeModal);
-      }
-      if (cancelBtn) {
-        cancelBtn.addEventListener("click", closeModal);
-      }
-      modal.addEventListener("click", function (event) {
-        if (event.target === modal) {
-          closeModal();
-        }
-      });
-      document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape" && modal.classList.contains("help-modal--active")) {
-          closeModal();
-        }
-      });
-    })();
-  </script>
+    openBtn.addEventListener("click", openModal);
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+    modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && modal.classList.contains("help-modal--active")) closeModal();
+    });
+  })();
+</script>
 {% endblock %}

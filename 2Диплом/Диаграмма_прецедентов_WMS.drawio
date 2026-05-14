@@ -1,0 +1,390 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/28.2.8 Chrome/140.0.7339.240 Electron/38.4.0 Safari/537.36" version="28.2.8">
+  <diagram name="Диаграмма прецедентов WMS" id="wms-use-case-orthogonal">
+    <mxGraphModel dx="3588" dy="2601" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="actor_guest" value="Неавторизованный&#xa;пользователь" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="1255" y="-950" width="90" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_auth" value="Авторизоваться" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="1215" y="-770" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_check" value="Проверить&#xa;учетные данные" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="940" y="-770" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_define_role" value="Определить&#xa;роль пользователя" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="1205" y="-620" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_open_role_area" value="Открыть рабочий&#xa;раздел по роли" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="1205" y="-440" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_role_user" value="Пользователь&#xa;с ролью" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="1255" y="-290" width="90" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_admin" value="Администратор" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="-185" y="-262.5" width="90" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_storekeeper" value="Кладовщик" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="500" y="-92.5" width="90" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_sales" value="Менеджер&#xa;по продажам" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="695" y="-542.5" width="90" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_picker" value="Сборщик&#xa;мелких деталей" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="1100" y="80" width="90" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_loader" value="Комплектовщик /&#xa;грузчик" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="1820" y="-180" width="90" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_analyst" value="Аналитик" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="1510" y="-435" width="90" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_manage_users" value="Управлять&#xa;пользователями" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="-530" y="-235" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_create_user" value="Создать&#xa;пользователя" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="-760" y="-230" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_change_role" value="Изменить&#xa;роль" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="-505" y="-327.5" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_block_user" value="Заблокировать&#xa;пользователя" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="-505" y="-110" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_manage_refs" value="Настраивать&#xa;справочники" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="-245" y="-435" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_create_warehouse" value="Создать&#xa;склад" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="60" y="-430" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_setup_zones" value="Настроить зоны&#xa;и ячейки" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="-505" y="-430" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_manage_catalog" value="Вести каталог&#xa;товаров" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="-330" y="-32.5" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_add_product" value="Создать карточку&#xa;товара" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="-590" y="-27.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_add_xref" value="Добавить&#xa;аналог товара" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="-310" y="82.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_manage_backups" value="Управлять&#xa;резервными копиями" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="-95" y="-32.5" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_make_backup" value="Создать&#xa;резервную копию" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="110" y="87.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_restore_backup" value="Восстановить&#xa;данные" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="-75" y="87.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_receive" value="Оформить&#xa;приемку" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="715" y="-65" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_add_receive_lines" value="Добавить строки&#xa;приемки" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="965" y="-55" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_choose_location" value="Выбрать место&#xa;хранения" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="735" y="-170" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_update_stock" value="Обновить&#xa;остатки" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="825" y="52.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_create_product_from_receive" value="Создать товар&#xa;при приемке" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="615" y="52.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_stock" value="Просматривать&#xa;остатки" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="220" y="-65" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_movements" value="Просматривать&#xa;движения товаров" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="240" y="-162.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_inventory" value="Провести&#xa;инвентаризацию" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="265" y="157.5" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_enter_fact" value="Ввести фактическое&#xa;количество" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="500" y="162.5" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_calc_diff" value="Рассчитать&#xa;расхождения" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="465" y="287.5" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_adjust_stock" value="Скорректировать&#xa;остатки" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="280" y="297.5" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_3d_store" value="Просмотреть&#xa;3D-склад" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="735" y="217.5" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_cell_stock" value="Просмотреть товары&#xa;в ячейке" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="750" y="337.5" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_create_order" value="Создать&#xa;заказ" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="850" y="-510" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_add_order_items" value="Добавить товары&#xa;в заказ" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="880" y="-382.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_orders" value="Просматривать&#xa;заказы" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="430" y="-510" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_confirm_order" value="Подтвердить&#xa;заказ" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="635" y="-660" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_check_availability" value="Проверить&#xa;доступность товара" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="420" y="-655" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_make_pick_tasks" value="Сформировать&#xa;задачи подбора" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="895" y="-650" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_create_backorder" value="Создать backorder&#xa;при дефиците" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="655" y="-780" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_pick_small" value="Подобрать&#xa;мелкие детали" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="1295" y="112.5" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_take_small_task" value="Взять задачу&#xa;в работу" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1315" y="17.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_scan_oem" value="Сканировать&#xa;OEM-номер" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1555" y="117.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_finish_pick" value="Завершить&#xa;задачу подбора" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1315" y="222.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_ship_order" value="Отгрузить&#xa;заказ" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="1760" y="115" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_pick_large" value="Подобрать&#xa;крупный товар" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1780" y="27.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_check_package" value="Проверить&#xa;комплектность" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1570" y="27.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_writeoff_reserve" value="Списать&#xa;резервы" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1780" y="212.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_reports" value="Просмотреть&#xa;отчеты" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="1745" y="-407.5" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_generate_reports" value="Сформировать&#xa;отчет" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="2015" y="-402.5" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_filter_reports" value="Отфильтровать&#xa;данные отчета" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1765" y="-520" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_analyze_work" value="Анализировать&#xa;работу склада" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;" parent="1" vertex="1">
+          <mxGeometry x="1575" y="-260" width="210" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_view_forecast" value="Просмотреть&#xa;прогноз спроса" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1595" y="-135" width="170" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_guest_auth" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_guest" target="uc_auth" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_auth_check" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_auth" target="uc_check" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_auth_role" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_auth" target="uc_define_role" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_role_area" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_define_role" target="uc_open_role_area" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_role_user" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_open_role_area" target="actor_role_user" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link_role_admin" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;entryX=1;entryY=0.3333333333333333;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="actor_role_user" target="actor_admin" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-95" y="-240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="link_role_storekeeper" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_role_user" target="actor_storekeeper" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="link_role_sales" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;entryX=1;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.25;exitY=0.1;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="actor_role_user" target="actor_sales" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="-276" />
+              <mxPoint x="790" y="-412" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="link_role_picker" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_role_user" target="actor_picker" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1145" y="-190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="link_role_loader" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_role_user" target="actor_loader" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1520" y="-222" />
+              <mxPoint x="1520" y="-50" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="link_role_analyst" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.3333333333333333;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="actor_role_user" target="actor_analyst" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1410" y="-245" />
+              <mxPoint x="1410" y="-375" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="assoc_admin_users" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_admin" target="uc_manage_users" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_admin_refs" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_admin" target="uc_manage_refs" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_admin_catalog" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="actor_admin" target="uc_manage_catalog" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-230" y="-142.5" />
+              <mxPoint x="-230" y="-32.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="assoc_admin_backup" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="actor_admin" target="uc_manage_backups" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="10" y="-142.5" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="assoc_store_receive" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_storekeeper" target="uc_receive" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_store_stock" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_storekeeper" target="uc_view_stock" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_store_inventory" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="actor_storekeeper" target="uc_inventory" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_store_3d" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="actor_storekeeper" target="uc_view_3d_store" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_sales_create" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_sales" target="uc_create_order" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_sales_view" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_sales" target="uc_view_orders" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_sales_confirm" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_sales" target="uc_confirm_order" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_picker_pick" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_picker" target="uc_pick_small" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_loader_ship" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="actor_loader" target="uc_pick_large" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_analyst_reports" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;" parent="1" source="actor_analyst" target="uc_view_reports" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc_analyst_analyze" style="endArrow=none;html=1;rounded=0;strokeColor=#000000;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="actor_analyst" target="uc_analyze_work" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_users_create" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_manage_users" target="uc_create_user" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_users_role" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_manage_users" target="uc_change_role" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_users_block" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_block_user" target="uc_manage_users" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_refs_warehouse" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_manage_refs" target="uc_create_warehouse" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_refs_zones" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_manage_refs" target="uc_setup_zones" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_catalog_product" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_manage_catalog" target="uc_add_product" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_catalog_xref" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_add_xref" target="uc_manage_catalog" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_backup_make" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="uc_manage_backups" target="uc_make_backup" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_backup_restore" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_restore_backup" target="uc_manage_backups" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_receive_lines" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_receive" target="uc_add_receive_lines" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_receive_location" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_receive" target="uc_choose_location" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_receive_stock" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=1;exitDx=0;exitDy=0;" parent="1" source="uc_receive" target="uc_update_stock" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_receive_product" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;entryX=0;entryY=1;entryDx=0;entryDy=0;" parent="1" source="uc_create_product_from_receive" target="uc_receive" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_stock_movements" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_view_stock" target="uc_view_movements" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_inv_fact" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_inventory" target="uc_enter_fact" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_inv_diff" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=1;exitDx=0;exitDy=0;" parent="1" source="uc_inventory" target="uc_calc_diff" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_inv_adjust" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_adjust_stock" target="uc_inventory" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_3d_cell_stock" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_view_cell_stock" target="uc_view_3d_store" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_order_items" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_create_order" target="uc_add_order_items" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_confirm_check" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_confirm_order" target="uc_check_availability" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_confirm_tasks" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_confirm_order" target="uc_make_pick_tasks" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_confirm_backorder" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_create_backorder" target="uc_confirm_order" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_pick_take" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_pick_small" target="uc_take_small_task" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_pick_scan" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_pick_small" target="uc_scan_oem" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_pick_finish" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_pick_small" target="uc_finish_pick" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_ship_large" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_ship_order" target="uc_pick_large" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_ship_check" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="uc_pick_large" target="uc_check_package" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_ship_writeoff" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_ship_order" target="uc_writeoff_reserve" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_reports_generate" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_view_reports" target="uc_generate_reports" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_reports_filter" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_filter_reports" target="uc_view_reports" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_analyze_reports" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="uc_analyze_work" target="uc_view_reports" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_forecast" value="&amp;lt;&amp;lt;extend&amp;gt;&amp;gt;" style="endArrow=open;endFill=0;dashed=1;html=1;rounded=0;strokeColor=#000000;fontSize=11;edgeStyle=orthogonalEdgeStyle;" parent="1" source="uc_view_forecast" target="uc_analyze_work" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

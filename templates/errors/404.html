@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Страница не найдена · WMS{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="error-page">
+
+    {# ── Иконка компаса ── #}
+    <div class="error-page__icon error-page__icon--brand" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none"
+           stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+      </svg>
+    </div>
+
+    {# ── Код ошибки — один раз, большой, синий градиент ── #}
+    <div class="error-page__code error-page__code--brand" aria-label="Ошибка 404">404</div>
+
+    {# ── Заголовок ── #}
+    <h1 class="error-page__title">Страница не найдена</h1>
+
+    {# ── Описание ── #}
+    <p class="error-page__desc">
+      {% if request_path %}
+        Адрес <code class="error-page__path">{{ request_path }}</code> не существует
+        или был изменён.
+      {% else %}
+        Запрошенная страница не существует или была перемещена.
+      {% endif %}
+      Проверьте адрес или воспользуйтесь навигацией.
+    </p>
+
+    {# ── Кнопки ── #}
+    <div class="error-page__actions">
+      <button type="button" class="btn btn--ghost"
+              onclick="history.length > 1 ? history.back() : window.location.href='{% url "dashboard" %}'">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Назад
+      </button>
+
+      {% if request.user.is_authenticated %}
+        <a class="btn btn--primary" href="{% url 'dashboard' %}">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="9"/>
+            <rect x="14" y="3" width="7" height="5"/>
+            <rect x="14" y="12" width="7" height="9"/>
+            <rect x="3" y="16" width="7" height="5"/>
+          </svg>
+          На главную
+        </a>
+      {% else %}
+        <a class="btn btn--primary" href="{% url 'login' %}">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          Войти в систему
+        </a>
+      {% endif %}
+    </div>
+
+    {# ── Быстрые ссылки для авторизованных ── #}
+    {% if request.user.is_authenticated %}
+      <div class="error-page__shortcuts">
+        <p class="error-page__shortcuts-label">Куда перейти</p>
+        <div class="error-page__shortcuts-links">
+          <a href="{% url 'receiving_list' %}" class="btn btn--ghost btn--sm">Приёмка</a>
+          <a href="{% url 'stock_list' %}"     class="btn btn--ghost btn--sm">Остатки</a>
+          <a href="{% url 'order_list' %}"     class="btn btn--ghost btn--sm">Заказы</a>
+          <a href="{% url 'task_list' %}"      class="btn btn--ghost btn--sm">Задачи</a>
+          {% if request.user.is_superuser or request.user.role == "ADMIN" %}
+            <a href="{% url 'admin_panel:dashboard' %}" class="btn btn--ghost btn--sm">Управление</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

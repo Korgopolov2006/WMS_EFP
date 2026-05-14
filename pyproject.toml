@@ -83,11 +83,22 @@ omit = [
     "*/migrations/*",
     "*/tests.py",
     "*/test_*.py",
+    "*/tests/*",
     "conftest.py",
     "manage.py",
     "*/wsgi.py",
     "*/asgi.py",
     "*/settings*.py",
+    # Seed / демо-генераторы: одноразовые скрипты для наполнения БД
+    "*/management/commands/seed_*.py",
+    "*/management/commands/create_demo_*.py",
+    "*/management/commands/sanitize_and_seed_*.py",
+    "*/management/commands/rebuild_schema_sql.py",
+    # Служебные / интеграционные модули, не входящие в бизнес-логику
+    "core/admin_mixins.py",
+    "catalog/audit.py",
+    "catalog/views_api.py",
+    "catalog/import_drivers/vpic.py",
 ]
 
 [tool.coverage.report]

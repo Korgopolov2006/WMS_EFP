@@ -40,6 +40,10 @@ ALLOWED_HOSTS = [
     if h.strip()
 ]
 
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+]
+
 
 # Application definition
 
@@ -75,6 +79,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Защита служебных разделов: авторизованные без роли ADMIN видят 403
+    "core.middleware.AdminAccessMiddleware",
 ]
 
 ROOT_URLCONF = "wms.urls"
@@ -90,6 +96,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "notifications.context_processors.notifications",
+                "core.context_processors.pagination_settings",
             ],
         },
     },

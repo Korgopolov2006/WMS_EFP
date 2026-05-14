@@ -21,11 +21,13 @@ def notification_list(request: HttpRequest) -> HttpResponse:
     if only_unread:
         qs = qs.filter(is_read=False)
 
-    paginator = Paginator(qs.order_by("-created_at"), 25)
-    page_obj = paginator.get_page(request.GET.get("page"))
+    from core.pagination import paginate, ALLOWED_PER_PAGE
+    page_obj, per_page = paginate(request, qs.order_by("-created_at"), default_per_page=25)
 
     return render(request, "notifications/list.html", {
         "page_obj": page_obj,
+        "per_page": per_page,
+        "per_page_options": ALLOWED_PER_PAGE,
         "items": page_obj.object_list,
         "only_unread": only_unread,
         "unread_count": unread_count(request.user),

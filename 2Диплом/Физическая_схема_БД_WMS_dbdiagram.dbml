@@ -1,0 +1,715 @@
+Project WMS_Physical {
+  database_type: 'PostgreSQL'
+  Note: 'Физическая схема БД WMS: реальные таблицы, типы PostgreSQL, ключи, ограничения, индексы и связи.'
+}
+
+Table accounts_user [note: 'пользователи'] {
+  id bigint [pk, note: 'ID']
+  password varchar(128) [not null, note: 'пароль']
+  last_login timestamptz [note: 'последний вход']
+  is_superuser boolean [not null, default: false, note: 'статус суперпользователя']
+  username varchar(150) [not null, unique, note: 'имя пользователя']
+  first_name varchar(150) [not null, note: 'имя']
+  last_name varchar(150) [not null, note: 'фамилия']
+  email varchar(254) [not null, note: 'адрес электронной почты']
+  is_staff boolean [not null, default: false, note: 'статус персонала']
+  is_active boolean [not null, default: true, note: 'активный']
+  date_joined timestamptz [not null, note: 'дата регистрации']
+  role varchar(32) [not null, default: 'STOREKEEPER', note: 'Роль']
+}
+
+Table catalog_branch [note: 'Филиалы'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  code varchar(32) [not null, unique, note: 'Код филиала']
+  name varchar(255) [not null, note: 'Название филиала']
+  address text [not null, note: 'Адрес']
+  is_active boolean [not null, default: true, note: 'Активен']
+}
+
+Table catalog_warehouse [note: 'Склады'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  branch_id bigint [not null, note: 'Филиал']
+  code varchar(32) [not null, note: 'Код склада']
+  name varchar(255) [not null, note: 'Название склада']
+  width_m numeric(8,2) [not null, default: 30.0, note: 'Ширина, м']
+  length_m numeric(8,2) [not null, default: 40.0, note: 'Длина, м']
+  height_m numeric(8,2) [not null, default: 8.0, note: 'Высота, м']
+  is_active boolean [not null, default: true, note: 'Активен']
+  indexes {
+    (branch_id, code) [unique, name: 'uniq_warehouse_branch_code']
+  }
+}
+
+Table catalog_warehouseaccess [note: 'Доступы к складам'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  user_id bigint [not null, note: 'Пользователь']
+  warehouse_id bigint [not null, note: 'Склад']
+  access_level varchar(16) [not null, default: 'VIEW', note: 'Уровень доступа']
+  indexes {
+    (user_id, warehouse_id) [unique, name: 'uniq_warehouse_access_user_warehouse']
+  }
+}
+
+Table catalog_brand [note: 'Бренды'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  name varchar(120) [not null, unique, note: 'Бренд']
+}
+
+Table catalog_category [note: 'Категории'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  name varchar(120) [not null, unique, note: 'Категория']
+  parent_id bigint [note: 'Родительская категория']
+}
+
+Table catalog_vehiclemake [note: 'Марки ТС'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  name varchar(120) [not null, unique, note: 'Марка']
+}
+
+Table catalog_vehiclemodel [note: 'Модели ТС'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  make_id bigint [not null, note: 'Марка']
+  name varchar(120) [not null, note: 'Модель']
+  indexes {
+    (make_id, name) [unique, name: 'uniq_vehicle_model_make_name']
+  }
+}
+
+Table catalog_storagezonetype [note: 'Типы складских зон'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  code varchar(32) [not null, unique, note: 'Код']
+  name varchar(120) [not null, note: 'Название']
+  description text [not null, note: 'Описание']
+  sort_order integer [not null, default: 100, note: 'Порядок']
+}
+
+Table catalog_storagezone [note: 'Зоны хранения'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  warehouse_id bigint [note: 'Склад']
+  code varchar(32) [not null, note: 'Код зоны']
+  name varchar(120) [not null, note: 'Название зоны']
+  zone_type_id bigint [not null, note: 'Тип зоны']
+  description text [not null, note: 'Описание']
+  indexes {
+    (warehouse_id, code) [unique, name: 'uniq_zone_warehouse_code']
+  }
+}
+
+Table catalog_storagelocation [note: 'Места хранения'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  zone_id bigint [not null, note: 'Зона']
+  code varchar(32) [not null, note: 'Код места']
+  name varchar(120) [not null, note: 'Наименование места']
+  aisle varchar(16) [not null, note: 'Ряд']
+  rack varchar(16) [not null, note: 'Стеллаж']
+  shelf varchar(16) [not null, note: 'Полка']
+  level varchar(16) [not null, note: 'Уровень']
+  max_weight_kg numeric(10,3) [note: 'Максимальный вес, кг']
+  indexes {
+    (zone_id, code) [unique, name: 'uniq_location_zone_code']
+  }
+}
+
+Table catalog_product [note: 'Номенклатура (товары)'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  internal_sku varchar(64) [not null, unique, note: 'Внутренний артикул']
+  name varchar(255) [not null, note: 'Наименование']
+  oem_number varchar(64) [not null, note: 'OEM номер']
+  analog_number varchar(64) [not null, note: 'Номер аналога']
+  barcode varchar(64) [not null, default: '', note: 'Штрихкод']
+  oem_number_normalized varchar(64) [not null, default: '', note: 'oem number normalized']
+  analog_number_normalized varchar(64) [not null, default: '', note: 'analog number normalized']
+  brand_id bigint [not null, note: 'Бренд']
+  category_id bigint [not null, note: 'Категория']
+  weight_kg numeric(10,3) [note: 'Вес, кг']
+  length_cm numeric(10,2) [note: 'Длина, см']
+  width_cm numeric(10,2) [note: 'Ширина, см']
+  height_cm numeric(10,2) [note: 'Высота, см']
+  packaging_type varchar(16) [not null, default: 'SMALL', note: 'Тип упаковки']
+  photo varchar(100) [note: 'Фото детали']
+  indexes {
+    (barcode) [unique, name: 'uniq_product_barcode_nonempty']
+    (oem_number) [name: 'idx_product_oem']
+    (analog_number) [name: 'idx_product_analog']
+    (brand_id, category_id) [name: 'idx_product_brand_cat']
+    (barcode) [name: 'idx_product_barcode']
+  }
+}
+
+Table catalog_productapplicability [note: 'Применимость товаров'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  product_id bigint [not null, note: 'Товар']
+  vehicle_model_id bigint [not null, note: 'Модель ТС']
+  indexes {
+    (product_id, vehicle_model_id) [unique, name: 'uniq_product_vehicle_model']
+  }
+}
+
+Table catalog_productcrossreference [note: 'Перекрёстные ссылки'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  from_product_id bigint [not null, note: 'Из товара']
+  to_product_id bigint [not null, note: 'В товар']
+  relation_type varchar(16) [not null, note: 'Тип связи']
+  note varchar(255) [not null, note: 'Комментарий']
+  indexes {
+    (from_product_id, to_product_id, relation_type) [unique, name: 'uniq_xref_from_to_type']
+    (from_product_id, relation_type) [name: 'idx_xref_from_type']
+  }
+}
+// CHECK catalog_productcrossreference.chk_xref_not_self
+
+Table catalog_productchangelog [note: 'Журнал изменений товаров'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  product_id bigint [not null, note: 'Товар']
+  changed_by_id bigint [note: 'Пользователь']
+  action varchar(16) [not null, note: 'Действие']
+  source varchar(32) [not null, default: 'ui', note: 'Источник']
+  changed_fields jsonb [not null, note: 'Изменения']
+  note varchar(255) [not null, note: 'Комментарий']
+  indexes {
+    (product_id, created_at) [name: 'idx_prod_chlog_product_created']
+    (action, created_at) [name: 'idx_prod_chlog_action_created']
+  }
+}
+
+Table catalog_backorder [note: 'Отложенные заказы'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  order_id bigint [not null, note: 'Заказ']
+  product_id bigint [not null, note: 'Товар']
+  qty_ordered numeric(10,2) [not null, note: 'Заказано, шт']
+  qty_fulfilled numeric(10,2) [not null, default: 0, note: 'Выполнено, шт']
+  status varchar(16) [not null, default: 'PENDING', note: 'Статус']
+  expected_arrival_date date [note: 'Ожидаемая дата поступления']
+  fulfilled_at timestamptz [note: 'Выполнено']
+  created_by_id bigint [not null, note: 'Создал']
+  notes text [not null, note: 'Примечания']
+  indexes {
+    (status) [name: 'idx_backorder_status']
+    (expected_arrival_date) [name: 'idx_backorder_arrival']
+  }
+}
+
+Table catalog_tool [note: 'Инструменты'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  warehouse_id bigint [note: 'Склад']
+  tool_type varchar(32) [not null, note: 'Тип инструмента']
+  code varchar(64) [not null, unique, note: 'Код/Инвентарный номер']
+  name varchar(255) [not null, note: 'Название']
+  brand varchar(120) [not null, note: 'Бренд/Производитель']
+  model varchar(120) [not null, note: 'Модель']
+  is_available boolean [not null, default: true, note: 'Доступен']
+  is_active boolean [not null, default: true, note: 'Активен']
+  current_user_id bigint [note: 'Текущий пользователь']
+  checked_out_at timestamptz [note: 'Выдан']
+  expected_return_at timestamptz [note: 'Ожидаемое возвращение']
+  last_maintenance_date date [note: 'Последнее ТО']
+  next_maintenance_date date [note: 'Следующее ТО']
+  maintenance_notes text [not null, note: 'Примечания по ТО']
+  notes text [not null, note: 'Примечания']
+  indexes {
+    (warehouse_id, is_available) [name: 'idx_tool_warehouse_available']
+    (tool_type) [name: 'idx_tool_type']
+  }
+}
+
+Table api_apitoken [note: 'API токены'] {
+  id bigint [pk, note: 'ID']
+  name varchar(120) [not null, note: 'Название']
+  token varchar(64) [not null, unique, note: 'Токен']
+  user_id bigint [not null, note: 'Пользователь']
+  is_active boolean [not null, default: true, note: 'Активен']
+  created_at timestamptz [not null, note: 'Создано']
+  last_used_at timestamptz [note: 'Последнее использование']
+}
+
+Table receiving_supplier [note: 'Поставщики'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  code varchar(24) [not null, unique, note: 'Код поставщика']
+  name varchar(255) [not null, unique, note: 'Название поставщика']
+  is_active boolean [not null, default: true, note: 'Активен']
+}
+
+Table receiving_receiving [note: 'Приёмки'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  number varchar(32) [not null, unique, note: 'Номер приёмки']
+  supplier_name varchar(255) [not null, note: 'Поставщик']
+  supplier_doc_no varchar(64) [not null, note: 'Номер документа поставщика']
+  warehouse_id bigint [note: 'Склад']
+  status varchar(16) [not null, default: 'DRAFT', note: 'Статус']
+  expected_at timestamptz [note: 'Плановая дата поставки']
+  completed_at timestamptz [note: 'Дата завершения']
+  created_by_id bigint [not null, note: 'Создал']
+}
+
+Table receiving_receivingline [note: 'Строки приёмки'] {
+  id bigint [pk, note: 'ID']
+  receiving_id bigint [not null, note: 'Приёмка']
+  product_id bigint [not null, note: 'Товар']
+  supplier_sku varchar(64) [not null, note: 'Артикул поставщика/штрихкод']
+  qty_expected numeric(10,2) [not null, default: 0.00, note: 'Ожидаемо, шт']
+  qty_received numeric(10,2) [not null, default: 0.00, note: 'Принято, шт']
+  storage_location_id bigint [note: 'Место хранения']
+  has_serial_numbers boolean [not null, default: false, note: 'Есть серийные номера']
+}
+
+Table receiving_receivingserial [note: 'Серийные номера приёмки'] {
+  id bigint [pk, note: 'ID']
+  line_id bigint [not null, note: 'Строка приёмки']
+  serial_number varchar(128) [not null, note: 'Серийный номер']
+}
+
+Table inventory_stock [note: 'Остатки'] {
+  id bigint [pk, note: 'ID']
+  product_id bigint [not null, note: 'Товар']
+  storage_location_id bigint [not null, note: 'Место хранения']
+  qty_available numeric(10,2) [not null, default: 0.00, note: 'Доступно, шт']
+  qty_reserved numeric(10,2) [not null, default: 0.00, note: 'Зарезервировано, шт']
+  batch_no varchar(64) [not null, note: 'Номер партии']
+  expiry_date date [note: 'Срок годности']
+  indexes {
+    (product_id, storage_location_id, batch_no) [unique, name: 'uniq_stock_product_location_batch']
+    (product_id) [name: 'idx_stock_product']
+    (storage_location_id) [name: 'idx_stock_location']
+    (qty_available) [name: 'idx_stock_qty_available']
+  }
+}
+
+Table inventory_inventory [note: 'Инвентаризации'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  number varchar(32) [not null, unique, note: 'Номер инвентаризации']
+  zone_id bigint [note: 'Зона']
+  status varchar(16) [not null, default: 'DRAFT', note: 'Статус']
+  started_at timestamptz [note: 'Начало']
+  completed_at timestamptz [note: 'Завершение']
+  created_by_id bigint [not null, note: 'Создал']
+}
+
+Table inventory_inventoryline [note: 'Строки инвентаризации'] {
+  id bigint [pk, note: 'ID']
+  inventory_id bigint [not null, note: 'Инвентаризация']
+  product_id bigint [not null, note: 'Товар']
+  storage_location_id bigint [not null, note: 'Место хранения']
+  qty_book numeric(10,2) [not null, default: 0.00, note: 'По учёту, шт']
+  qty_actual numeric(10,2) [note: 'Фактически, шт']
+  discrepancy numeric(10,2) [not null, default: 0.00, note: 'Расхождение']
+  indexes {
+    (inventory_id, product_id, storage_location_id) [unique, name: 'uniq_inv_line_inv_prod_loc']
+  }
+}
+
+Table inventory_stockmovement [note: 'Журнал движений'] {
+  id bigint [pk, note: 'ID']
+  movement_type varchar(16) [not null, note: 'Тип операции']
+  status varchar(16) [not null, default: 'POSTED', note: 'Статус']
+  product_id bigint [not null, note: 'Товар']
+  quantity numeric(12,2) [not null, note: 'Количество']
+  from_location_id bigint [note: 'Откуда']
+  to_location_id bigint [note: 'Куда']
+  batch_no varchar(64) [not null, note: 'Партия']
+  reason varchar(128) [not null, note: 'Причина']
+  comment text [not null, note: 'Комментарий']
+  ref_type varchar(32) [not null, note: 'Тип документа']
+  ref_id varchar(64) [not null, note: 'ID документа']
+  user_id bigint [note: 'Пользователь']
+  created_at timestamptz [not null, note: 'Создано']
+  indexes {
+    (product_id, created_at) [name: 'idx_mov_product_date']
+    (movement_type, created_at) [name: 'idx_mov_type_date']
+  }
+}
+// CHECK inventory_stockmovement.movement_qty_nonzero
+
+Table picking_order [note: 'Заказы'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  number varchar(32) [not null, unique, note: 'Номер заказа']
+  customer_name varchar(255) [not null, note: 'Клиент']
+  customer_phone varchar(32) [not null, note: 'Телефон']
+  customer_email varchar(254) [not null, note: 'Email']
+  note text [not null, note: 'Комментарий к заказу']
+  status varchar(16) [not null, default: 'DRAFT', note: 'Статус']
+  priority varchar(16) [not null, default: 'NORMAL', note: 'Важность заказа']
+  shipping_due_at timestamptz [note: 'Срок отгрузки']
+  source varchar(32) [not null, default: 'MANUAL', note: 'Источник']
+  external_id varchar(64) [not null, note: 'Внешний ID']
+  confirmed_at timestamptz [note: 'Подтверждён']
+  picked_at timestamptz [note: 'Подобран']
+  shipped_at timestamptz [note: 'Отгружен']
+  reserved_at_window boolean [not null, default: false, note: 'Зарезервирован у окна']
+  window_number varchar(16) [not null, note: 'Номер окна выдачи']
+  created_by_id bigint [not null, note: 'Создал']
+  picked_by_id bigint [note: 'Подобрал']
+  indexes {
+    (status) [name: 'idx_order_status']
+    (number) [name: 'idx_order_number']
+  }
+}
+
+Table picking_orderline [note: 'Строки заказа'] {
+  id bigint [pk, note: 'ID']
+  order_id bigint [not null, note: 'Заказ']
+  product_id bigint [not null, note: 'Товар']
+  qty_ordered numeric(10,2) [not null, note: 'Заказано, шт']
+  qty_picked numeric(10,2) [not null, default: 0.00, note: 'Подобрано, шт']
+  price numeric(10,2) [note: 'Цена']
+  indexes {
+    (order_id, product_id) [unique, name: 'uniq_order_line_order_product']
+  }
+}
+
+Table picking_pickingtask [note: 'Задачи подбора'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  order_id bigint [not null, note: 'Заказ']
+  status varchar(16) [not null, default: 'PENDING', note: 'Статус']
+  priority varchar(16) [not null, default: 'NORMAL', note: 'Важность']
+  due_date timestamptz [note: 'Срок выполнения']
+  zone_type_code varchar(32) [not null, note: 'Тип зоны']
+  assigned_to_id bigint [note: 'Назначен']
+  started_at timestamptz [note: 'Начало']
+  completed_at timestamptz [note: 'Завершение']
+  indexes {
+    (status) [name: 'idx_picking_task_status']
+    (zone_type_code) [name: 'idx_picking_task_zone']
+  }
+}
+
+Table picking_pickingline [note: 'Строки подбора'] {
+  id bigint [pk, note: 'ID']
+  task_id bigint [not null, note: 'Задача подбора']
+  order_line_id bigint [not null, note: 'Строка заказа']
+  stock_id bigint [not null, note: 'Остаток']
+  qty_picked numeric(10,2) [not null, note: 'Подобрано, шт']
+  scanned_oem varchar(64) [not null, note: 'Отсканированный OEM']
+  indexes {
+    (task_id, order_line_id, stock_id) [unique, name: 'uniq_picking_line_task_order_stock']
+  }
+}
+
+Table reports_abcxyzanalysis [note: 'ABC-XYZ анализы'] {
+  id bigint [pk, note: 'ID']
+  product_id bigint [not null, note: 'Товар']
+  period_start date [not null, note: 'Начало периода']
+  period_end date [not null, note: 'Конец периода']
+  total_sales_qty numeric(12,2) [not null, default: 0.00, note: 'Объём продаж, шт']
+  total_sales_amount numeric(12,2) [not null, default: 0.00, note: 'Сумма продаж, ₽']
+  abc_class varchar(1) [not null, note: 'ABC класс']
+  xyz_class varchar(1) [not null, note: 'XYZ класс']
+  coefficient_variation numeric(10,4) [note: 'Коэффициент вариации']
+  indexes {
+    (period_start, period_end) [name: 'idx_abcxyz_period']
+    (abc_class, xyz_class) [name: 'idx_abcxyz_class']
+  }
+}
+
+Table reports_deadstockreport [note: 'Мёртвые остатки'] {
+  id bigint [pk, note: 'ID']
+  product_id bigint [not null, note: 'Товар']
+  stock_id bigint [note: 'Остаток']
+  qty_available numeric(10,2) [not null, default: 0.00, note: 'Количество, шт']
+  days_without_movement integer [not null, default: 0, note: 'Дней без движения']
+  last_movement_date date [note: 'Последнее движение']
+  estimated_value numeric(12,2) [note: 'Оценочная стоимость, ₽']
+  calculated_at timestamptz [not null, note: 'Рассчитано']
+  indexes {
+    (days_without_movement) [name: 'idx_dead_stock_days']
+    (calculated_at) [name: 'idx_dead_stock_calculated']
+  }
+}
+
+Table reports_pickingerror [note: 'Ошибки подбора'] {
+  id bigint [pk, note: 'ID']
+  order_line_id bigint [not null, note: 'Строка заказа']
+  picking_line_id bigint [note: 'Строка подбора']
+  error_type varchar(32) [not null, note: 'Тип ошибки']
+  expected_product_id bigint [not null, note: 'Ожидаемый товар']
+  actual_product_id bigint [note: 'Фактический товар']
+  expected_qty numeric(10,2) [not null, note: 'Ожидаемое количество']
+  actual_qty numeric(10,2) [note: 'Фактическое количество']
+  detected_by_id bigint [not null, note: 'Обнаружил']
+  detected_at timestamptz [not null, note: 'Обнаружено']
+  resolved boolean [not null, default: false, note: 'Исправлено']
+  resolved_at timestamptz [note: 'Исправлено']
+  resolved_by_id bigint [note: 'Исправил']
+  notes text [not null, note: 'Примечания']
+  indexes {
+    (error_type) [name: 'idx_picking_error_type']
+    (detected_at) [name: 'idx_picking_error_detected']
+    (resolved) [name: 'idx_picking_error_resolved']
+  }
+}
+
+Table reports_analogvsoriginalreport [note: 'Отчёты аналоги vs оригиналы'] {
+  id bigint [pk, note: 'ID']
+  period_start date [not null, note: 'Начало периода']
+  period_end date [not null, note: 'Конец периода']
+  original_product_id bigint [not null, note: 'Оригинальный товар']
+  analog_product_id bigint [not null, note: 'Аналог']
+  original_sales_qty numeric(10,2) [not null, default: 0.00, note: 'Продажи оригинала, шт']
+  analog_sales_qty numeric(10,2) [not null, default: 0.00, note: 'Продажи аналога, шт']
+  original_sales_amount numeric(12,2) [not null, default: 0.00, note: 'Сумма продаж оригинала, ₽']
+  analog_sales_amount numeric(12,2) [not null, default: 0.00, note: 'Сумма продаж аналога, ₽']
+  substitution_rate numeric(5,2) [note: 'Коэффициент замещения']
+  calculated_at timestamptz [not null, note: 'Рассчитано']
+  indexes {
+    (period_start, period_end, original_product_id, analog_product_id) [unique, name: 'uniq_analog_report_period_products']
+  }
+}
+
+Table reports_demandforecast [note: 'Прогнозы спроса'] {
+  id bigint [pk, note: 'ID']
+  product_id bigint [not null, note: 'Товар']
+  forecast_date date [not null, note: 'Дата прогноза']
+  period_start date [not null, note: 'Начало периода прогноза']
+  period_end date [not null, note: 'Конец периода прогноза']
+  forecasted_qty numeric(12,2) [not null, default: 0.00, note: 'Прогнозируемое количество, шт']
+  confidence_level numeric(5,2) [note: 'Уровень уверенности']
+  seasonal_factor numeric(5,2) [note: 'Сезонный коэффициент']
+  trend_factor numeric(5,2) [note: 'Тренд']
+  historical_sales_qty numeric(12,2) [note: 'Исторические продажи, шт']
+  historical_period_start date [note: 'Начало исторического периода']
+  historical_period_end date [note: 'Конец исторического периода']
+  calculated_at timestamptz [not null, note: 'Рассчитано']
+  calculated_by_id bigint [note: 'Рассчитал']
+  notes text [not null, note: 'Примечания']
+  indexes {
+    (product_id, forecast_date) [name: 'idx_forecast_product_date']
+    (period_start, period_end) [name: 'idx_forecast_period']
+  }
+}
+
+Table tasks_task [note: 'Задачи'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  task_type varchar(32) [not null, note: 'Тип задачи']
+  status varchar(16) [not null, default: 'PENDING', note: 'Статус']
+  priority varchar(16) [not null, default: 'NORMAL', note: 'Приоритет']
+  title varchar(255) [not null, note: 'Название задачи']
+  description text [not null, note: 'Описание']
+  receiving_id bigint [note: 'Приёмка']
+  inventory_id bigint [note: 'Инвентаризация']
+  order_id bigint [note: 'Заказ']
+  picking_task_id bigint [note: 'Задача подбора']
+  assigned_to_id bigint [note: 'Назначен']
+  created_by_id bigint [not null, note: 'Создал']
+  due_date timestamptz [note: 'Срок выполнения']
+  started_at timestamptz [note: 'Начало']
+  completed_at timestamptz [note: 'Завершение']
+  metadata jsonb [not null, note: 'Метаданные']
+  indexes {
+    (task_type, status) [name: 'idx_task_type_status']
+    (assigned_to_id, status) [name: 'idx_task_assigned_status']
+    (priority, due_date) [name: 'idx_task_priority_due']
+  }
+}
+
+Table tasks_taskcomment [note: 'Комментарии к задачам'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  task_id bigint [not null, note: 'Задача']
+  author_id bigint [not null, note: 'Автор']
+  text text [not null, note: 'Текст комментария']
+}
+
+Table warehouse_3d_warehouselayout [note: 'Геометрии складов'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  warehouse_id bigint [not null, unique, note: 'Склад']
+  floor_points jsonb [not null, note: 'Точки контура пола']
+  is_layout_defined boolean [not null, default: false, note: 'Разметка выполнена']
+  gate_x float8 [note: 'Координата ворот X']
+  gate_z float8 [note: 'Координата ворот Z']
+}
+
+Table warehouse_3d_storageobject [note: 'Объекты хранения'] {
+  id bigint [pk, note: 'ID']
+  created_at timestamptz [not null, note: 'Создано']
+  updated_at timestamptz [not null, note: 'Обновлено']
+  warehouse_id bigint [not null, note: 'Склад']
+  object_type varchar(16) [not null, note: 'Тип объекта']
+  code varchar(64) [not null, note: 'Код объекта']
+  name varchar(255) [not null, note: 'Название']
+  position_x float8 [not null, default: 0.0, note: 'Позиция X']
+  position_z float8 [not null, default: 0.0, note: 'Позиция Z']
+  position_y float8 [not null, default: 0.0, note: 'Позиция Y (высота)']
+  width float8 [not null, default: 1.0, note: 'Ширина']
+  depth float8 [not null, default: 1.0, note: 'Глубина']
+  height float8 [not null, default: 1.0, note: 'Высота']
+  rotation_y float8 [not null, default: 0.0, note: 'Поворот вокруг Y (градусы)']
+  is_active boolean [not null, default: true, note: 'Активен']
+  storage_location_id bigint [note: 'Место хранения']
+  indexes {
+    (warehouse_id, object_type) [name: 'idx_storage_obj_wh_type']
+  }
+}
+
+Table admin_panel_auditlog [note: 'Журнал аудита'] {
+  id bigint [pk, note: 'ID']
+  user_id bigint [note: 'Пользователь']
+  action varchar(32) [not null, note: 'Действие']
+  resource_type varchar(64) [not null, note: 'Тип ресурса']
+  resource_id varchar(64) [not null, note: 'ID ресурса']
+  resource_str varchar(255) [not null, note: 'Ресурс (текст)']
+  changes jsonb [note: 'Изменения']
+  ip_address inet [note: 'IP адрес']
+  user_agent varchar(512) [not null, note: 'User-Agent']
+  timestamp timestamptz [not null, note: 'Дата и время']
+}
+
+Table admin_panel_backuprecord [note: 'Резервные копии'] {
+  id bigint [pk, note: 'ID']
+  filename varchar(255) [not null, unique, note: 'Имя файла']
+  size_bytes bigint [not null, default: 0, note: 'Размер (байт)']
+  created_at timestamptz [not null, note: 'Создано']
+  created_by_id bigint [note: 'Создал']
+  notes text [not null, note: 'Заметки']
+  is_auto boolean [not null, default: false, note: 'Автоматический']
+}
+
+Table notifications_notification [note: 'Уведомления'] {
+  id bigint [pk, note: 'ID']
+  user_id bigint [not null, note: 'Пользователь']
+  kind varchar(16) [not null, default: 'INFO', note: 'Тип']
+  priority varchar(8) [not null, default: 'NORMAL', note: 'Приоритет']
+  title varchar(200) [not null, note: 'Заголовок']
+  body text [not null, note: 'Текст']
+  link varchar(500) [not null, note: 'Ссылка']
+  dedup_key varchar(128) [not null, note: 'Ключ дедупликации']
+  is_read boolean [not null, default: false, note: 'Прочитано']
+  read_at timestamptz [note: 'Прочитано в']
+  created_at timestamptz [not null, note: 'Создано']
+  indexes {
+    (user_id, is_read, created_at) [name: 'idx_notif_user_unread']
+  }
+}
+
+Table accounts_user_branches [note: 'Связующая M2M таблица'] {
+  id bigint [pk]
+  user_id bigint [not null, note: 'FK -> accounts_user']
+  branch_id bigint [not null, note: 'FK -> catalog_branch']
+  indexes {
+    (user_id, branch_id) [unique]
+  }
+}
+
+Ref: catalog_warehouse.branch_id > catalog_branch.id
+Ref: catalog_warehouseaccess.user_id > accounts_user.id
+Ref: catalog_warehouseaccess.warehouse_id > catalog_warehouse.id
+Ref: catalog_category.parent_id > catalog_category.id
+Ref: catalog_vehiclemodel.make_id > catalog_vehiclemake.id
+Ref: catalog_storagezone.warehouse_id > catalog_warehouse.id
+Ref: catalog_storagezone.zone_type_id > catalog_storagezonetype.id
+Ref: catalog_storagelocation.zone_id > catalog_storagezone.id
+Ref: catalog_product.brand_id > catalog_brand.id
+Ref: catalog_product.category_id > catalog_category.id
+Ref: catalog_productapplicability.product_id > catalog_product.id
+Ref: catalog_productapplicability.vehicle_model_id > catalog_vehiclemodel.id
+Ref: catalog_productcrossreference.from_product_id > catalog_product.id
+Ref: catalog_productcrossreference.to_product_id > catalog_product.id
+Ref: catalog_productchangelog.product_id > catalog_product.id
+Ref: catalog_productchangelog.changed_by_id > accounts_user.id
+Ref: catalog_backorder.order_id > picking_order.id
+Ref: catalog_backorder.product_id > catalog_product.id
+Ref: catalog_backorder.created_by_id > accounts_user.id
+Ref: catalog_tool.warehouse_id > catalog_warehouse.id
+Ref: catalog_tool.current_user_id > accounts_user.id
+Ref: api_apitoken.user_id > accounts_user.id
+Ref: receiving_receiving.warehouse_id > catalog_warehouse.id
+Ref: receiving_receiving.created_by_id > accounts_user.id
+Ref: receiving_receivingline.receiving_id > receiving_receiving.id
+Ref: receiving_receivingline.product_id > catalog_product.id
+Ref: receiving_receivingline.storage_location_id > catalog_storagelocation.id
+Ref: receiving_receivingserial.line_id > receiving_receivingline.id
+Ref: inventory_stock.product_id > catalog_product.id
+Ref: inventory_stock.storage_location_id > catalog_storagelocation.id
+Ref: inventory_inventory.zone_id > catalog_storagezone.id
+Ref: inventory_inventory.created_by_id > accounts_user.id
+Ref: inventory_inventoryline.inventory_id > inventory_inventory.id
+Ref: inventory_inventoryline.product_id > catalog_product.id
+Ref: inventory_inventoryline.storage_location_id > catalog_storagelocation.id
+Ref: inventory_stockmovement.product_id > catalog_product.id
+Ref: inventory_stockmovement.from_location_id > catalog_storagelocation.id
+Ref: inventory_stockmovement.to_location_id > catalog_storagelocation.id
+Ref: inventory_stockmovement.user_id > accounts_user.id
+Ref: picking_order.created_by_id > accounts_user.id
+Ref: picking_order.picked_by_id > accounts_user.id
+Ref: picking_orderline.order_id > picking_order.id
+Ref: picking_orderline.product_id > catalog_product.id
+Ref: picking_pickingtask.order_id > picking_order.id
+Ref: picking_pickingtask.assigned_to_id > accounts_user.id
+Ref: picking_pickingline.task_id > picking_pickingtask.id
+Ref: picking_pickingline.order_line_id > picking_orderline.id
+Ref: picking_pickingline.stock_id > inventory_stock.id
+Ref: reports_abcxyzanalysis.product_id > catalog_product.id
+Ref: reports_deadstockreport.product_id > catalog_product.id
+Ref: reports_deadstockreport.stock_id > inventory_stock.id
+Ref: reports_pickingerror.order_line_id > picking_orderline.id
+Ref: reports_pickingerror.picking_line_id > picking_pickingline.id
+Ref: reports_pickingerror.expected_product_id > catalog_product.id
+Ref: reports_pickingerror.actual_product_id > catalog_product.id
+Ref: reports_pickingerror.detected_by_id > accounts_user.id
+Ref: reports_pickingerror.resolved_by_id > accounts_user.id
+Ref: reports_analogvsoriginalreport.original_product_id > catalog_product.id
+Ref: reports_analogvsoriginalreport.analog_product_id > catalog_product.id
+Ref: reports_demandforecast.product_id > catalog_product.id
+Ref: reports_demandforecast.calculated_by_id > accounts_user.id
+Ref: tasks_task.receiving_id > receiving_receiving.id
+Ref: tasks_task.inventory_id > inventory_inventory.id
+Ref: tasks_task.order_id > picking_order.id
+Ref: tasks_task.picking_task_id > picking_pickingtask.id
+Ref: tasks_task.assigned_to_id > accounts_user.id
+Ref: tasks_task.created_by_id > accounts_user.id
+Ref: tasks_taskcomment.task_id > tasks_task.id
+Ref: tasks_taskcomment.author_id > accounts_user.id
+Ref: warehouse_3d_warehouselayout.warehouse_id - catalog_warehouse.id
+Ref: warehouse_3d_storageobject.warehouse_id > catalog_warehouse.id
+Ref: warehouse_3d_storageobject.storage_location_id > catalog_storagelocation.id
+Ref: admin_panel_auditlog.user_id > accounts_user.id
+Ref: admin_panel_backuprecord.created_by_id > accounts_user.id
+Ref: notifications_notification.user_id > accounts_user.id
+Ref: accounts_user_branches.user_id > accounts_user.id
+Ref: accounts_user_branches.branch_id > catalog_branch.id
+

@@ -1,0 +1,3605 @@
+digraph model_graph {
+  // Dotfile by Django-Extensions graph_models
+  // Created: 2026-05-12 03:44
+  
+
+  fontname = "Arial"
+  fontsize = 9
+  splines = ortho
+  nodesep = 0.85
+  ranksep = 1.55
+  outputorder = edgesfirst
+  concentrate = false
+  overlap = false
+  rankdir = "LR"
+  
+
+  node [
+    fontname = "Arial"
+    fontsize = 8
+    shape = "plaintext"
+  ]
+
+  edge [
+    fontname = "Arial"
+    fontsize = 8
+  ]
+
+  // Labels
+  subgraph cluster_accounts {
+      >]
+  
+    accounts_models_User [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      User<BR/>&lt;<FONT FACE="Arial"><I>AbstractUser</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><I>date_joined</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>email</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>EmailField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>first_name</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>CharField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><I>is_active</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><I>BooleanField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><I>is_staff</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><I>BooleanField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><I>is_superuser</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><I>BooleanField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>last_login</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>last_name</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>CharField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><I>password</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><I>CharField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">role</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><I>username</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><I>CharField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+
+  }
+  subgraph cluster_catalog {
+      >]
+  
+    catalog_models_Branch [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Branch<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">address</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">code</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">is_active</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">BooleanField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_Warehouse [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Warehouse<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>branch</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">code</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">height_m</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">is_active</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">BooleanField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">length_m</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">width_m</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_WarehouseAccess [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      WarehouseAccess<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>user</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>warehouse</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">access_level</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_Brand [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Brand<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_Category [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Category<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>parent</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_VehicleMake [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      VehicleMake<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_VehicleModel [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      VehicleModel<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>make</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_StorageZoneType [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      StorageZoneType<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">code</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">description</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">sort_order</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">PositiveIntegerField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_StorageZone [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      StorageZone<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>warehouse</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>zone_type</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">code</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">description</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_StorageLocation [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      StorageLocation<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>zone</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">aisle</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">code</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">level</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">max_weight_kg</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">rack</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">shelf</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_Product [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Product<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>brand</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>category</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">analog_number</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">analog_number_normalized</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">barcode</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">height_cm</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">internal_sku</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">length_cm</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">oem_number</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">oem_number_normalized</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">packaging_type</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">photo</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">ImageField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">weight_kg</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">width_cm</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_ProductApplicability [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      ProductApplicability<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>vehicle_model</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_ProductCrossReference [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      ProductCrossReference<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>from_product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>to_product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">note</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">relation_type</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_ProductChangeLog [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      ProductChangeLog<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>changed_by</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">action</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">changed_fields</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">JSONField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">note</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">source</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_Backorder [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Backorder<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>created_by</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>order</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">expected_arrival_date</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">fulfilled_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">notes</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_fulfilled</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_ordered</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">status</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    catalog_models_Tool [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Tool<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>current_user</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>warehouse</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">brand</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">checked_out_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">code</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">expected_return_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">is_active</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">BooleanField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">is_available</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">BooleanField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">last_maintenance_date</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">maintenance_notes</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">model</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">next_maintenance_date</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">notes</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">tool_type</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+
+  }
+  subgraph cluster_receiving {
+      >]
+  
+    receiving_models_Supplier [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Supplier<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">code</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">is_active</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">BooleanField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    receiving_models_Receiving [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Receiving<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>created_by</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>warehouse</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">completed_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">expected_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">number</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">status</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">supplier_doc_no</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">supplier_name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    receiving_models_ReceivingLine [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      ReceivingLine
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>receiving</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>storage_location</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">has_serial_numbers</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">BooleanField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_expected</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_received</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">supplier_sku</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    receiving_models_ReceivingSerial [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      ReceivingSerial
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>line</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">serial_number</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+
+  }
+  subgraph cluster_inventory {
+      >]
+  
+    inventory_models_Stock [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Stock
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>storage_location</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">batch_no</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">expiry_date</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_available</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_reserved</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    inventory_models_Inventory [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Inventory<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>created_by</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>zone</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">completed_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">number</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">started_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">status</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    inventory_models_InventoryLine [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      InventoryLine
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>inventory</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>storage_location</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">discrepancy</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">qty_actual</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_book</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    inventory_models_StockMovement [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      StockMovement
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>from_location</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>to_location</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>user</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">batch_no</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">comment</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">created_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">movement_type</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">quantity</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">reason</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">ref_id</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">ref_type</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">status</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+
+  }
+  subgraph cluster_picking {
+      >]
+  
+    picking_models_Order [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Order<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>created_by</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>picked_by</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">confirmed_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">customer_email</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">EmailField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">customer_name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">customer_phone</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">external_id</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">note</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">number</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">picked_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">priority</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">reserved_at_window</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">BooleanField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">shipped_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">shipping_due_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">source</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">status</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">window_number</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    picking_models_OrderLine [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      OrderLine
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>order</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">price</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_ordered</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_picked</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    picking_models_PickingTask [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      PickingTask<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>assigned_to</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>order</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">completed_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">due_date</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">priority</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">started_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">status</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">zone_type_code</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    picking_models_PickingLine [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      PickingLine
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>order_line</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>stock</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>task</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_picked</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">scanned_oem</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+
+  }
+  subgraph cluster_tasks {
+      >]
+  
+    tasks_models_Task [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      Task<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>assigned_to</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>created_by</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>inventory</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>order</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>picking_task</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>receiving</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">completed_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">description</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">due_date</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">metadata</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">JSONField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">priority</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">started_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">status</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">task_type</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">title</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    tasks_models_TaskComment [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      TaskComment<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>author</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>task</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">text</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+
+  }
+  subgraph cluster_reports {
+      >]
+  
+    reports_models_DeadStockReport [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      DeadStockReport
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>stock</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">calculated_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">days_without_movement</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">IntegerField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">estimated_value</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">last_movement_date</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">qty_available</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    reports_models_PickingError [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      PickingError
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>actual_product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>detected_by</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>expected_product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>order_line</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>picking_line</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>resolved_by</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">actual_qty</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">detected_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">error_type</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">expected_qty</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">notes</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">resolved</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">BooleanField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">resolved_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    reports_models_AnalogVsOriginalReport [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      AnalogVsOriginalReport
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>analog_product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>original_product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">analog_sales_amount</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">analog_sales_qty</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">calculated_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">original_sales_amount</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">original_sales_qty</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">period_end</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">period_start</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">substitution_rate</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    reports_models_DemandForecast [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      DemandForecast
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>calculated_by</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>product</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">calculated_at</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateTimeField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">confidence_level</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">forecast_date</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">forecasted_qty</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">historical_period_end</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">historical_period_start</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">historical_sales_qty</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">notes</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">TextField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">period_end</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">period_start</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">DateField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">seasonal_factor</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">trend_factor</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">DecimalField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+
+  }
+  subgraph cluster_warehouse_3d {
+      >]
+  
+    warehouse_3d_models_WarehouseLayout [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      WarehouseLayout<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>warehouse</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>OneToOneField (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">floor_points</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">JSONField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">gate_x</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">FloatField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">gate_z</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">FloatField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">is_layout_defined</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">BooleanField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+  
+    warehouse_3d_models_StorageObject [label=<
+      <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+      <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+      <FONT FACE="Arial" COLOR="white" POINT-SIZE="10"><B>
+      StorageObject<BR/>&lt;<FONT FACE="Arial"><I>TimeStampedModel</I></FONT>&gt;
+      </B></FONT></TD></TR>
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>id</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>BigAutoField</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>storage_location</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial"><B>warehouse</B></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial"><B>ForeignKey (id)</B></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">code</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>created_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">depth</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">FloatField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">height</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">FloatField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">is_active</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">BooleanField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial">name</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">object_type</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">CharField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">position_x</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">FloatField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">position_y</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">FloatField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">position_z</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">FloatField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">rotation_y</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">FloatField</FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>updated_at</I></FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT COLOR="#7B7B7B" FACE="Arial"><I>DateTimeField</I></FONT>
+      </TD></TR>
+    
+    
+    
+      <TR><TD ALIGN="LEFT" BORDER="0">
+      <FONT FACE="Arial">width</FONT>
+      </TD><TD ALIGN="LEFT">
+      <FONT FACE="Arial">FloatField</FONT>
+      </TD></TR>
+    
+    
+      </TABLE>
+      >]
+
+  }
+  subgraph cluster_api {
+      >]
+
+  }
+  subgraph cluster_notifications {
+      >]
+
+  }
+
+
+  // Relations
+  django_contrib_auth_base_user_AbstractBaseUser [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Arial" POINT-SIZE="12" COLOR="white">AbstractBaseUser</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  django_contrib_auth_models_AbstractUser -> django_contrib_auth_base_user_AbstractBaseUser
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+  django_contrib_auth_models_PermissionsMixin [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Arial" POINT-SIZE="12" COLOR="white">PermissionsMixin</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  django_contrib_auth_models_AbstractUser -> django_contrib_auth_models_PermissionsMixin
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+  django_contrib_auth_models_Group [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Arial" POINT-SIZE="12" COLOR="white">Group</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  accounts_models_User -> django_contrib_auth_models_Group
+  [label=" "] [arrowhead=crow arrowtail=crow, dir=both];
+  django_contrib_auth_models_Permission [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Arial" POINT-SIZE="12" COLOR="white">Permission</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  accounts_models_User -> django_contrib_auth_models_Permission
+  [label=" "] [arrowhead=crow arrowtail=crow, dir=both];
+
+  accounts_models_User -> catalog_models_Branch
+  [label=" "] [arrowhead=crow arrowtail=crow, dir=both];
+
+  accounts_models_User -> django_contrib_auth_models_AbstractUser
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+
+  catalog_models_Branch -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_Warehouse -> catalog_models_Branch
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_Warehouse -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_WarehouseAccess -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_WarehouseAccess -> catalog_models_Warehouse
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_WarehouseAccess -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_Brand -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_Category -> catalog_models_Category
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_Category -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_VehicleMake -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_VehicleModel -> catalog_models_VehicleMake
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_VehicleModel -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_StorageZoneType -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_StorageZone -> catalog_models_Warehouse
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_StorageZone -> catalog_models_StorageZoneType
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_StorageZone -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_StorageLocation -> catalog_models_StorageZone
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_StorageLocation -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_Product -> catalog_models_Brand
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_Product -> catalog_models_Category
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_Product -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_ProductApplicability -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_ProductApplicability -> catalog_models_VehicleModel
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_ProductApplicability -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_ProductCrossReference -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_ProductCrossReference -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_ProductCrossReference -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_ProductChangeLog -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_ProductChangeLog -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_ProductChangeLog -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_Backorder -> picking_models_Order
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_Backorder -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_Backorder -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_Backorder -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  catalog_models_Tool -> catalog_models_Warehouse
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_Tool -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  catalog_models_Tool -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+
+  receiving_models_Supplier -> receiving_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  receiving_models_Receiving -> catalog_models_Warehouse
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  receiving_models_Receiving -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  receiving_models_Receiving -> receiving_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  receiving_models_ReceivingLine -> receiving_models_Receiving
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  receiving_models_ReceivingLine -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  receiving_models_ReceivingLine -> catalog_models_StorageLocation
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  receiving_models_ReceivingSerial -> receiving_models_ReceivingLine
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+
+  inventory_models_Stock -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  inventory_models_Stock -> catalog_models_StorageLocation
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  inventory_models_Inventory -> catalog_models_StorageZone
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  inventory_models_Inventory -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  inventory_models_Inventory -> inventory_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  inventory_models_InventoryLine -> inventory_models_Inventory
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  inventory_models_InventoryLine -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  inventory_models_InventoryLine -> catalog_models_StorageLocation
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  inventory_models_StockMovement -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  inventory_models_StockMovement -> catalog_models_StorageLocation
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  inventory_models_StockMovement -> catalog_models_StorageLocation
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  inventory_models_StockMovement -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+
+  picking_models_Order -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  picking_models_Order -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  picking_models_Order -> picking_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  picking_models_OrderLine -> picking_models_Order
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  picking_models_OrderLine -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  picking_models_PickingTask -> picking_models_Order
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  picking_models_PickingTask -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  picking_models_PickingTask -> picking_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  picking_models_PickingLine -> picking_models_PickingTask
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  picking_models_PickingLine -> picking_models_OrderLine
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  picking_models_PickingLine -> inventory_models_Stock
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+
+  tasks_models_Task -> receiving_models_Receiving
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  tasks_models_Task -> inventory_models_Inventory
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  tasks_models_Task -> picking_models_Order
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  tasks_models_Task -> picking_models_PickingTask
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  tasks_models_Task -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  tasks_models_Task -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  tasks_models_Task -> tasks_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  tasks_models_TaskComment -> tasks_models_Task
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  tasks_models_TaskComment -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  tasks_models_TaskComment -> tasks_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+
+  reports_models_ABCXYZAnalysis -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_DeadStockReport -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_DeadStockReport -> inventory_models_Stock
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_PickingError -> picking_models_OrderLine
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_PickingError -> picking_models_PickingLine
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_PickingError -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_PickingError -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_PickingError -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_PickingError -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_AnalogVsOriginalReport -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_AnalogVsOriginalReport -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_DemandForecast -> catalog_models_Product
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  reports_models_DemandForecast -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+
+  warehouse_3d_models_WarehouseLayout -> catalog_models_Warehouse
+  [label=" "] [arrowhead=none, arrowtail=none, dir=both];
+
+  warehouse_3d_models_WarehouseLayout -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+  warehouse_3d_models_StorageObject -> catalog_models_Warehouse
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  warehouse_3d_models_StorageObject -> catalog_models_StorageLocation
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+  warehouse_3d_models_StorageObject -> catalog_models_TimeStampedModel
+  [label=" "] [arrowhead=empty, arrowtail=none, dir=both];
+
+
+  api_models_ApiToken -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+
+  notifications_models_Notification -> accounts_models_User
+  [label=" "] [arrowhead=none, arrowtail=crow, dir=both];
+
+
+}

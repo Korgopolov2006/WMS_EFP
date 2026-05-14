@@ -28,9 +28,9 @@ from .models import Receiving, ReceivingLine, ReceivingStatus, Supplier
 from .services import get_user_warehouses, suggest_storage_location
 
 
-def _paginate(request: HttpRequest, items, per_page: int = 5):
-    paginator = Paginator(items, per_page)
-    return paginator.get_page(request.GET.get("page"))
+def _paginate(request: HttpRequest, items, per_page: int = 10):
+    from core.pagination import paginate_legacy
+    return paginate_legacy(request, items, per_page=per_page)
 
 
 def _style_form_fields(form) -> None:

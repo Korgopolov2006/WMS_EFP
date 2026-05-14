@@ -1,17 +1,88 @@
 {% extends "base.html" %}
 
-{% block title %}Нет доступа — WMS{% endblock %}
+{% block title %}Нет доступа · WMS{% endblock %}
 
 {% block content %}
-  <section style="margin-top:14px;">
-    <div class="card card--glass card--lg">
-      <div class="card__header">
-        <h1 class="h2">Доступ запрещён</h1>
-        <p class="muted">{{ error_message|default:"У вас нет доступа к этой странице." }}</p>
-      </div>
-      <div class="card__footer">
-        <a class="btn btn--primary" href="{% url 'dashboard' %}">Вернуться на дашборд</a>
-      </div>
+<div class="page">
+  <div class="error-page">
+
+    {# ── Иконка замка ── #}
+    <div class="error-page__icon error-page__icon--danger" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none"
+           stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0110 0v4"/>
+      </svg>
     </div>
-  </section>
+
+    {# ── Код ошибки — один раз, большой, красный градиент ── #}
+    <div class="error-page__code error-page__code--danger" aria-label="Ошибка 403">403</div>
+
+    {# ── Заголовок ── #}
+    <h1 class="error-page__title">Доступ закрыт</h1>
+
+    {# ── Описание ── #}
+    <p class="error-page__desc">
+      {{ error_message|default:"Этот раздел недоступен для вашей учётной записи. Обратитесь к руководителю или ответственному за настройку доступа." }}
+    </p>
+
+    {# ── Кто вошёл и какая роль ── #}
+    {% if request.user.is_authenticated %}
+      <div class="error-page__role-hint" role="alert">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+             stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <div>
+          Вы вошли как <strong>{{ request.user.username }}</strong>
+          {% if request.user.role %}
+            &nbsp;(роль:&nbsp;<strong>{{ request.user.get_role_display }}</strong>)
+          {% endif %}.
+          Для получения доступа обратитесь к руководителю или администратору.
+        </div>
+      </div>
+    {% endif %}
+
+    {# ── Кнопки ── #}
+    <div class="error-page__actions">
+      <button type="button" class="btn btn--ghost"
+              onclick="history.length > 1 ? history.back() : window.location.href='{% url "dashboard" %}'">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Назад
+      </button>
+
+      {% if request.user.is_authenticated %}
+        <a class="btn btn--primary" href="{% url 'dashboard' %}">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="9"/>
+            <rect x="14" y="3" width="7" height="5"/>
+            <rect x="14" y="12" width="7" height="9"/>
+            <rect x="3" y="16" width="7" height="5"/>
+          </svg>
+          На главную
+        </a>
+      {% else %}
+        <a class="btn btn--primary" href="{% url 'login' %}">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          Войти в систему
+        </a>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
 {% endblock %}

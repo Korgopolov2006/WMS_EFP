@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+
+from core.views import page_not_found_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -24,3 +26,11 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler403 = "core.views.permission_denied_view"
+handler404 = "core.views.page_not_found_view"
+
+# ── Catch-all: показывает кастомную 404 даже при DEBUG=True ──────────────────
+# ВАЖНО: должен стоять самым последним — срабатывает только если ни один
+# маршрут выше не совпал.
+urlpatterns += [
+    re_path(r"^.*$", page_not_found_view),
+]
