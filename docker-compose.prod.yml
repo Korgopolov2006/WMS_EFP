@@ -1,0 +1,77 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: wms_efp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wms_autoparts}
+      POSTGRES_USER: ${POSTGRES_USER:-wms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wms} -d ${POSTGRES_DB:-wms_autoparts}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: wms_efp_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wms_efp_web
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      DJANGO_CACHE_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    ports:
+      - "127.0.0.1:${DJANGO_PORT_PUBLIC:-8000}:8000"
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wms_efp_celery
+    restart: unless-stopped
+    command: celery -A wms worker -l info --concurrency=1
+    env_file:
+      - .env.production
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      DJANGO_CACHE_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    volumes:
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    profiles:
+      - worker
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
