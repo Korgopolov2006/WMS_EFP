@@ -3,6 +3,33 @@
 {% block title %}Вход — WMS{% endblock %}
 
 {% block content %}
+  <div class="auth-modal-backdrop" id="loginCredentialsModal" role="dialog" aria-modal="true" aria-labelledby="loginCredentialsTitle">
+    <section class="auth-modal">
+      <button class="auth-modal__close" type="button" id="loginCredentialsCloseIcon" aria-label="Закрыть">×</button>
+      <div class="auth-modal__body">
+        <div class="auth-modal__icon">i</div>
+        <div>
+          <p class="auth-modal__eyebrow">Тестовый доступ</p>
+          <h2 class="h3" id="loginCredentialsTitle">Данные для входа</h2>
+          <p class="auth-modal__text">Для авторизаци используйте данные admin123 admin123</p>
+
+          <div class="auth-credentials" aria-label="Тестовые данные для входа">
+            <div class="auth-credentials__row">
+              <span class="auth-credentials__label">Логин</span>
+              <code class="auth-credentials__value">admin123</code>
+            </div>
+            <div class="auth-credentials__row">
+              <span class="auth-credentials__label">Пароль</span>
+              <code class="auth-credentials__value">admin123</code>
+            </div>
+          </div>
+
+          <button class="btn btn--primary btn--block auth-modal__button" type="button" id="loginCredentialsClose">Понятно</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <div class="grid grid--center">
     <section class="card card--glass card--lg">
       <div class="card__header">
@@ -35,5 +62,20 @@
       </form>
     </section>
   </div>
-{% endblock %}
 
+  <script>
+    (function () {
+      var modal = document.getElementById('loginCredentialsModal');
+      var closeButtons = [
+        document.getElementById('loginCredentialsClose'),
+        document.getElementById('loginCredentialsCloseIcon')
+      ];
+
+      closeButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          modal.hidden = true;
+        });
+      });
+    })();
+  </script>
+{% endblock %}

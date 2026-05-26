@@ -63,8 +63,16 @@ Change at least:
 ```env
 DJANGO_SECRET_KEY=long-random-secret
 POSTGRES_PASSWORD=strong-database-password
-DJANGO_SUPERUSER_PASSWORD=strong-admin-password
 ```
+
+By default the first start creates a test administrator:
+
+```text
+login: admin123
+password: admin123
+```
+
+For a public production server, change `DJANGO_SUPERUSER_PASSWORD` after the defense/demo.
 
 ## 4. Start the app
 
